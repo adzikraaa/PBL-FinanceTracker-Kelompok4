@@ -12,7 +12,44 @@
           "package_name": "com.example.pbl_kelompok4"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "583449756071-4m3lvnoblsa2u50nk9e5quvv1pmr39g8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.pbl_kelompok4",
+            "certificate_hash": "734f4ef067d46199b3fd2dbc578f912d8bf92094"
+          }
+        },
+        {
+          "client_id": "583449756071-bo5hv4hs3aj12199m87h1i114tje3rk2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.pbl_kelompok4",
+            "certificate_hash": "e6eb02c57841fc0a5989a2fb70f12389043bb5b0"
+          }
+        },
+        {
+          "client_id": "583449756071-fl2d407iq7q0qnmuc32v0mcq5v1r0pjj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.pbl_kelompok4",
+            "certificate_hash": "ff2258a03387ee226b9324c8617fe730da2327d4"
+          }
+        },
+        {
+          "client_id": "583449756071-ji963umcn50bluj4a2tiv4pt8q24fn07.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.pbl_kelompok4",
+            "certificate_hash": "438b700f80a833011a12358caa39fba19fd2b106"
+          }
+        },
+        {
+          "client_id": "583449756071-rq8rld3lptc4crrgscvdau5o4ke6d0ps.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDPbU5O7ijU-2ScIlYuMIPKGfYkmRaAa54"
@@ -20,7 +57,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "583449756071-rq8rld3lptc4crrgscvdau5o4ke6d0ps.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "583449756071-hm756o9q17js72mmg1382ck4nobg56g7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.pblKelompok4"
+              }
+            }
+          ]
         }
       }
     }
