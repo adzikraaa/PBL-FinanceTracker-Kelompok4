@@ -42,17 +42,17 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyBzsUvFzEc62W8AgQRD76Nn4Ho6hYtDL6I',
-    appId: '1:583449756071:web:ed7a0744ef33485f7fb682',
+    appId: '1:583449756071:web:0af8ad0610749c0a7fb682',
     messagingSenderId: '583449756071',
     projectId: 'bizzprice-39f54',
     authDomain: 'bizzprice-39f54.firebaseapp.com',
     storageBucket: 'bizzprice-39f54.firebasestorage.app',
-    measurementId: 'G-1289MPNW2H',
+    measurementId: 'G-50QEHZKZVJ',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDPbU5O7ijU-2ScIlYuMIPKGfYkmRaAa54',
-    appId: '1:583449756071:android:379b343d95c166ae7fb682',
+    appId: '1:583449756071:android:25ac8cc9ed7e9afb7fb682',
     messagingSenderId: '583449756071',
     projectId: 'bizzprice-39f54',
     storageBucket: 'bizzprice-39f54.firebasestorage.app',
@@ -64,6 +64,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '583449756071',
     projectId: 'bizzprice-39f54',
     storageBucket: 'bizzprice-39f54.firebasestorage.app',
+    androidClientId: '583449756071-4m3lvnoblsa2u50nk9e5quvv1pmr39g8.apps.googleusercontent.com',
+    iosClientId: '583449756071-hm756o9q17js72mmg1382ck4nobg56g7.apps.googleusercontent.com',
     iosBundleId: 'com.example.pblKelompok4',
   );
 
@@ -73,16 +75,19 @@ class DefaultFirebaseOptions {
     messagingSenderId: '583449756071',
     projectId: 'bizzprice-39f54',
     storageBucket: 'bizzprice-39f54.firebasestorage.app',
+    androidClientId: '583449756071-4m3lvnoblsa2u50nk9e5quvv1pmr39g8.apps.googleusercontent.com',
+    iosClientId: '583449756071-hm756o9q17js72mmg1382ck4nobg56g7.apps.googleusercontent.com',
     iosBundleId: 'com.example.pblKelompok4',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyBzsUvFzEc62W8AgQRD76Nn4Ho6hYtDL6I',
-    appId: '1:583449756071:web:0af8ad0610749c0a7fb682',
+    appId: '1:583449756071:web:2f3a9710ec9975907fb682',
     messagingSenderId: '583449756071',
     projectId: 'bizzprice-39f54',
     authDomain: 'bizzprice-39f54.firebaseapp.com',
     storageBucket: 'bizzprice-39f54.firebasestorage.app',
-    measurementId: 'G-50QEHZKZVJ',
+    measurementId: 'G-Q09LP5LLJ8',
   );
+
 }

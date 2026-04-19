@@ -1,6 +1,6 @@
 {
-    "name": "pbl_kelompok4",
-    "short_name": "pbl_kelompok4",
+    "name": "BizPrice",
+    "short_name": "BizPrice",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
