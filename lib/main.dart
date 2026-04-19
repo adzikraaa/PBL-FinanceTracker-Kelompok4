@@ -1,5 +1,22 @@
 import 'package:flutter/material.dart';
+<<<<<<< Updated upstream
 import 'pages/home/home_view.dart';
+=======
+import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
+import 'firebase_options.dart';
+import 'shared/colors.dart';
+import 'viewmodels/auth_viewmodel.dart';
+import 'views/welcome_view.dart';
+import 'pages/home/home_view.dart'; 
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+>>>>>>> Stashed changes
 
 void main() {
   runApp(const MyApp());
@@ -11,6 +28,7 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+<<<<<<< Updated upstream
         return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -102,6 +120,41 @@ class _MyHomePageState extends State<MyHomePage> {
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
+=======
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthViewModel()),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'BizPrice Tracker',
+        theme: ThemeData(
+          colorScheme: ColorScheme.dark(
+            primary: AppColors.primaryPurple,
+            secondary: AppColors.accentYellow,
+            surface: AppColors.darkCard,
+            error: AppColors.errorRed,
+          ),
+          useMaterial3: true,
+          scaffoldBackgroundColor: AppColors.darkBackground,
+          appBarTheme: const AppBarTheme(
+            backgroundColor: AppColors.darkScaffold,
+            elevation: 0,
+          ),
+        ),
+        // --- BAGIAN OTOMATIS PINDAH HALAMAN (AUTH GATE) ---
+        home: Consumer<AuthViewModel>(
+          builder: (context, auth, _) {
+            // Jika user tidak null (berarti sudah login/masih login)
+            if (auth.user != null) {
+              return const HomeView(); // Lempar ke Dashboard
+            }
+            // Jika user null (berarti belum login)
+            return const WelcomeView(); // Kasih halaman Welcome/Login
+          },
+        ),
+        // --------------------------------------------------
+>>>>>>> Stashed changes
       ),
     );
   }
