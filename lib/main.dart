@@ -5,7 +5,7 @@ import 'firebase_options.dart';
 import 'shared/colors.dart';
 import 'viewmodels/auth_viewmodel.dart';
 import 'views/welcome_view.dart';
-import 'pages/home/home_view.dart'; // Import sudah pindah ke atas sini
+import 'pages/home/home_view.dart'; 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,7 +24,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // Menambahkan AuthViewModel agar fitur login bisa dipakai
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
       ],
       child: MaterialApp(
@@ -44,8 +43,16 @@ class MyApp extends StatelessWidget {
             elevation: 0,
           ),
         ),
-        // Sesuai keinginan: Mulai dari WelcomeView (Login)
-        home: const WelcomeView(),
+        // Auth Gate: Otomatis pilih halaman
+        home: Consumer<AuthViewModel>(
+          builder: (context, auth, _) {
+            // Kita pakai .currentUser sesuai dengan isi AuthViewModel kamu
+            if (auth.currentUser != null) {
+              return const HomeView(); // Jika sudah login ke Dashboard
+            }
+            return const WelcomeView(); // Jika belum ke Login
+          }
+        ),
       ),
     );
   }
