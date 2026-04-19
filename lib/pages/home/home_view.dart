@@ -27,6 +27,8 @@ class _HomeViewState extends State<HomeView> {
           backgroundColor: kPutih,
           body: Stack(
             children: [
+              // ── Background blob pastel ──
+              _buildBackground(),
               // ── Konten scroll ──
               SafeArea(
                 bottom: false,
@@ -57,7 +59,7 @@ class _HomeViewState extends State<HomeView> {
                   ),
                 ),
               ),
-
+              // ── Navbar nempel di bawah ──
               Positioned(
                 bottom: 0,
                 left: 0,
@@ -68,6 +70,14 @@ class _HomeViewState extends State<HomeView> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildBackground() {
+    return SizedBox.expand(
+      child: CustomPaint(
+        painter: _BlobPainter(),
+      ),
     );
   }
 
@@ -419,7 +429,7 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  // ── Baris Bawah : Insight + Catatan ───────────────────────────────────────
+  // ── Baris Bawah: Insight + Catatan ───────────────────────────────────────
   Widget _buildBottomRow() {
     return IntrinsicHeight(
       child: Row(
@@ -695,4 +705,51 @@ class _HomeViewState extends State<HomeView> {
       },
     );
   }
+}
+
+// ── Background Blob Painter ───────────────────────────────────────────────────
+class _BlobPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 25);
+
+    // Blob ungu kiri tengah
+    paint.color = const Color.fromARGB(255, 168, 171, 245);
+    canvas.drawCircle(
+        Offset(size.width * 0.22, size.height * 0.38), 110, paint);
+
+    // Blob kuning kanan atas
+    paint.color = const Color.fromARGB(255, 247, 236, 180);
+    canvas.drawCircle(
+        Offset(size.width * 0.78, size.height * 0.07), 55, paint);
+
+    // Blob biru kanan tengah
+    paint.color = const Color.fromARGB(255, 179, 207, 242);
+    canvas.drawCircle(
+        Offset(size.width * 0.88, size.height * 0.58), 130, paint);
+
+    // Blob pink kanan bawah
+    paint.color = const Color.fromARGB(255, 241, 191, 209);
+    canvas.drawCircle(
+        Offset(size.width * 0.78, size.height * 0.73), 75, paint);
+
+    // Blob kuning bawah tengah
+    paint.color = const Color.fromARGB(255, 247, 231, 185);
+    canvas.drawCircle(
+        Offset(size.width * 0.38, size.height * 0.9), 100, paint);
+
+    // Blob pink kiri bawah
+    paint.color = const Color.fromARGB(255, 255, 211, 227);
+    canvas.drawCircle(
+        Offset(size.width * 0.05, size.height * 0.75), 120, paint);
+
+    // Blob ungu kiri atas
+    paint.color = const Color.fromARGB(255, 203, 192, 244);
+    canvas.drawCircle(
+        Offset(size.width * 0.0, size.height * 0.08), 80, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
