@@ -93,6 +93,7 @@ class AuthViewModel extends ChangeNotifier {
     _setError(null);
 
     try {
+      await _googleSignIn.signOut(); // ← tambahkan baris ini
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
       if (googleUser == null) {
@@ -166,7 +167,7 @@ class AuthViewModel extends ChangeNotifier {
       // 3. Ambil data user terbaru
       _currentUser = _firebaseAuth.currentUser;
       _isLoggedIn = _currentUser != null;
-      
+
       notifyListeners();
       return true;
     } on FirebaseAuthException catch (e) {
@@ -194,7 +195,7 @@ class AuthViewModel extends ChangeNotifier {
         _currentUser = _firebaseAuth.currentUser;
         _isLoggedIn = true;
         notifyListeners();
-        return true; 
+        return true;
       }
       _setError('Error: ${e.toString()}');
       return false;

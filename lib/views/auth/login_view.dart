@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/auth_viewmodel.dart';
@@ -16,7 +15,6 @@ class _LoginViewState extends State<LoginView>
     with SingleTickerProviderStateMixin {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _rememberMe = false;
   bool _obscurePassword = true;
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
@@ -29,14 +27,10 @@ class _LoginViewState extends State<LoginView>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    _fadeAnim = CurvedAnimation(
-      parent: _animController,
-      curve: Curves.easeOut,
-    );
-    _slideAnim = Tween<Offset>(
-      begin: const Offset(0, 0.15),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
+    _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
+    _slideAnim = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero)
+        .animate(
+            CurvedAnimation(parent: _animController, curve: Curves.easeOut));
     _animController.forward();
   }
 
@@ -53,10 +47,292 @@ class _LoginViewState extends State<LoginView>
     return Scaffold(
       body: Stack(
         children: [
-          // ── Background Gradient + Blobs ──────────────────────────────
+          // 1. Background
           _buildBackground(),
 
-          // ── Back button ──────────────────────────────────────────────
+          // 2. Content
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 60, 20, 24),
+              child: FadeTransition(
+                opacity: _fadeAnim,
+                child: SlideTransition(
+                  position: _slideAnim,
+                  child: Column(
+                    children: [
+                      // Logo circle
+                      Align(
+                        alignment: Alignment.center,
+                        child: Container(
+                          width: 80,
+                          height: 80,
+                          margin: const EdgeInsets.only(bottom: 16),
+                          child: Image.asset(
+                            'assets/images/logo.png',
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+
+                      // Main card
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: AppColors.white.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: AppColors.white.withValues(alpha: 0.2),
+                            width: 1,
+                          ),
+                        ),
+                        padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Title
+                            const Center(
+                              child: Text(
+                                'Sign In',
+                                style: TextStyle(
+                                  fontFamily: 'Lexend',
+                                  color: Colors.white,
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Center(
+                              child: Text(
+                                'Welcome back!',
+                                style: TextStyle(
+                                  fontFamily: 'Lexend',
+                                  color: Color(0xFFCCBBFF),
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 28),
+
+                            // Email
+                            _buildLabel('Email'),
+                            const SizedBox(height: 8),
+                            _buildTextField(
+                              controller: _emailController,
+                              hint: 'Enter Email',
+                              keyboardType: TextInputType.emailAddress,
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Password
+                            _buildLabel('Password'),
+                            const SizedBox(height: 8),
+                            _buildPasswordField(),
+                            const SizedBox(height: 8),
+
+                            // Forgot password
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: GestureDetector(
+                                onTap: () {},
+                                child: const Text(
+                                  'Forgot Password?',
+                                  style: TextStyle(
+                                    fontFamily: 'Lexend',
+                                    color: AppColors.accentYellow,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Sign In button
+                            Consumer<AuthViewModel>(
+                              builder: (context, vm, _) => GestureDetector(
+                                onTap: vm.isLoading
+                                    ? null
+                                    : () async {
+                                        final success = await vm.loginWithEmail(
+                                          email: _emailController.text.trim(),
+                                          password: _passwordController.text,
+                                        );
+                                        if (!mounted) return;
+                                        if (success) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(const SnackBar(
+                                                  content: Text(
+                                                      'Login berhasil! 🎉')));
+                                        } else if (vm.errorMessage != null) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(SnackBar(
+                                                  content:
+                                                      Text(vm.errorMessage!)));
+                                        }
+                                      },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  width: double.infinity,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.accentYellow,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.accentYellow
+                                            .withValues(alpha: 0.4),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 6),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Center(
+                                    child: vm.isLoading
+                                        ? const SizedBox(
+                                            width: 22,
+                                            height: 22,
+                                            child: CircularProgressIndicator(
+                                                color: AppColors.textDark,
+                                                strokeWidth: 2.5),
+                                          )
+                                        : const Text(
+                                            'Sign In',
+                                            style: TextStyle(
+                                              fontFamily: 'Lexend',
+                                              color: AppColors.textDark,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+
+                            // Divider
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Divider(
+                                    color:
+                                        AppColors.white.withValues(alpha: 0.2),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12),
+                                  child: Text(
+                                    'or sign in with',
+                                    style: TextStyle(
+                                      fontFamily: 'Lexend',
+                                      color: AppColors.white
+                                          .withValues(alpha: 0.5),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Divider(
+                                    color:
+                                        AppColors.white.withValues(alpha: 0.2),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Social buttons
+                            Consumer<AuthViewModel>(
+                              builder: (context, vm, _) => Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _buildSocialButton(
+                                    icon: Icons.facebook,
+                                    iconColor: const Color(0xFF4267B2),
+                                    onTap: () {},
+                                  ),
+                                  const SizedBox(width: 12),
+                                  _buildSocialButton(
+                                    label: 'X',
+                                    labelColor: Colors.white,
+                                    onTap: () {},
+                                  ),
+                                  const SizedBox(width: 12),
+                                  _buildSocialButton(
+                                    label: 'G',
+                                    labelColor: const Color(0xFFEA4335),
+                                    onTap: () async {
+                                      final success =
+                                          await vm.loginWithGoogle();
+                                      if (!mounted) return;
+                                      if (success) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(const SnackBar(
+                                                content: Text(
+                                                    'Login Google berhasil! 🎉')));
+                                      } else if (vm.errorMessage != null) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(SnackBar(
+                                                content:
+                                                    Text(vm.errorMessage!)));
+                                      }
+                                    },
+                                  ),
+                                  const SizedBox(width: 12),
+                                  _buildSocialButton(
+                                    icon: Icons.apple,
+                                    iconColor: Colors.white,
+                                    onTap: () {},
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Don't have account
+                            Center(
+                              child: GestureDetector(
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => const RegisterView()),
+                                ),
+                                child: RichText(
+                                  text: const TextSpan(
+                                    text: "Don't have an account? ",
+                                    style: TextStyle(
+                                      fontFamily: 'Lexend',
+                                      color: Color(0xFFCCBBFF),
+                                      fontSize: 13,
+                                    ),
+                                    children: [
+                                      TextSpan(
+                                        text: 'Sign up',
+                                        style: TextStyle(
+                                          color: AppColors.accentYellow,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // 3. Back button (paling atas)
           SafeArea(
             child: Material(
               color: Colors.transparent,
@@ -75,7 +351,8 @@ class _LoginViewState extends State<LoginView>
                             color: AppColors.textPrimary, size: 18),
                         SizedBox(width: 6),
                         Text('Back',
-                            style: const TextStyle(
+                            style: TextStyle(
+                                fontFamily: 'Lexend',
                                 color: AppColors.textPrimary,
                                 fontSize: 15,
                                 fontWeight: FontWeight.w500)),
@@ -86,249 +363,20 @@ class _LoginViewState extends State<LoginView>
               ),
             ),
           ),
-
-          // ── Content ──────────────────────────────────────────────────
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 60, 20, 24),
-              child: FadeTransition(
-                opacity: _fadeAnim,
-                child: SlideTransition(
-                  position: _slideAnim,
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      _buildGlassCard(),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );
   }
 
-  // ── Background ─────────────────────────────────────────────────────────────
-  Widget _buildBackground() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: AppColors.backgroundGradient,
-      ),
-      child: Stack(
-        children: [
-          // Blob besar atas-kiri
-          Positioned(
-            top: -60,
-            left: -40,
-            child: _blob(180, AppColors.primaryLight),
-          ),
-          // Blob kecil tengah-atas
-          Positioned(
-            top: 80,
-            right: 30,
-            child: _blob(100, AppColors.white.withValues(alpha: 0.15)),
-          ),
-          // Blob besar bawah-kanan
-          Positioned(
-            bottom: -80,
-            right: -50,
-            child: _blob(220, AppColors.gradientBlueEnd),
-          ),
-          // Blob kecil bawah-kiri
-          Positioned(
-            bottom: 100,
-            left: 10,
-            child: _blob(100, AppColors.primaryPurple.withValues(alpha: 0.5)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _blob(double size, Color color) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-      ),
-    );
-  }
-
-  // ── Glass Card ─────────────────────────────────────────────────────────────
-  Widget _buildGlassCard() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.white.withValues(alpha: 0.92),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-                color: AppColors.white.withValues(alpha: 0.6), width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.black.withValues(alpha: 0.15),
-                blurRadius: 30,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Title
-              Center(
-                child: Text(
-                  'Welcome back',
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primaryPurple,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 28),
-
-              // Email field
-              _buildLabel('Email'),
-              const SizedBox(height: 6),
-              _buildTextField(
-                controller: _emailController,
-                hint: 'kristin.watson@example.com',
-                keyboardType: TextInputType.emailAddress,
-                prefixIcon: Icons.email_outlined,
-              ),
-              const SizedBox(height: 16),
-
-              // Password field
-              _buildLabel('Password'),
-              const SizedBox(height: 6),
-              _buildPasswordField(),
-              const SizedBox(height: 14),
-
-              // Remember me + Forgot
-              Row(
-                children: [
-                  Transform.scale(
-                    scale: 0.9,
-                    child: Checkbox(
-                      value: _rememberMe,
-                      activeColor: AppColors.primaryPurple,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4)),
-                      onChanged: (v) => setState(() => _rememberMe = v!),
-                    ),
-                  ),
-                  const Text('Remember me',
-                      style: const TextStyle(
-                          fontSize: 13, color: AppColors.textTertiary)),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: () {},
-                    child: const Text(
-                      'Forgot password?',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.primaryPurple,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Sign In button
-              Consumer<AuthViewModel>(
-                builder: (context, vm, _) => _buildPrimaryButton(
-                  label: 'Sign in',
-                  isLoading: vm.isLoading,
-                  onTap: () async {
-                    final success = await vm.loginWithEmail(
-                      email: _emailController.text.trim(),
-                      password: _passwordController.text,
-                    );
-                    if (!mounted) return;
-                    if (success) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Login berhasil! 🎉')),
-                      );
-                    } else if (vm.errorMessage != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(vm.errorMessage!)),
-                      );
-                    }
-                  },
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Sign in with
-              Center(
-                child: Text(
-                  'Sign in with',
-                  style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textTertiary,
-                      fontWeight: FontWeight.w500),
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              // Social buttons
-              Consumer<AuthViewModel>(
-                builder: (context, vm, _) => _buildSocialRow(vm),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Don't have an account?
-              Center(
-                child: GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const RegisterView()),
-                  ),
-                  child: RichText(
-                    text: const TextSpan(
-                      text: "Don't have an account? ",
-                      style: const TextStyle(
-                          color: AppColors.textTertiary, fontSize: 13),
-                      children: [
-                        TextSpan(
-                          text: 'Sign up',
-                          style: const TextStyle(
-                            color: AppColors.primaryPurple,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ── Helpers ────────────────────────────────────────────────────────────────
   Widget _buildLabel(String text) {
     return Text(
       text,
       style: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-          color: AppColors.textTertiary),
+        fontFamily: 'Lexend',
+        color: Color(0xFFCCBBFF),
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+      ),
     );
   }
 
@@ -336,35 +384,40 @@ class _LoginViewState extends State<LoginView>
     required TextEditingController controller,
     required String hint,
     TextInputType keyboardType = TextInputType.text,
-    IconData? prefixIcon,
   }) {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
-      style: const TextStyle(fontSize: 14),
+      style: const TextStyle(
+        fontFamily: 'Lexend',
+        color: Colors.white,
+        fontSize: 14,
+      ),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: AppColors.textTertiary, fontSize: 14),
-        prefixIcon: prefixIcon != null
-            ? Icon(prefixIcon, color: AppColors.textTertiary, size: 18)
-            : null,
+        hintStyle: TextStyle(
+          color: AppColors.white.withValues(alpha: 0.4),
+          fontSize: 14,
+        ),
         filled: true,
-        fillColor: AppColors.inputBg,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        fillColor: AppColors.white.withValues(alpha: 0.08),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(12),
+          borderSide:
+              BorderSide(color: AppColors.white.withValues(alpha: 0.15)),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(12),
+          borderSide:
+              BorderSide(color: AppColors.white.withValues(alpha: 0.15)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           borderSide:
-              const BorderSide(color: AppColors.primaryPurple, width: 1.5),
+              const BorderSide(color: AppColors.accentYellow, width: 1.5),
         ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
     );
   }
@@ -373,80 +426,78 @@ class _LoginViewState extends State<LoginView>
     return TextField(
       controller: _passwordController,
       obscureText: _obscurePassword,
-      style: const TextStyle(fontSize: 14),
+      style: const TextStyle(
+        fontFamily: 'Lexend',
+        color: Colors.white,
+        fontSize: 14,
+      ),
       decoration: InputDecoration(
-        hintText: '••••••••••',
-        hintStyle: const TextStyle(color: AppColors.textTertiary, fontSize: 14),
-        prefixIcon: const Icon(Icons.lock_outline,
-            color: AppColors.textTertiary, size: 18),
-        suffixIcon: GestureDetector(
-          onTap: () => setState(() => _obscurePassword = !_obscurePassword),
-          child: Icon(
-            _obscurePassword
-                ? Icons.visibility_off_outlined
-                : Icons.visibility_outlined,
-            color: AppColors.textTertiary,
-            size: 18,
-          ),
+        hintText: 'Enter Password',
+        hintStyle: TextStyle(
+          color: AppColors.white.withValues(alpha: 0.4),
+          fontSize: 14,
         ),
         filled: true,
-        fillColor: AppColors.inputBg,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        fillColor: AppColors.white.withValues(alpha: 0.08),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(12),
+          borderSide:
+              BorderSide(color: AppColors.white.withValues(alpha: 0.15)),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(12),
+          borderSide:
+              BorderSide(color: AppColors.white.withValues(alpha: 0.15)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           borderSide:
-              const BorderSide(color: AppColors.primaryPurple, width: 1.5),
+              const BorderSide(color: AppColors.accentYellow, width: 1.5),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        suffixIcon: IconButton(
+          icon: Icon(
+            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+            color: AppColors.white.withValues(alpha: 0.4),
+            size: 18,
+          ),
+          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
         ),
       ),
     );
   }
 
-  Widget _buildPrimaryButton({
-    required String label,
+  Widget _buildSocialButton({
+    IconData? icon,
+    Color? iconColor,
+    String? label,
+    Color? labelColor,
     required VoidCallback onTap,
-    bool isLoading = false,
   }) {
     return GestureDetector(
-      onTap: isLoading ? null : onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: double.infinity,
-        height: 50,
+      onTap: onTap,
+      child: Container(
+        width: 48,
+        height: 48,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: AppColors.primaryGradient,
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primaryPurple.withValues(alpha: 0.4),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            ),
-          ],
+          shape: BoxShape.circle,
+          color: AppColors.white.withValues(alpha: 0.08),
+          border: Border.all(
+            color: AppColors.white.withValues(alpha: 0.2),
+            width: 1.5,
+          ),
         ),
         child: Center(
-          child: isLoading
-              ? const SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(
-                      color: AppColors.textPrimary, strokeWidth: 2.5),
-                )
+          child: icon != null
+              ? Icon(icon, color: iconColor, size: 20)
               : Text(
-                  label,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                    letterSpacing: 0.4,
+                  label!,
+                  style: TextStyle(
+                    fontFamily: 'Lexend',
+                    color: labelColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
                   ),
                 ),
         ),
@@ -454,85 +505,39 @@ class _LoginViewState extends State<LoginView>
     );
   }
 
-  Widget _buildSocialRow(AuthViewModel vm) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _socialIcon(
-          icon: Icons.facebook,
-          color: const Color(0xFF1877F2),
-          onTap: () {},
-        ),
-        const SizedBox(width: 16),
-        _socialIcon(
-          svgPath: 'twitter',
-          color: const Color(0xFF1DA1F2),
-          onTap: () {},
-        ),
-        const SizedBox(width: 16),
-        _socialIcon(
-          svgPath: 'google',
-          color: const Color(0xFFDB4437),
-          onTap: () async {
-            final success = await vm.loginWithGoogle();
-            if (!mounted) return;
-            if (success) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Login Google berhasil! 🎉')),
-              );
-            }
-          },
-        ),
-        const SizedBox(width: 16),
-        _socialIcon(
-          icon: Icons.apple,
-          color: Colors.black,
-          onTap: () {},
-        ),
-      ],
+  Widget _blob(double size, Color color) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 
-  Widget _socialIcon({
-    IconData? icon,
-    String? svgPath,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          shape: BoxShape.circle,
-          border: Border.all(color: AppColors.border),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.black.withValues(alpha: 0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Center(
-          child: svgPath == 'google'
-              ? Text(
-                  'G',
-                  style: TextStyle(
-                      color: color, fontWeight: FontWeight.bold, fontSize: 18),
-                )
-              : svgPath == 'twitter'
-                  ? Text(
-                      'X',
-                      style: TextStyle(
-                          color: color,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16),
-                    )
-                  : Icon(icon, color: color, size: 22),
-        ),
+  Widget _buildBackground() {
+    return Container(
+      decoration: BoxDecoration(gradient: AppColors.backgroundGradient),
+      child: Stack(
+        children: [
+          Positioned(
+              top: -60, left: -40, child: _blob(200, AppColors.primaryLight)),
+          Positioned(
+              top: 120,
+              right: -30,
+              child: _blob(140, AppColors.white.withValues(alpha: 0.15))),
+          Positioned(
+              top: 220,
+              left: 30,
+              child: _blob(90, AppColors.primaryDeep.withValues(alpha: 0.6))),
+          Positioned(
+              bottom: -60,
+              right: -60,
+              child: _blob(240, AppColors.gradientBlueEnd)),
+          Positioned(
+              bottom: 150,
+              left: -20,
+              child:
+                  _blob(100, AppColors.primaryPurple.withValues(alpha: 0.5))),
+        ],
       ),
     );
   }
