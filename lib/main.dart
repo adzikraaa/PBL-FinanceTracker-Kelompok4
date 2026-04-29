@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart'; // Import Firebase Core
+import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
-import 'firebase_options.dart'; // Import file konfigurasi yang kamu generate tadi
-import 'shared/colors.dart'; // Import color palette
-import 'viewmodels/auth_viewmodel.dart'; // Import AuthViewModel
-import 'views/welcome_view.dart'; // Import WelcomeView
+import 'package:firebase_auth/firebase_auth.dart';
+import 'data/config/firebase_options.dart';
+import 'shared/colors.dart';
+import 'viewmodels/auth_viewmodel.dart';
+import 'views/auth/welcome_view.dart';
+import 'views/home/home_view.dart';
+import 'viewmodels/finance_viewmodel.dart';
 
 void main() async {
-  // 1. Pastikan binding Flutter sudah siap
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 2. Inisialisasi Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await FirebaseAuth.instance.signOut();
 
   runApp(const MyApp());
 }
@@ -26,12 +28,12 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
+        ChangeNotifierProvider(create: (_) => FinanceViewModel()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'BizPrice Tracker',
         theme: ThemeData(
-          // Dark theme dengan color scheme dari Figma
           colorScheme: ColorScheme.dark(
             primary: AppColors.primaryPurple,
             secondary: AppColors.accentYellow,
@@ -45,7 +47,14 @@ class MyApp extends StatelessWidget {
             elevation: 0,
           ),
         ),
-        home: const WelcomeView(),
+        // Auth Gate: Otomatis pilih halaman
+        home: Consumer<AuthViewModel>(builder: (context, auth, _) {
+          // Kita pakai .currentUser sesuai dengan isi AuthViewModel kamu
+          if (auth.currentUser != null) {
+            return const HomeView(); // Jika sudah login ke Dashboard
+          }
+          return const WelcomeView(); // Jika belum ke Login
+        }),
       ),
     );
   }
