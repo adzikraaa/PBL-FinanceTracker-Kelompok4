@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../shared/colors.dart';
-import 'auth/register_view.dart';
-import 'auth/login_view.dart'; // Import color palette
+import '../../shared/colors.dart';
+import 'register_view.dart';
+import 'login_view.dart'; // Import color palette
 
 class WelcomeView extends StatefulWidget {
   const WelcomeView({super.key});

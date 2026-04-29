@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
-import 'firebase_options.dart';
+import 'data/config/firebase_options.dart';
 import 'shared/colors.dart';
 import 'viewmodels/auth_viewmodel.dart';
-import 'views/welcome_view.dart';
-import 'pages/home/home_view.dart'; 
+import 'views/auth/welcome_view.dart';
+import 'views/home/home_view.dart';
+import 'viewmodels/finance_viewmodel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,6 +26,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
+        ChangeNotifierProvider(create: (_) => FinanceViewModel()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

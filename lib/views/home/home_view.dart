@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'home_viewmodel.dart';
+import '../../viewmodels/home_viewmodel.dart';
+import '../finance/hitung_hpp_page.dart';
 
 // ─── Warna ───────────────────────────────────────────────────────────────────
 const Color kUngu   = Color(0xFF430D75);
@@ -644,7 +645,16 @@ class _HomeViewState extends State<HomeView> {
                         final isSelected = i == _vm.selectedIndex;
                         return Expanded(
                           child: GestureDetector(
-                            onTap: () => _vm.onNavTap(i),
+                            onTap: () {
+                              if (i == 0) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const HitungHppPage()),
+                                );
+                              } else {
+                                _vm.onNavTap(i);
+                              }
+                            },
                             child: Container(
                               color: Colors.transparent,
                               child: Icon(
