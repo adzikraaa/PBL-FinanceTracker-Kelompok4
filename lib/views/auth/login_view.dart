@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../../shared/colors.dart';
 import 'register_view.dart';
+import '../../pages/home/home_view.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -60,7 +61,7 @@ class _LoginViewState extends State<LoginView>
                   position: _slideAnim,
                   child: Column(
                     children: [
-                      // Logo circle
+                      // Logo
                       Align(
                         alignment: Alignment.center,
                         child: Container(
@@ -150,64 +151,74 @@ class _LoginViewState extends State<LoginView>
 
                             // Sign In button
                             Consumer<AuthViewModel>(
-                              builder: (context, vm, _) => GestureDetector(
-                                onTap: vm.isLoading
-                                    ? null
-                                    : () async {
-                                        final success = await vm.loginWithEmail(
-                                          email: _emailController.text.trim(),
-                                          password: _passwordController.text,
-                                        );
-                                        if (!mounted) return;
-                                        if (success) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(const SnackBar(
-                                                  content: Text(
-                                                      'Login berhasil! 🎉')));
-                                        } else if (vm.errorMessage != null) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(SnackBar(
-                                                  content:
-                                                      Text(vm.errorMessage!)));
-                                        }
-                                      },
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  width: double.infinity,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.accentYellow,
-                                    borderRadius: BorderRadius.circular(12),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: AppColors.accentYellow
-                                            .withValues(alpha: 0.4),
-                                        blurRadius: 12,
-                                        offset: const Offset(0, 6),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Center(
-                                    child: vm.isLoading
-                                        ? const SizedBox(
-                                            width: 22,
-                                            height: 22,
-                                            child: CircularProgressIndicator(
+                              builder: (context, vm, _) {
+                                return GestureDetector(
+                                  onTap: vm.isLoading
+                                      ? null
+                                      : () async {
+                                          final success =
+                                              await vm.loginWithEmail(
+                                            email: _emailController.text.trim(),
+                                            password: _passwordController.text,
+                                          );
+                                          if (!mounted) return;
+                                          if (success) {
+                                            Navigator.pushAndRemoveUntil(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    const HomeView(),
+                                              ),
+                                              (route) => false,
+                                            );
+                                          } else if (vm.errorMessage != null) {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                content: Text(vm.errorMessage!),
+                                              ),
+                                            );
+                                          }
+                                        },
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    width: double.infinity,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.accentYellow,
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.accentYellow
+                                              .withValues(alpha: 0.4),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 6),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Center(
+                                      child: vm.isLoading
+                                          ? const SizedBox(
+                                              width: 22,
+                                              height: 22,
+                                              child: CircularProgressIndicator(
                                                 color: AppColors.textDark,
-                                                strokeWidth: 2.5),
-                                          )
-                                        : const Text(
-                                            'Sign In',
-                                            style: TextStyle(
-                                              fontFamily: 'Lexend',
-                                              color: AppColors.textDark,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
+                                                strokeWidth: 2.5,
+                                              ),
+                                            )
+                                          : const Text(
+                                              'Sign In',
+                                              style: TextStyle(
+                                                fontFamily: 'Lexend',
+                                                color: AppColors.textDark,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                             ),
-                                          ),
+                                    ),
                                   ),
-                                ),
-                              ),
+                                );
+                              },
                             ),
                             const SizedBox(height: 20),
 
@@ -245,49 +256,56 @@ class _LoginViewState extends State<LoginView>
 
                             // Social buttons
                             Consumer<AuthViewModel>(
-                              builder: (context, vm, _) => Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  _buildSocialButton(
-                                    icon: Icons.facebook,
-                                    iconColor: const Color(0xFF4267B2),
-                                    onTap: () {},
-                                  ),
-                                  const SizedBox(width: 12),
-                                  _buildSocialButton(
-                                    label: 'X',
-                                    labelColor: Colors.white,
-                                    onTap: () {},
-                                  ),
-                                  const SizedBox(width: 12),
-                                  _buildSocialButton(
-                                    label: 'G',
-                                    labelColor: const Color(0xFFEA4335),
-                                    onTap: () async {
-                                      final success =
-                                          await vm.loginWithGoogle();
-                                      if (!mounted) return;
-                                      if (success) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(const SnackBar(
-                                                content: Text(
-                                                    'Login Google berhasil! 🎉')));
-                                      } else if (vm.errorMessage != null) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(SnackBar(
-                                                content:
-                                                    Text(vm.errorMessage!)));
-                                      }
-                                    },
-                                  ),
-                                  const SizedBox(width: 12),
-                                  _buildSocialButton(
-                                    icon: Icons.apple,
-                                    iconColor: Colors.white,
-                                    onTap: () {},
-                                  ),
-                                ],
-                              ),
+                              builder: (context, vm, _) {
+                                return Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    _buildSocialButton(
+                                      icon: Icons.facebook,
+                                      iconColor: const Color(0xFF4267B2),
+                                      onTap: () {},
+                                    ),
+                                    const SizedBox(width: 12),
+                                    _buildSocialButton(
+                                      label: 'X',
+                                      labelColor: Colors.white,
+                                      onTap: () {},
+                                    ),
+                                    const SizedBox(width: 12),
+                                    _buildSocialButton(
+                                      label: 'G',
+                                      labelColor: const Color(0xFFEA4335),
+                                      onTap: () async {
+                                        final success =
+                                            await vm.loginWithGoogle();
+                                        if (!mounted) return;
+                                        if (success) {
+                                          Navigator.pushAndRemoveUntil(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => const HomeView(),
+                                            ),
+                                            (route) => false,
+                                          );
+                                        } else if (vm.errorMessage != null) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text(vm.errorMessage!),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                    ),
+                                    const SizedBox(width: 12),
+                                    _buildSocialButton(
+                                      icon: Icons.apple,
+                                      iconColor: Colors.white,
+                                      onTap: () {},
+                                    ),
+                                  ],
+                                );
+                              },
                             ),
                             const SizedBox(height: 24),
 
@@ -297,7 +315,8 @@ class _LoginViewState extends State<LoginView>
                                 onTap: () => Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (_) => const RegisterView()),
+                                    builder: (_) => const RegisterView(),
+                                  ),
                                 ),
                                 child: RichText(
                                   text: const TextSpan(
@@ -332,7 +351,7 @@ class _LoginViewState extends State<LoginView>
             ),
           ),
 
-          // 3. Back button (paling atas)
+          // 3. Back button
           SafeArea(
             child: Material(
               color: Colors.transparent,
@@ -350,12 +369,15 @@ class _LoginViewState extends State<LoginView>
                         Icon(Icons.arrow_back_ios_new,
                             color: AppColors.textPrimary, size: 18),
                         SizedBox(width: 6),
-                        Text('Back',
-                            style: TextStyle(
-                                fontFamily: 'Lexend',
-                                color: AppColors.textPrimary,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500)),
+                        Text(
+                          'Back',
+                          style: TextStyle(
+                            fontFamily: 'Lexend',
+                            color: AppColors.textPrimary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -519,24 +541,30 @@ class _LoginViewState extends State<LoginView>
       child: Stack(
         children: [
           Positioned(
-              top: -60, left: -40, child: _blob(200, AppColors.primaryLight)),
+            top: -60,
+            left: -40,
+            child: _blob(200, AppColors.primaryLight),
+          ),
           Positioned(
-              top: 120,
-              right: -30,
-              child: _blob(140, AppColors.white.withValues(alpha: 0.15))),
+            top: 120,
+            right: -30,
+            child: _blob(140, AppColors.white.withValues(alpha: 0.15)),
+          ),
           Positioned(
-              top: 220,
-              left: 30,
-              child: _blob(90, AppColors.primaryDeep.withValues(alpha: 0.6))),
+            top: 220,
+            left: 30,
+            child: _blob(90, AppColors.primaryDeep.withValues(alpha: 0.6)),
+          ),
           Positioned(
-              bottom: -60,
-              right: -60,
-              child: _blob(240, AppColors.gradientBlueEnd)),
+            bottom: -60,
+            right: -60,
+            child: _blob(240, AppColors.gradientBlueEnd),
+          ),
           Positioned(
-              bottom: 150,
-              left: -20,
-              child:
-                  _blob(100, AppColors.primaryPurple.withValues(alpha: 0.5))),
+            bottom: 150,
+            left: -20,
+            child: _blob(100, AppColors.primaryPurple.withValues(alpha: 0.5)),
+          ),
         ],
       ),
     );
