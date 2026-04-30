@@ -1,8 +1,10 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../../shared/colors.dart';
 import 'register_view.dart';
+import '../home/home_view.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -12,11 +14,13 @@ class LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<LoginView>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   late AnimationController _animController;
+  late AnimationController _sparkleCtrl;
+  late AnimationController _floatCtrl;
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
 
@@ -32,6 +36,16 @@ class _LoginViewState extends State<LoginView>
         .animate(
             CurvedAnimation(parent: _animController, curve: Curves.easeOut));
     _animController.forward();
+
+    _sparkleCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat(reverse: true);
+
+    _floatCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat(reverse: true);
   }
 
   @override
@@ -39,6 +53,8 @@ class _LoginViewState extends State<LoginView>
     _emailController.dispose();
     _passwordController.dispose();
     _animController.dispose();
+    _sparkleCtrl.dispose();
+    _floatCtrl.dispose();
     super.dispose();
   }
 
@@ -60,7 +76,7 @@ class _LoginViewState extends State<LoginView>
                   position: _slideAnim,
                   child: Column(
                     children: [
-                      // Logo circle
+                      // Logo
                       Align(
                         alignment: Alignment.center,
                         child: Container(
@@ -107,7 +123,7 @@ class _LoginViewState extends State<LoginView>
                                 'Welcome back!',
                                 style: TextStyle(
                                   fontFamily: 'Lexend',
-                                  color: Color(0xFFCCBBFF),
+                                  color: Color(0xFF6DFC9A),
                                   fontSize: 14,
                                 ),
                               ),
@@ -150,64 +166,74 @@ class _LoginViewState extends State<LoginView>
 
                             // Sign In button
                             Consumer<AuthViewModel>(
-                              builder: (context, vm, _) => GestureDetector(
-                                onTap: vm.isLoading
-                                    ? null
-                                    : () async {
-                                        final success = await vm.loginWithEmail(
-                                          email: _emailController.text.trim(),
-                                          password: _passwordController.text,
-                                        );
-                                        if (!mounted) return;
-                                        if (success) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(const SnackBar(
-                                                  content: Text(
-                                                      'Login berhasil! 🎉')));
-                                        } else if (vm.errorMessage != null) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(SnackBar(
-                                                  content:
-                                                      Text(vm.errorMessage!)));
-                                        }
-                                      },
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  width: double.infinity,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.accentYellow,
-                                    borderRadius: BorderRadius.circular(12),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: AppColors.accentYellow
-                                            .withValues(alpha: 0.4),
-                                        blurRadius: 12,
-                                        offset: const Offset(0, 6),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Center(
-                                    child: vm.isLoading
-                                        ? const SizedBox(
-                                            width: 22,
-                                            height: 22,
-                                            child: CircularProgressIndicator(
+                              builder: (context, vm, _) {
+                                return GestureDetector(
+                                  onTap: vm.isLoading
+                                      ? null
+                                      : () async {
+                                          final success =
+                                              await vm.loginWithEmail(
+                                            email: _emailController.text.trim(),
+                                            password: _passwordController.text,
+                                          );
+                                          if (!mounted) return;
+                                          if (success) {
+                                            Navigator.pushAndRemoveUntil(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    const HomeView(),
+                                              ),
+                                              (route) => false,
+                                            );
+                                          } else if (vm.errorMessage != null) {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                content: Text(vm.errorMessage!),
+                                              ),
+                                            );
+                                          }
+                                        },
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    width: double.infinity,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.accentYellow,
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.accentYellow
+                                              .withValues(alpha: 0.4),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 6),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Center(
+                                      child: vm.isLoading
+                                          ? const SizedBox(
+                                              width: 22,
+                                              height: 22,
+                                              child: CircularProgressIndicator(
                                                 color: AppColors.textDark,
-                                                strokeWidth: 2.5),
-                                          )
-                                        : const Text(
-                                            'Sign In',
-                                            style: TextStyle(
-                                              fontFamily: 'Lexend',
-                                              color: AppColors.textDark,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
+                                                strokeWidth: 2.5,
+                                              ),
+                                            )
+                                          : const Text(
+                                              'Sign In',
+                                              style: TextStyle(
+                                                fontFamily: 'Lexend',
+                                                color: AppColors.textDark,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                             ),
-                                          ),
+                                    ),
                                   ),
-                                ),
-                              ),
+                                );
+                              },
                             ),
                             const SizedBox(height: 20),
 
@@ -245,49 +271,56 @@ class _LoginViewState extends State<LoginView>
 
                             // Social buttons
                             Consumer<AuthViewModel>(
-                              builder: (context, vm, _) => Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  _buildSocialButton(
-                                    icon: Icons.facebook,
-                                    iconColor: const Color(0xFF4267B2),
-                                    onTap: () {},
-                                  ),
-                                  const SizedBox(width: 12),
-                                  _buildSocialButton(
-                                    label: 'X',
-                                    labelColor: Colors.white,
-                                    onTap: () {},
-                                  ),
-                                  const SizedBox(width: 12),
-                                  _buildSocialButton(
-                                    label: 'G',
-                                    labelColor: const Color(0xFFEA4335),
-                                    onTap: () async {
-                                      final success =
-                                          await vm.loginWithGoogle();
-                                      if (!mounted) return;
-                                      if (success) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(const SnackBar(
-                                                content: Text(
-                                                    'Login Google berhasil! 🎉')));
-                                      } else if (vm.errorMessage != null) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(SnackBar(
-                                                content:
-                                                    Text(vm.errorMessage!)));
-                                      }
-                                    },
-                                  ),
-                                  const SizedBox(width: 12),
-                                  _buildSocialButton(
-                                    icon: Icons.apple,
-                                    iconColor: Colors.white,
-                                    onTap: () {},
-                                  ),
-                                ],
-                              ),
+                              builder: (context, vm, _) {
+                                return Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    _buildSocialButton(
+                                      icon: Icons.facebook,
+                                      iconColor: const Color(0xFF4267B2),
+                                      onTap: () {},
+                                    ),
+                                    const SizedBox(width: 12),
+                                    _buildSocialButton(
+                                      label: 'X',
+                                      labelColor: Colors.white,
+                                      onTap: () {},
+                                    ),
+                                    const SizedBox(width: 12),
+                                    _buildSocialButton(
+                                      label: 'G',
+                                      labelColor: const Color(0xFFEA4335),
+                                      onTap: () async {
+                                        final success =
+                                            await vm.loginWithGoogle();
+                                        if (!mounted) return;
+                                        if (success) {
+                                          Navigator.pushAndRemoveUntil(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => const HomeView(),
+                                            ),
+                                            (route) => false,
+                                          );
+                                        } else if (vm.errorMessage != null) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text(vm.errorMessage!),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                    ),
+                                    const SizedBox(width: 12),
+                                    _buildSocialButton(
+                                      icon: Icons.apple,
+                                      iconColor: Colors.white,
+                                      onTap: () {},
+                                    ),
+                                  ],
+                                );
+                              },
                             ),
                             const SizedBox(height: 24),
 
@@ -297,14 +330,15 @@ class _LoginViewState extends State<LoginView>
                                 onTap: () => Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (_) => const RegisterView()),
+                                    builder: (_) => const RegisterView(),
+                                  ),
                                 ),
                                 child: RichText(
                                   text: const TextSpan(
                                     text: "Don't have an account? ",
                                     style: TextStyle(
                                       fontFamily: 'Lexend',
-                                      color: Color(0xFFCCBBFF),
+                                      color: Color(0xFF6DFC9A),
                                       fontSize: 13,
                                     ),
                                     children: [
@@ -332,7 +366,7 @@ class _LoginViewState extends State<LoginView>
             ),
           ),
 
-          // 3. Back button (paling atas)
+          // 3. Back button
           SafeArea(
             child: Material(
               color: Colors.transparent,
@@ -350,12 +384,15 @@ class _LoginViewState extends State<LoginView>
                         Icon(Icons.arrow_back_ios_new,
                             color: AppColors.textPrimary, size: 18),
                         SizedBox(width: 6),
-                        Text('Back',
-                            style: TextStyle(
-                                fontFamily: 'Lexend',
-                                color: AppColors.textPrimary,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500)),
+                        Text(
+                          'Back',
+                          style: TextStyle(
+                            fontFamily: 'Lexend',
+                            color: AppColors.textPrimary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -373,7 +410,7 @@ class _LoginViewState extends State<LoginView>
       text,
       style: const TextStyle(
         fontFamily: 'Lexend',
-        color: Color(0xFFCCBBFF),
+        color: Color(0xFF6DFC9A),
         fontSize: 13,
         fontWeight: FontWeight.w500,
       ),
@@ -505,40 +542,238 @@ class _LoginViewState extends State<LoginView>
     );
   }
 
-  Widget _blob(double size, Color color) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-    );
-  }
+  static const Color _bg1 = Color(0xFF061D12);
+  static const Color _bg2 = Color(0xFF0D2E1E);
+  static const Color _bg3 = Color(0xFF08351F);
+  static const Color _green = Color(0xFF6DFC9A);
 
   Widget _buildBackground() {
     return Container(
-      decoration: BoxDecoration(gradient: AppColors.backgroundGradient),
+      width: double.infinity,
+      height: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [_bg1, _bg2, _bg3],
+          stops: [0.0, 0.5, 1.0],
+        ),
+      ),
       child: Stack(
         children: [
+          // Radial glow bottom left
           Positioned(
-              top: -60, left: -40, child: _blob(200, AppColors.primaryLight)),
+            bottom: -100,
+            left: -100,
+            child: _glowOrb(300, const Color(0xFF0E3D22), 0.6),
+          ),
+          // Radial glow top right
           Positioned(
-              top: 120,
-              right: -30,
-              child: _blob(140, AppColors.white.withValues(alpha: 0.15))),
+            top: -100,
+            right: -100,
+            child: _glowOrb(300, const Color(0xFF0E3D22), 0.4),
+          ),
+          
+          // Top left rings
           Positioned(
-              top: 220,
-              left: 30,
-              child: _blob(90, AppColors.primaryDeep.withValues(alpha: 0.6))),
+            top: -80,
+            left: -80,
+            child: CustomPaint(
+              size: const Size(200, 200),
+              painter: _ThinRingPainter(color: _green),
+            ),
+          ),
           Positioned(
-              bottom: -60,
-              right: -60,
-              child: _blob(240, AppColors.gradientBlueEnd)),
+            top: -20,
+            left: -100,
+            child: CustomPaint(
+              size: const Size(280, 280),
+              painter: _ThinRingPainter(color: _green),
+            ),
+          ),
+
+          // Bottom right rings
           Positioned(
-              bottom: 150,
-              left: -20,
-              child:
-                  _blob(100, AppColors.primaryPurple.withValues(alpha: 0.5))),
+            bottom: -50,
+            right: -80,
+            child: CustomPaint(
+              size: const Size(300, 300),
+              painter: _ThinRingPainter(color: _green),
+            ),
+          ),
+          Positioned(
+            bottom: -120,
+            right: -20,
+            child: CustomPaint(
+              size: const Size(250, 250),
+              painter: _ThinRingPainter(color: _green),
+            ),
+          ),
+
+          // Left star
+          _animatedSparkle(
+            top: 250,
+            left: 30,
+            size: 14,
+            delay: 0.5,
+          ),
+
+          // Bottom right star
+          _animatedSparkle(
+            bottom: 200,
+            right: 40,
+            size: 32,
+            delay: 1.0,
+          ),
+
+          // Top right cluster
+          _animatedSparkle(
+            top: 100,
+            right: 100,
+            size: 55,
+            delay: 0.0,
+          ),
+          _animatedSparkle(
+            top: 130,
+            right: 40,
+            size: 30,
+            delay: 0.3,
+          ),
         ],
       ),
     );
   }
+
+  Widget _glowOrb(double size, Color color, double opacity) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: color.withOpacity(opacity),
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: _green.withOpacity(0.06),
+            blurRadius: size * 0.5,
+            spreadRadius: size * 0.04,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _animatedSparkle({
+    double? top,
+    double? bottom,
+    double? left,
+    double? right,
+    required double size,
+    required double delay,
+  }) {
+    return AnimatedBuilder(
+      animation: _floatCtrl,
+      builder: (context, child) {
+        final floatOffset = sin((_floatCtrl.value * 2 * pi) + delay * 2 * pi) * 10;
+        
+        return Positioned(
+          top: top != null ? top + floatOffset : null,
+          bottom: bottom != null ? bottom - floatOffset : null,
+          left: left,
+          right: right,
+          child: AnimatedBuilder(
+            animation: _sparkleCtrl,
+            builder: (context, child) {
+              final scale = 0.8 + 0.2 * sin((_sparkleCtrl.value * 2 * pi) + delay * pi);
+              final opacity = 0.5 + 0.5 * sin((_sparkleCtrl.value * 2 * pi) + delay * pi);
+              
+              return Opacity(
+                opacity: opacity.clamp(0.0, 1.0),
+                child: Transform.scale(
+                  scale: scale,
+                  child: _Sparkle(size: size, color: _green),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  Thin Ring Painter
+// ═══════════════════════════════════════════════
+class _ThinRingPainter extends CustomPainter {
+  final Color color;
+  _ThinRingPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    final r = size.width / 2;
+
+    canvas.drawCircle(
+      Offset(cx, cy),
+      r,
+      Paint()
+        ..color = color.withOpacity(0.15)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.0,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_ThinRingPainter o) => o.color != color;
+}
+
+// ═══════════════════════════════════════════════
+//  4-point sparkle
+// ═══════════════════════════════════════════════
+class _Sparkle extends StatelessWidget {
+  final double size;
+  final Color color;
+  const _Sparkle({required this.size, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: Size(size, size),
+      painter: _SparklePainter(color),
+    );
+  }
+}
+
+class _SparklePainter extends CustomPainter {
+  final Color color;
+  _SparklePainter(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    final r = size.width / 2;
+    final inner = r * 0.22;
+    final path = Path();
+    for (int i = 0; i < 8; i++) {
+      final angle = (i * pi / 4) - pi / 2;
+      final rad = (i % 2 == 0) ? r : inner;
+      final x = cx + rad * cos(angle);
+      final y = cy + rad * sin(angle);
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_SparklePainter o) => o.color != color;
 }
