@@ -2,37 +2,45 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/finance_viewmodel.dart';
 import '../widgets/custom_input_widget.dart';
-import 'hitung_bep_page.dart';
+import 'hasil_analisis_page.dart';
 
-class HitungHppPage extends StatefulWidget {
-  const HitungHppPage({super.key});
+class HitungBepPage extends StatefulWidget {
+  const HitungBepPage({super.key});
 
   @override
-  State<HitungHppPage> createState() => _HitungHppPageState();
+  State<HitungBepPage> createState() => _HitungBepPageState();
 }
 
-class _HitungHppPageState extends State<HitungHppPage> {
-  // Controllers
-  final TextEditingController _biayaProduksiController = TextEditingController();
-  final TextEditingController _biayaTenagaKerjaController = TextEditingController();
-  final TextEditingController _biayaOverheadController = TextEditingController();
-  final TextEditingController _jumlahUnitController = TextEditingController();
+class _HitungBepPageState extends State<HitungBepPage> {
+  final TextEditingController _hargaJualController = TextEditingController();
+  final TextEditingController _biayaPerUnitController = TextEditingController();
+  final TextEditingController _biayaTetapController = TextEditingController();
+  final TextEditingController _jumlahTerjualController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-fill Biaya Per Unit with modalPerUnit from ViewModel
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final vm = Provider.of<FinanceViewModel>(context, listen: false);
+      _biayaPerUnitController.text = vm.modalPerUnit.toInt().toString();
+    });
+  }
 
   @override
   void dispose() {
-    _biayaProduksiController.dispose();
-    _biayaTenagaKerjaController.dispose();
-    _biayaOverheadController.dispose();
-    _jumlahUnitController.dispose();
+    _hargaJualController.dispose();
+    _biayaPerUnitController.dispose();
+    _biayaTetapController.dispose();
+    _jumlahTerjualController.dispose();
     super.dispose();
   }
 
   void _onInputChanged() {
     final vm = Provider.of<FinanceViewModel>(context, listen: false);
-    vm.biayaProduksi = double.tryParse(_biayaProduksiController.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0;
-    vm.biayaTenagaKerja = double.tryParse(_biayaTenagaKerjaController.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0;
-    vm.biayaOverhead = double.tryParse(_biayaOverheadController.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0;
-    vm.jumlahUnit = int.tryParse(_jumlahUnitController.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+    vm.hargaJualUnit = double.tryParse(_hargaJualController.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0;
+    vm.biayaTetap = double.tryParse(_biayaTetapController.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0;
+    vm.jumlahUnitTerjual = int.tryParse(_jumlahTerjualController.text.replaceAll(RegExp(r'[^0-9]'), ''));
   }
 
   @override
@@ -42,7 +50,7 @@ class _HitungHppPageState extends State<HitungHppPage> {
       body: SafeArea(
         child: Stack(
           children: [
-            // Background patterns (Simplified with circles)
+            // Background patterns
             Positioned(
               top: -50,
               right: -50,
@@ -89,18 +97,27 @@ class _HitungHppPageState extends State<HitungHppPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          "HARGA POKOK PRODUKSI",
-                          style: TextStyle(
-                            color: Color(0xFF8BCA6E),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 1.5,
-                          ),
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
+                            ),
+                            const SizedBox(width: 16),
+                            const Text(
+                              "BREAK EVEN POINT",
+                              style: TextStyle(
+                                color: Color(0xFF8BCA6E),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          "Hitung HPP",
+                          "Hitung BEP",
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 32,
@@ -109,7 +126,7 @@ class _HitungHppPageState extends State<HitungHppPage> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          "Input detail biaya produksi untuk menghitung\nHarga Pokok Penjualan secara presisi.",
+                          "Input your financial figures to determine the\npoint where your total revenue equals your\ntotal expenses.",
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.7),
                             fontSize: 12,
@@ -119,37 +136,37 @@ class _HitungHppPageState extends State<HitungHppPage> {
                         const SizedBox(height: 32),
                         
                         CustomInputWidget(
-                          label: "Biaya Produksi",
-                          icon: Icons.inventory_2,
-                          tooltipMessage: "Masukkan total biaya bahan baku untuk produksi.",
-                          controller: _biayaProduksiController,
+                          label: "Harga Jual Per Unit",
+                          icon: Icons.payments_outlined,
+                          tooltipMessage: "Masukkan harga jual produk per satu unit barang anda.",
+                          controller: _hargaJualController,
                           onChanged: (_) => _onInputChanged(),
                         ),
                         const SizedBox(height: 20),
                         
                         CustomInputWidget(
-                          label: "Upah Tenaga Kerja",
-                          icon: Icons.people,
-                          tooltipMessage: "Masukkan total upah pekerja produksi.",
-                          controller: _biayaTenagaKerjaController,
+                          label: "Biaya Per Unit",
+                          icon: Icons.account_balance_wallet_outlined,
+                          tooltipMessage: "Biaya produksi untuk satu unit barang (Otomatis dari HPP).",
+                          controller: _biayaPerUnitController,
+                          readOnly: true, // Read-only since it's derived from HPP
+                        ),
+                        const SizedBox(height: 20),
+                        
+                        CustomInputWidget(
+                          label: "Total Biaya Tetap",
+                          icon: Icons.analytics_outlined,
+                          tooltipMessage: "Total biaya yang tidak berubah terlepas dari jumlah produksi.",
+                          controller: _biayaTetapController,
                           onChanged: (_) => _onInputChanged(),
                         ),
                         const SizedBox(height: 20),
                         
                         CustomInputWidget(
-                          label: "Biaya Overhead",
-                          icon: Icons.account_balance,
-                          tooltipMessage: "Masukkan biaya operasional tambahan (listrik, sewa, dll).",
-                          controller: _biayaOverheadController,
-                          onChanged: (_) => _onInputChanged(),
-                        ),
-                        const SizedBox(height: 20),
-                        
-                        CustomInputWidget(
-                          label: "Jumlah Unit Diproduksi",
-                          icon: Icons.inventory,
-                          tooltipMessage: "Masukkan target jumlah unit yang akan diproduksi.",
-                          controller: _jumlahUnitController,
+                          label: "Jumlah Unit Terjual (Opsional)",
+                          icon: Icons.insert_chart_outlined,
+                          tooltipMessage: "Masukkan estimasi unit terjual untuk simulasi margin.",
+                          controller: _jumlahTerjualController,
                           prefix: "",
                           suffix: "unit",
                           onChanged: (_) => _onInputChanged(),
@@ -157,7 +174,7 @@ class _HitungHppPageState extends State<HitungHppPage> {
                         
                         const SizedBox(height: 40),
                         
-                        // Lanjut Button
+                        // Lihat Hasil Analisis Button
                         Container(
                           width: double.infinity,
                           height: 56,
@@ -180,15 +197,15 @@ class _HitungHppPageState extends State<HitungHppPage> {
                             onPressed: () {
                               _onInputChanged();
                               final vm = Provider.of<FinanceViewModel>(context, listen: false);
-                              if (vm.isHppValid()) {
+                              if (vm.isBepValid()) {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (context) => const HitungBepPage()),
+                                  MaterialPageRoute(builder: (context) => const HasilAnalisisPage()),
                                 );
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text('Harap isi semua form. Jumlah unit harus > 0.'),
+                                    content: Text('Harap isi Harga Jual dan Biaya Tetap (> 0).'),
                                     backgroundColor: Colors.redAccent,
                                   ),
                                 );
@@ -201,24 +218,13 @@ class _HitungHppPageState extends State<HitungHppPage> {
                                 borderRadius: BorderRadius.circular(28),
                               ),
                             ),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  "Lanjut",
-                                  style: TextStyle(
-                                    color: Color(0xFF0C1B13),
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                SizedBox(width: 8),
-                                Icon(
-                                  Icons.chevron_right,
-                                  color: Color(0xFF0C1B13),
-                                  size: 20,
-                                ),
-                              ],
+                            child: const Text(
+                              "Lihat hasil analisis",
+                              style: TextStyle(
+                                color: Color(0xFF0C1B13),
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
@@ -281,4 +287,3 @@ class _HitungHppPageState extends State<HitungHppPage> {
     );
   }
 }
-

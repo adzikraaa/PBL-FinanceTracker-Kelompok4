@@ -3,14 +3,13 @@ class HppModel {
   String userId;
   String namaProduk;
 
-  double persediaanAwal;
-  double pembelianBersih;
+  double biayaProduksi;
   double biayaTenagaKerja;
   double biayaOverhead;
-  double persediaanAkhir;
   int jumlahUnit;
   double biayaTetap;
   double hargaJualUnit;
+  int? jumlahUnitTerjual;
 
   double totalHpp;
   double bepUnit;
@@ -22,15 +21,13 @@ class HppModel {
     this.id,
     required this.userId,
     required this.namaProduk,
-    required this.persediaanAwal,
-    required this.pembelianBersih,
+    required this.biayaProduksi,
     required this.biayaTenagaKerja,
     required this.biayaOverhead,
-    required this.persediaanAkhir,
     required this.jumlahUnit,
     required this.biayaTetap,
     required this.hargaJualUnit,
-
+    this.jumlahUnitTerjual,
     required this.totalHpp,
     required this.bepUnit,
     required this.bepRupiah,
@@ -41,15 +38,13 @@ class HppModel {
   Map<String, dynamic> toJson() => {
     'userId': userId,
     'namaProduk': namaProduk,
-    'persediaanAwal': persediaanAwal,
-    'pembelianBersih': pembelianBersih,
+    'biayaProduksi': biayaProduksi,
     'biayaTenagaKerja': biayaTenagaKerja,
     'biayaOverhead': biayaOverhead,
-    'persediaanAkhir': persediaanAkhir,
     'jumlahUnit': jumlahUnit,
     'biayaTetap': biayaTetap,
     'hargaJualUnit': hargaJualUnit,
-
+    'jumlahUnitTerjual': jumlahUnitTerjual,
     'totalHpp': totalHpp,
     'bepUnit': bepUnit,
     'bepRupiah': bepRupiah,
@@ -61,18 +56,16 @@ class HppModel {
     id: docId,
     userId: json['userId'],
     namaProduk: json['namaProduk'],
-    persediaanAwal: json['persediaanAwal'].toDouble(),
-    pembelianBersih: json['pembelianBersih'].toDouble(),
-    biayaTenagaKerja: json['biayaTenagaKerja'].toDouble(),
-    biayaOverhead: json['biayaOverhead'].toDouble(),
-    persediaanAkhir: json['persediaanAkhir'].toDouble(),
-    jumlahUnit: json['jumlahUnit'],
-    biayaTetap: json['biayaTetap'].toDouble(),
-    hargaJualUnit: json['hargaJualUnit'].toDouble(),
-    
-    totalHpp: json['totalHpp'].toDouble(),
-    bepUnit: json['bepUnit'].toDouble(),
-    bepRupiah: json['bepRupiah'].toDouble(),
+    biayaProduksi: json['biayaProduksi']?.toDouble() ?? 0.0,
+    biayaTenagaKerja: json['biayaTenagaKerja']?.toDouble() ?? 0.0,
+    biayaOverhead: json['biayaOverhead']?.toDouble() ?? 0.0,
+    jumlahUnit: json['jumlahUnit'] ?? 0,
+    biayaTetap: json['biayaTetap']?.toDouble() ?? 0.0,
+    hargaJualUnit: json['hargaJualUnit']?.toDouble() ?? 0.0,
+    jumlahUnitTerjual: json['jumlahUnitTerjual'],
+    totalHpp: json['totalHpp']?.toDouble() ?? 0.0,
+    bepUnit: json['bepUnit']?.toDouble() ?? 0.0,
+    bepRupiah: json['bepRupiah']?.toDouble() ?? 0.0,
     catatan: json['catatan'] ?? '',
     createdAt: DateTime.parse(json['createdAt']),
   );
