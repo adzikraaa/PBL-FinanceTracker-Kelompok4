@@ -12,6 +12,9 @@ class HitungBepPage extends StatefulWidget {
 }
 
 class _HitungBepPageState extends State<HitungBepPage> {
+  // Nav state untuk animasi sliding circle
+  int _navIndex = 0;
+
   final TextEditingController _hargaJualController = TextEditingController();
   final TextEditingController _biayaPerUnitController = TextEditingController();
   final TextEditingController _biayaTetapController = TextEditingController();
@@ -87,7 +90,7 @@ class _HitungBepPageState extends State<HitungBepPage> {
                 ),
               ),
             ),
-            
+
             // Main content
             Column(
               children: [
@@ -134,7 +137,7 @@ class _HitungBepPageState extends State<HitungBepPage> {
                           ),
                         ),
                         const SizedBox(height: 32),
-                        
+
                         CustomInputWidget(
                           label: "Harga Jual Per Unit",
                           icon: Icons.payments_outlined,
@@ -143,16 +146,16 @@ class _HitungBepPageState extends State<HitungBepPage> {
                           onChanged: (_) => _onInputChanged(),
                         ),
                         const SizedBox(height: 20),
-                        
+
                         CustomInputWidget(
                           label: "Biaya Per Unit",
                           icon: Icons.account_balance_wallet_outlined,
                           tooltipMessage: "Biaya produksi untuk satu unit barang (Otomatis dari HPP).",
                           controller: _biayaPerUnitController,
-                          readOnly: true, // Read-only since it's derived from HPP
+                          readOnly: true,
                         ),
                         const SizedBox(height: 20),
-                        
+
                         CustomInputWidget(
                           label: "Total Biaya Tetap",
                           icon: Icons.analytics_outlined,
@@ -161,7 +164,7 @@ class _HitungBepPageState extends State<HitungBepPage> {
                           onChanged: (_) => _onInputChanged(),
                         ),
                         const SizedBox(height: 20),
-                        
+
                         CustomInputWidget(
                           label: "Jumlah Unit Terjual (Opsional)",
                           icon: Icons.insert_chart_outlined,
@@ -171,9 +174,9 @@ class _HitungBepPageState extends State<HitungBepPage> {
                           suffix: "unit",
                           onChanged: (_) => _onInputChanged(),
                         ),
-                        
+
                         const SizedBox(height: 40),
-                        
+
                         // Lihat Hasil Analisis Button
                         Container(
                           width: double.infinity,
@@ -235,7 +238,7 @@ class _HitungBepPageState extends State<HitungBepPage> {
                 ),
               ],
             ),
-            
+
             // Bottom Navigation
             Positioned(
               left: 20,
@@ -250,40 +253,104 @@ class _HitungBepPageState extends State<HitungBepPage> {
   }
 
   Widget _buildBottomNav() {
-    return Container(
-      height: 64,
-      decoration: BoxDecoration(
-        color: const Color(0xFF132018).withOpacity(0.9),
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: const Color(0xFF2C4334), width: 1.5),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildNavItem(Icons.calculate_outlined, false),
-          _buildNavItem(Icons.account_balance_wallet_outlined, false),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: const BoxDecoration(
-              color: Color(0xFF6CF688),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.home, color: Color(0xFF0C1B13), size: 24),
-          ),
-          _buildNavItem(Icons.insert_chart_outlined, false),
-          _buildNavItem(Icons.history, false),
-        ],
-      ),
-    );
-  }
+    const navIcons = [
+      Icons.calculate_outlined,
+      Icons.account_balance_wallet_outlined,
+      Icons.home,
+      Icons.show_chart,
+      Icons.history,
+    ];
+    const int navCount = 5;
+    const Color kNavActive = Color(0xFF6CF688);
+    const Color kNavBg     = Color(0xFF132018);
+    const Color kNavBorder = Color(0xFF2C4334);
+    const Color kNavIcon   = Color(0xFF6B7E72);
 
-  Widget _buildNavItem(IconData icon, bool isSelected) {
-    return IconButton(
-      icon: Icon(
-        icon,
-        color: isSelected ? const Color(0xFF8BCA6E) : const Color(0xFF6B7E72),
-      ),
-      onPressed: () {},
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final navWidth = constraints.maxWidth;
+        final itemWidth = navWidth / navCount;
+        final circleLeft = itemWidth * _navIndex + (itemWidth / 2) - 24;
+
+        return SizedBox(
+          height: 64,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // ── Rail (background pill) ──
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: kNavBg.withOpacity(0.95),
+                    borderRadius: BorderRadius.circular(32),
+                    border: Border.all(color: kNavBorder, width: 1.5),
+                  ),
+                ),
+              ),
+              // ── Sliding green circle ──
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 320),
+                curve: Curves.easeInOutCubic,
+                left: circleLeft,
+                top: 8,
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: kNavActive,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: kNavActive.withOpacity(0.45),
+                        blurRadius: 16,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    navIcons[_navIndex],
+                    color: const Color(0xFF0C1B13),
+                    size: 24,
+                  ),
+                ),
+              ),
+              // ── Tappable icon slots ──
+              Row(
+                children: List.generate(navCount, (i) {
+                  return Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onTap: () async {
+                        if (i == 2) {
+                          // Geser lingkaran ke home dulu, baru navigate
+                          setState(() => _navIndex = 2);
+                          await Future.delayed(Duration.zero);
+                          if (!mounted) return;
+                          Navigator.popUntil(context, (r) => r.isFirst);
+                        }
+                      },
+                      child: SizedBox(
+                        height: 64,
+                        child: Center(
+                          child: AnimatedOpacity(
+                            duration: const Duration(milliseconds: 200),
+                            opacity: i == _navIndex ? 0.0 : 1.0,
+                            child: Icon(
+                              navIcons[i],
+                              color: kNavIcon,
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

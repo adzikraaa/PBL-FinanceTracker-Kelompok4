@@ -5,15 +5,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'data/config/firebase_options.dart';
 import 'shared/colors.dart';
 import 'viewmodels/auth_viewmodel.dart';
-<<<<<<< Updated upstream
 import 'views/auth/welcome_view.dart';
-import 'views/home/home_view.dart';
+import 'views/home/main_navigation.dart';
 import 'viewmodels/finance_viewmodel.dart';
-=======
-import 'views/welcome_view.dart';
-import 'pages/home/home_view.dart';
-import 'package:firebase_auth/firebase_auth.dart';
->>>>>>> Stashed changes
+import 'viewmodels/loadingscreen.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,7 +17,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  await FirebaseAuth.instance.signOut();
+  //await FirebaseAuth.instance.signOut();
 
   runApp(const MyApp());
 }
@@ -53,14 +49,8 @@ class MyApp extends StatelessWidget {
             elevation: 0,
           ),
         ),
-        // Auth Gate: Otomatis pilih halaman
-        home: Consumer<AuthViewModel>(builder: (context, auth, _) {
-          // Kita pakai .currentUser sesuai dengan isi AuthViewModel kamu
-          if (auth.currentUser != null) {
-            return const HomeView(); // Jika sudah login ke Dashboard
-          }
-          return const WelcomeView(); // Jika belum ke Login
-        }),
+        // Tampilkan LoadingScreen saat pertama kali buka app
+        home: const LoadingScreen(),
       ),
     );
   }
