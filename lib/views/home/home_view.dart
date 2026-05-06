@@ -3,25 +3,26 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../viewmodels/home_viewmodel.dart';
 import '../finance/hitung_hpp_page.dart';
+import 'insight_view.dart';
 import 'profile_view.dart';
 
 // ─── Color Palette (Dark Green Theme) ────────────────────────────────────────
-const Color kBg        = Color(0xFF0D2818);
-const Color kBgMid     = Color(0xFF122A1C);
-const Color kCard      = Color(0xFF163520);
+const Color kBg = Color(0xFF0D2818);
+const Color kBgMid = Color(0xFF122A1C);
+const Color kCard = Color(0xFF163520);
 const Color kCardLight = Color(0xFF1E4A2C);
-const Color kGreen     = Color(0xFF4ADE80);
+const Color kGreen = Color(0xFF4ADE80);
 const Color kGreenLime = Color(0xFF86EFAC);
-const Color kGreenBtn  = Color(0xFF22C55E);
-const Color kRiwayat   = Color(0xFF9CD76A);
-const Color kWhite     = Color(0xFFFFFFFF);
-const Color kWhite70   = Color(0xB3FFFFFF);
-const Color kWhite40   = Color(0x66FFFFFF);
-const Color kWhite20   = Color(0x33FFFFFF);
-const Color kCatatan   = Color(0xFF163520);
-const Color kNavBg     = Color(0xFF132018);
+const Color kGreenBtn = Color(0xFF22C55E);
+const Color kRiwayat = Color(0xFF9CD76A);
+const Color kWhite = Color(0xFFFFFFFF);
+const Color kWhite70 = Color(0xB3FFFFFF);
+const Color kWhite40 = Color(0x66FFFFFF);
+const Color kWhite20 = Color(0x33FFFFFF);
+const Color kCatatan = Color(0xFF163520);
+const Color kNavBg = Color(0xFF132018);
 const Color kNavBorder = Color(0xFF2C4334);
-const Color kNavIcon   = Color(0xFF6B7E72);
+const Color kNavIcon = Color(0xFF6B7E72);
 const Color kNavActive = Color(0xFF6CF688);
 
 // ─── Sparkle Model ────────────────────────────────────────────────────────────
@@ -66,14 +67,16 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       duration: const Duration(seconds: 3),
     )..repeat();
 
-    _sparkles = List.generate(12, (_) => _Sparkle(
-      x: _rng.nextDouble(),
-      y: _rng.nextDouble() * 0.28,
-      size: _rng.nextDouble() * 8 + 4,
-      opacity: _rng.nextDouble() * 0.7 + 0.3,
-      phase: _rng.nextDouble() * 2 * pi,
-      speed: _rng.nextDouble() * 1.5 + 0.5,
-    ));
+    _sparkles = List.generate(
+        12,
+        (_) => _Sparkle(
+              x: _rng.nextDouble(),
+              y: _rng.nextDouble() * 0.28,
+              size: _rng.nextDouble() * 8 + 4,
+              opacity: _rng.nextDouble() * 0.7 + 0.3,
+              phase: _rng.nextDouble() * 2 * pi,
+              speed: _rng.nextDouble() * 1.5 + 0.5,
+            ));
 
     _progressController = AnimationController(
       vsync: this,
@@ -442,7 +445,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                             value: _progressAnim.value,
                             strokeWidth: 8,
                             backgroundColor: kWhite20,
-                            valueColor: const AlwaysStoppedAnimation<Color>(kGreen),
+                            valueColor:
+                                const AlwaysStoppedAnimation<Color>(kGreen),
                             strokeCap: StrokeCap.round,
                           ),
                         ),
@@ -615,7 +619,13 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                   Align(
                     alignment: Alignment.centerRight,
                     child: GestureDetector(
-                      onTap: _vm.onInsightTap,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const InsightView()),
+                        );
+                      },
                       child: Container(
                         width: 30,
                         height: 30,
@@ -727,8 +737,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 6),
-        Text(label,
-            style: const TextStyle(color: kWhite70, fontSize: 10)),
+        Text(label, style: const TextStyle(color: kWhite70, fontSize: 10)),
       ],
     );
   }
@@ -736,11 +745,11 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   // ─── Bottom Navbar (FIXED) ────────────────────────────────────────────────
   Widget _buildBottomNav() {
     const navIcons = [
-      Icons.calculate_outlined,          // 0 - HPP & BEP
+      Icons.calculate_outlined, // 0 - HPP & BEP
       Icons.account_balance_wallet_outlined, // 1 - Wallet
-      Icons.home,                        // 2 - Home (default aktif)
-      Icons.show_chart,                  // 3 - Chart
-      Icons.history,                     // 4 - History
+      Icons.home, // 2 - Home (default aktif)
+      Icons.show_chart, // 3 - Chart
+      Icons.history, // 4 - History
     ];
     const int navCount = 5;
     const double navHeight = 68.0;
@@ -820,6 +829,19 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                               context,
                               MaterialPageRoute(
                                   builder: (_) => const HitungHppPage()),
+                            );
+                            // Kembali ke Home → aktifkan index 2
+                            if (mounted) _vm.onNavTap(2);
+                          } else if (i == 3) {
+                            // Tap Insight di navbar
+                            _vm.onNavTap(3);
+                            await Future.delayed(
+                                const Duration(milliseconds: 340));
+                            if (!mounted) return;
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const InsightView()),
                             );
                             // Kembali ke Home → aktifkan index 2
                             if (mounted) _vm.onNavTap(2);
@@ -917,7 +939,8 @@ class _DonutPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
     const strokeWidth = 12.0;
-    final rect = Rect.fromCircle(center: center, radius: radius - strokeWidth / 2);
+    final rect =
+        Rect.fromCircle(center: center, radius: radius - strokeWidth / 2);
 
     final paint = Paint()
       ..style = PaintingStyle.stroke
