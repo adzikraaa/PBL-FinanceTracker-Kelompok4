@@ -6,11 +6,12 @@ class HomeViewModel extends ChangeNotifier {
 
   // ─── Data Riwayat ─────────────────────────────────────────────────────────
   String riwayatNama = 'Nasi Goreng Spesial';
-  String riwayatHarga = 'Rp25.000';
+  String riwayatHarga = '25.000';
   bool riwayatUntung = true;
 
   // ─── Data Tabungan ────────────────────────────────────────────────────────
   double tabunganProgress = 0.75;
+  String tabunganNama = 'Liburan Akhir Tahun';
   String tabunganTarget = 'Rp 10.000.000';
   String tabunganSaatIni = 'Rp 7.500.000';
   String tabunganSisa = 'Rp 2.5jt lagi menuju target';
