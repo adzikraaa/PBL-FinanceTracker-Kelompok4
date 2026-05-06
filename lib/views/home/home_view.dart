@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../viewmodels/home_viewmodel.dart';
 import '../finance/hitung_hpp_page.dart';
-import 'insight_view.dart';
+import '../insight/insight_view.dart';
 import 'profile_view.dart';
 
 // ─── Color Palette (Dark Green Theme) ────────────────────────────────────────
