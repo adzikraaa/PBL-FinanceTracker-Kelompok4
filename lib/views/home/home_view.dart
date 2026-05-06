@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../viewmodels/home_viewmodel.dart';
 import '../finance/hitung_hpp_page.dart';
+import '../savings/savings_list_view.dart';
+import 'insight_view.dart';
 
 // ─── Warna ───────────────────────────────────────────────────────────────────
 const Color kUngu   = Color(0xFF430D75);
@@ -373,7 +375,12 @@ class _HomeViewState extends State<HomeView> {
                 ],
               ),
               GestureDetector(
-                onTap: _vm.onTabunganTap,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SavingsListView()),
+                  );
+                },
                 child: Container(
                   width: 36,
                   height: 36,
@@ -481,7 +488,12 @@ class _HomeViewState extends State<HomeView> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: GestureDetector(
-                      onTap: _vm.onInsightTap,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const InsightView()),
+                        );
+                      },
                       child: Container(
                         width: 32,
                         height: 32,
@@ -650,6 +662,11 @@ class _HomeViewState extends State<HomeView> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(builder: (_) => const HitungHppPage()),
+                                );
+                              } else if (i == 1) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const SavingsListView()),
                                 );
                               } else {
                                 _vm.onNavTap(i);

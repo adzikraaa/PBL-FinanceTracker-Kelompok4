@@ -149,6 +149,7 @@ class _HitungHppPageState extends State<HitungHppPage> {
                               vm.biayaOverhead = double.tryParse(_biayaOverheadController.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0;
                               vm.persediaanAkhir = double.tryParse(_persediaanAkhirController.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0;
                               vm.jumlahUnit = int.tryParse(_jumlahUnitController.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+                              vm.simpanPerhitungan('anon');
                               
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
