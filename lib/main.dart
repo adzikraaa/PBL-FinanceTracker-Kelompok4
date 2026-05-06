@@ -8,6 +8,7 @@ import 'viewmodels/auth_viewmodel.dart';
 import 'views/auth/welcome_view.dart';
 import 'views/home/main_navigation.dart';
 import 'viewmodels/finance_viewmodel.dart';
+import 'viewmodels/savings_viewmodel.dart';
 import 'viewmodels/loadingscreen.dart';
 
 
@@ -31,6 +32,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => FinanceViewModel()),
+        ChangeNotifierProvider(create: (_) => SavingsViewModel()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
