@@ -45,6 +45,11 @@ class FirestoreService {
     });
   }
 
+  Future<void> updateSavingFull(SavingModel saving) async {
+    if (saving.id == null) return;
+    await _db.collection('savings').doc(saving.id).update(saving.toJson());
+  }
+
   Future<void> deleteSaving(String id) async {
     await _db.collection('savings').doc(id).delete();
   }

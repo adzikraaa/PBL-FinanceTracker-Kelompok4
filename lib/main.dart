@@ -10,7 +10,7 @@ import 'views/home/main_navigation.dart';
 import 'viewmodels/finance_viewmodel.dart';
 import 'viewmodels/savings_viewmodel.dart';
 import 'viewmodels/loadingscreen.dart';
-
+import 'viewmodels/saving_viewmodel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +33,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => FinanceViewModel()),
         ChangeNotifierProvider(create: (_) => SavingsViewModel()),
+        ChangeNotifierProvider(create: (_) => SavingViewModel()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
