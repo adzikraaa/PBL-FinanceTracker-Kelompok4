@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/auth_viewmodel.dart';
@@ -11,13 +12,15 @@ class RegisterView extends StatefulWidget {
 }
 
 class _RegisterViewState extends State<RegisterView>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _agreeToTerms = false;
   bool _obscurePassword = true;
   late AnimationController _animController;
+  late AnimationController _sparkleCtrl;
+  late AnimationController _floatCtrl;
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
 
@@ -37,6 +40,16 @@ class _RegisterViewState extends State<RegisterView>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
     _animController.forward();
+
+    _sparkleCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat(reverse: true);
+
+    _floatCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat(reverse: true);
   }
 
   @override
@@ -45,6 +58,8 @@ class _RegisterViewState extends State<RegisterView>
     _emailController.dispose();
     _passwordController.dispose();
     _animController.dispose();
+    _sparkleCtrl.dispose();
+    _floatCtrl.dispose();
     super.dispose();
   }
 
@@ -56,7 +71,359 @@ class _RegisterViewState extends State<RegisterView>
           // ── Background Gradient + Blobs ──────────────────────────────
           _buildBackground(),
 
-          // ── Back button ──────────────────────────────────────────────
+          // 2. Content
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 60, 20, 24),
+              child: FadeTransition(
+                opacity: _fadeAnim,
+                child: SlideTransition(
+                  position: _slideAnim,
+                  child: Column(
+                    children: [
+                      // Logo (tanpa background putih)
+                      Align(
+                        alignment: Alignment.center,
+                        child: Container(
+                          width: 80,
+                          height: 80,
+                          margin: const EdgeInsets.only(bottom: 16),
+                          child: Image.asset(
+                            'assets/images/logo.png',
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+
+                      // Main card (glassmorphism)
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: AppColors.white.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: AppColors.white.withValues(alpha: 0.2),
+                            width: 1,
+                          ),
+                        ),
+                        padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Title
+                            const Center(
+                              child: Text(
+                                'Get Started',
+                                style: TextStyle(
+                                  fontFamily: 'Lexend',
+                                  color: Colors.white,
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Center(
+                              child: Text(
+                                'Create your account',
+                                style: TextStyle(
+                                  fontFamily: 'Lexend',
+                                  color: Color(0xFFCCBBFF),
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 28),
+
+                            // Usrname
+                            _buildLabel('Username'),
+                            const SizedBox(height: 8),
+                            _buildTextField(
+                              controller: _fullNameController,
+                              hint: 'Enter Username',
+                              keyboardType: TextInputType.name,
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Email
+                            _buildLabel('Email'),
+                            const SizedBox(height: 8),
+                            _buildTextField(
+                              controller: _emailController,
+                              hint: 'Enter Email',
+                              keyboardType: TextInputType.emailAddress,
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Password
+                            _buildLabel('Password'),
+                            const SizedBox(height: 8),
+                            _buildPasswordField(),
+                            const SizedBox(height: 14),
+
+                            // Checkbox terms
+                            Row(
+                              children: [
+                                GestureDetector(
+                                  onTap: () => setState(
+                                      () => _agreeToTerms = !_agreeToTerms),
+                                  child: Container(
+                                    width: 18,
+                                    height: 18,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                          color: AppColors.white
+                                              .withValues(alpha: 0.4),
+                                          width: 1.5),
+                                      borderRadius: BorderRadius.circular(4),
+                                      color: _agreeToTerms
+                                          ? AppColors.accentYellow
+                                          : Colors.transparent,
+                                    ),
+                                    child: _agreeToTerms
+                                        ? const Icon(Icons.check,
+                                            size: 13, color: Color(0xFF1a0a00))
+                                        : null,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                RichText(
+                                  text: TextSpan(
+                                    text: 'I agree to the processing of ',
+                                    style: TextStyle(
+                                      fontFamily: 'Lexend',
+                                      color: AppColors.white
+                                          .withValues(alpha: 0.6),
+                                      fontSize: 12,
+                                    ),
+                                    children: const [
+                                      TextSpan(
+                                        text: 'Personal data',
+                                        style: TextStyle(
+                                          color: AppColors.accentYellow,
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Sign Up button
+                            Consumer<AuthViewModel>(
+                              builder: (context, vm, _) => GestureDetector(
+                                onTap: vm.isLoading
+                                    ? null
+                                    : () async {
+                                        if (!_agreeToTerms) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(const SnackBar(
+                                                  content: Text(
+                                                      'Harap setujui syarat dan ketentuan.')));
+                                          return;
+                                        }
+                                        final success =
+                                            await vm.registerWithEmail(
+                                          fullName:
+                                              _fullNameController.text.trim(),
+                                          email: _emailController.text.trim(),
+                                          password: _passwordController.text,
+                                        );
+                                        if (!mounted) return;
+                                        if (success) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(const SnackBar(
+                                                  content: Text(
+                                                      'Registrasi berhasil! 🎉')));
+                                          Navigator.of(context).pop();
+                                        } else if (vm.errorMessage != null) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(SnackBar(
+                                                  content:
+                                                      Text(vm.errorMessage!)));
+                                        }
+                                      },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  width: double.infinity,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.accentYellow,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.accentYellow
+                                            .withValues(alpha: 0.4),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 6),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Center(
+                                    child: vm.isLoading
+                                        ? const SizedBox(
+                                            width: 22,
+                                            height: 22,
+                                            child: CircularProgressIndicator(
+                                                color: AppColors.textDark,
+                                                strokeWidth: 2.5),
+                                          )
+                                        : const Text(
+                                            'Sign Up',
+                                            style: TextStyle(
+                                              fontFamily: 'Lexend',
+                                              color: AppColors.textDark,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+
+                            // Divider
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Divider(
+                                    color:
+                                        AppColors.white.withValues(alpha: 0.2),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12),
+                                  child: Text(
+                                    'or sign up with',
+                                    style: TextStyle(
+                                      fontFamily: 'Lexend',
+                                      color: AppColors.white
+                                          .withValues(alpha: 0.5),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Divider(
+                                    color:
+                                        AppColors.white.withValues(alpha: 0.2),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Social buttons
+                            Consumer<AuthViewModel>(
+                              builder: (context, vm, _) => Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _buildSocialButton(
+                                    icon: Icons.facebook,
+                                    iconColor: const Color(0xFF4267B2),
+                                    onTap: () {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(const SnackBar(
+                                              content: Text(
+                                                  'Login Facebook belum tersedia.')));
+                                    },
+                                  ),
+                                  const SizedBox(width: 12),
+                                  _buildSocialButton(
+                                    label: 'X',
+                                    labelColor: Colors.white,
+                                    onTap: () {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(const SnackBar(
+                                              content: Text(
+                                                  'Login X belum tersedia.')));
+                                    },
+                                  ),
+                                  const SizedBox(width: 12),
+                                  _buildSocialButton(
+                                    label: 'G',
+                                    labelColor: const Color(0xFFEA4335),
+                                    onTap: () async {
+                                      final success =
+                                          await vm.loginWithGoogle();
+                                      if (!mounted) return;
+                                      if (success) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(const SnackBar(
+                                                content: Text(
+                                                    'Login Google berhasil! 🎉')));
+                                        Navigator.of(context).pop();
+                                      } else if (vm.errorMessage != null) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(SnackBar(
+                                                content:
+                                                    Text(vm.errorMessage!)));
+                                      }
+                                    },
+                                  ),
+                                  const SizedBox(width: 12),
+                                  _buildSocialButton(
+                                    icon: Icons.apple,
+                                    iconColor: Colors.white,
+                                    onTap: () {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(const SnackBar(
+                                              content: Text(
+                                                  'Login Apple belum tersedia.')));
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Already have account
+                            Center(
+                              child: GestureDetector(
+                                onTap: () => Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => const LoginView()),
+                                ),
+                                child: RichText(
+                                  text: const TextSpan(
+                                    text: 'Already have an account? ',
+                                    style: TextStyle(
+                                      fontFamily: 'Lexend',
+                                      color: Color(0xFFCCBBFF),
+                                      fontSize: 13,
+                                    ),
+                                    children: [
+                                      TextSpan(
+                                        text: 'Sign in',
+                                        style: TextStyle(
+                                          color: AppColors.accentYellow,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // 3. Back button
           SafeArea(
             child: Material(
               color: Colors.transparent,
@@ -342,10 +709,11 @@ class _RegisterViewState extends State<RegisterView>
     return Text(
       text,
       style: const TextStyle(
-          fontFamily: 'Lexend', // <-- Pakai Lexend
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-          color: AppColors.textTertiary),
+        fontFamily: 'Lexend',
+        color: Color(0xFFCCBBFF),
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+      ),
     );
   }
 
@@ -472,91 +840,155 @@ class _RegisterViewState extends State<RegisterView>
     );
   }
 
-  Widget _buildSocialRow(AuthViewModel vm) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _socialIcon(
-          icon: Icons.facebook,
-          color: const Color(0xFF1877F2),
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Login Facebook belum tersedia.')),
-            );
-          },
-        ),
-        const SizedBox(width: 16),
-        _socialIcon(
-          label: 'X',
-          color: const Color(0xFF1DA1F2),
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Login X/Twitter belum tersedia.')),
-            );
-          },
-        ),
-        const SizedBox(width: 16),
-        _socialIcon(
-          label: 'G',
-          color: const Color(0xFFDB4437),
-          onTap: () async {
-            final success = await vm.loginWithGoogle();
-            if (!mounted) return;
-            if (success) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Login Google berhasil! 🎉')),
-              );
-              Navigator.of(context).pop();
-            } else if (vm.errorMessage != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(vm.errorMessage!)),
-              );
-            }
-          },
-        ),
-        const SizedBox(width: 16),
-        _socialIcon(
-          icon: Icons.apple,
-          color: Colors.black,
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Login Apple belum tersedia.')),
-            );
-          },
-        ),
-      ],
+  Widget _blob(double size, Color color) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 
-  Widget _socialIcon({IconData? icon, String? label, required Color color, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          shape: BoxShape.circle,
-          border: Border.all(color: AppColors.border),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.black.withValues(alpha: 0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Center(
-          child: icon != null
-              ? Icon(icon, color: color, size: 22)
-              : Text(
-                  label!,
-                  style: TextStyle(
-                      fontFamily: 'Lexend', // <-- Pakai Lexend
-                      color: color, fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-        ),
+  Widget _buildBackground() {
+    return Container(
+      decoration: BoxDecoration(gradient: AppColors.backgroundGradient),
+      child: Stack(
+        children: [
+          Positioned(
+              top: -60, left: -40, child: _blob(200, AppColors.primaryLight)),
+          Positioned(
+              top: 120,
+              right: -30,
+              child: _blob(140, AppColors.white.withValues(alpha: 0.15))),
+          Positioned(
+              top: 220,
+              left: 30,
+              child: _blob(90, AppColors.primaryDeep.withValues(alpha: 0.6))),
+          Positioned(
+              bottom: -60,
+              right: -60,
+              child: _blob(240, AppColors.gradientBlueEnd)),
+          Positioned(
+              bottom: 150,
+              left: -20,
+              child:
+                  _blob(100, AppColors.primaryPurple.withValues(alpha: 0.5))),
+        ],
       ),
     );
   }
+
+  Widget _animatedSparkle({
+    double? top,
+    double? bottom,
+    double? left,
+    double? right,
+    required double size,
+    required double delay,
+  }) {
+    return AnimatedBuilder(
+      animation: _floatCtrl,
+      builder: (context, child) {
+        final floatOffset = sin((_floatCtrl.value * 2 * pi) + delay * 2 * pi) * 10;
+        
+        return Positioned(
+          top: top != null ? top + floatOffset : null,
+          bottom: bottom != null ? bottom - floatOffset : null,
+          left: left,
+          right: right,
+          child: AnimatedBuilder(
+            animation: _sparkleCtrl,
+            builder: (context, child) {
+              final scale = 0.8 + 0.2 * sin((_sparkleCtrl.value * 2 * pi) + delay * pi);
+              final opacity = 0.5 + 0.5 * sin((_sparkleCtrl.value * 2 * pi) + delay * pi);
+              
+              return Opacity(
+                opacity: opacity.clamp(0.0, 1.0),
+                child: Transform.scale(
+                  scale: scale,
+                  child: _Sparkle(size: size, color: _green),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  Thin Ring Painter
+// ═══════════════════════════════════════════════
+class _ThinRingPainter extends CustomPainter {
+  final Color color;
+  _ThinRingPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    final r = size.width / 2;
+
+    canvas.drawCircle(
+      Offset(cx, cy),
+      r,
+      Paint()
+        ..color = color.withOpacity(0.15)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.0,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_ThinRingPainter o) => o.color != color;
+}
+
+// ═══════════════════════════════════════════════
+//  4-point sparkle
+// ═══════════════════════════════════════════════
+class _Sparkle extends StatelessWidget {
+  final double size;
+  final Color color;
+  const _Sparkle({required this.size, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: Size(size, size),
+      painter: _SparklePainter(color),
+    );
+  }
+}
+
+class _SparklePainter extends CustomPainter {
+  final Color color;
+  _SparklePainter(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    final r = size.width / 2;
+    final inner = r * 0.22;
+    final path = Path();
+    for (int i = 0; i < 8; i++) {
+      final angle = (i * pi / 4) - pi / 2;
+      final rad = (i % 2 == 0) ? r : inner;
+      final x = cx + rad * cos(angle);
+      final y = cy + rad * sin(angle);
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_SparklePainter o) => o.color != color;
 }

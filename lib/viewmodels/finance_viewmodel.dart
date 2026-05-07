@@ -3,14 +3,15 @@ import '../data/models/hpp_model.dart';
 
 class FinanceViewModel extends ChangeNotifier {
   // --- Input Variables (State) ---
-  double persediaanAwal = 0.0;
-  double pembelianBersih = 0.0;
+  double biayaProduksi = 0.0;
   double biayaTenagaKerja = 0.0;
   double biayaOverhead = 0.0;
-  double persediaanAkhir = 0.0;
   int jumlahUnit = 0;
-  double biayaTetap = 0.0;
+
   double hargaJualUnit = 0.0;
+  double biayaTetap = 0.0;
+  int? jumlahUnitTerjual;
+
   String namaProduk = "Produk Baru";
 
   final List<HppModel> history = [
@@ -55,15 +56,14 @@ class FinanceViewModel extends ChangeNotifier {
   // --- Getters untuk Kalkulasi Otomatis ---
 
   // Rumus HPP
-  double get hitungHPP =>
+  double get hitungHPP => 
       (persediaanAwal + pembelianBersih + biayaTenagaKerja + biayaOverhead) - persediaanAkhir;
 
-  double get modalPerUnit => jumlahUnit > 0 ? hitungHPP / jumlahUnit : 0;
+  double get modalPerUnit =>
+      jumlahUnit > 0 ? hitungHPP / jumlahUnit : 0;
 
-  // Rumus BEP
-  // BEP Unit = Biaya Tetap / (Harga Jual per Unit - Biaya Variabel per Unit)
   double get hitungBEPUnit {
-    final margin = hargaJualUnit - modalPerUnit;
+    double margin = hargaJualUnit - modalPerUnit;
     if (margin <= 0) return 0; // Menghindari bagi nol atau hasil negatif jika rugi
     return biayaTetap / margin;
   }
@@ -71,63 +71,21 @@ class FinanceViewModel extends ChangeNotifier {
   // BEP Rupiah = BEP Unit * Harga Jual
   double get hitungBEPRupiah => hitungBEPUnit * hargaJualUnit;
 
-  List<double> get weeklyBepSeries {
-    if (history.isEmpty) {
-      return [10, 14, 18, 16, 20, 22, 19];
-    }
-    return history.map((item) {
-      final value = item.bepRupiah / 10000;
-      if (value < 4) return 4.0;
-      if (value > 30) return 30.0;
-      return value;
-    }).toList();
-  }
-
-  int get totalProducts => history.isEmpty ? 1 : history.length;
-
-  double get averageHpp {
-    if (history.isEmpty) return 12500;
-    final total = history.map((item) => item.totalHpp).reduce((a, b) => a + b);
-    return total / history.length;
-  }
-
-  String get totalBepAchievedPercent {
-    if (history.isEmpty) return '82%';
-    final latest = history.first;
-    if (latest.bepRupiah <= 0) return '0%';
-    final value = ((latest.totalHpp / latest.bepRupiah) * 100).clamp(0, 100).toInt();
-    return '$value%';
-  }
-
-  String get popularProduct =>
-      history.isNotEmpty ? history.first.namaProduk : 'Nasi Goreng Spesial';
-
-  int get performanceScore {
-    if (history.isEmpty) return 82;
-    final score = 70 + (history.first.totalHpp / 1000).round();
-    return score.clamp(60, 98);
-  }
-
-  String get efficiencyHeadline {
-    if (history.isEmpty) return 'BEP +12% Pekan Ini';
-    return 'BEP +${(history.first.bepRupiah / 10000).round()}% Pekan Ini';
-  }
-
-  String get trendLabel => performanceScore > 75 ? 'TRENDING' : 'STABIL';
-
   // --- Fungsi Validasi ---
   bool isValid() {
-    return persediaanAwal >= 0 &&
-           jumlahUnit > 0 &&
-           hargaJualUnit > 0 &&
+    return persediaanAwal >= 0 && 
+           jumlahUnit > 0 && 
+           hargaJualUnit > 0 && 
            biayaTetap >= 0;
   }
 
-  // --- Fungsi Simpan ---
+  // ================================
+  // SIMPAN DATA
+  // ================================
+
   Future<void> simpanPerhitungan(String userId) async {
     if (isValid()) {
       final newHpp = HppModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
         userId: userId,
         namaProduk: namaProduk,
         persediaanAwal: persediaanAwal,
@@ -139,14 +97,20 @@ class FinanceViewModel extends ChangeNotifier {
         biayaTetap: biayaTetap,
         hargaJualUnit: hargaJualUnit,
         totalHpp: hitungHPP,
-        bepUnit: hitungBEPUnit,
-        bepRupiah: hitungBEPRupiah,
-        catatan: 'Data otomatis disimpan untuk Insight',
+        bepUnit: hitungBEPUnit,     // Sudah tidak 0 lagi
+        bepRupiah: hitungBEPRupiah, // Sudah tidak 0 lagi
+        catatan: '', 
         createdAt: DateTime.now(),
       );
 
-      history.insert(0, newHpp);
+      // Panggil Firestore service kamu di sini
+      // await _firestoreService.addHpp(newHpp); 
+      
       notifyListeners();
     }
+
+    return history
+        .map((item) => item.bepUnit.toDouble())
+        .toList();
   }
 }
