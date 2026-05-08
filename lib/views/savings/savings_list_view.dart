@@ -65,7 +65,7 @@ class SavingsListView extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            formatter.format(vm.totalCurrentAmount),
+                            formatter.format(vm.totalSavings),
                             style: const TextStyle(
                               color: kHijauAksen,
                               fontSize: 32,
