@@ -3,24 +3,26 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../viewmodels/home_viewmodel.dart';
 import '../finance/hitung_hpp_page.dart';
+import '../insight/insight_view.dart';
+import 'profile_view.dart';
 
 // ─── Color Palette (Dark Green Theme) ────────────────────────────────────────
-const Color kBg = Color(0xFF0D2818);
-const Color kBgMid = Color(0xFF122A1C);
-const Color kCard = Color(0xFF163520);
+const Color kBg        = Color(0xFF0D2818);
+const Color kBgMid     = Color(0xFF122A1C);
+const Color kCard      = Color(0xFF163520);
 const Color kCardLight = Color(0xFF1E4A2C);
-const Color kGreen = Color(0xFF4ADE80);
+const Color kGreen     = Color(0xFF4ADE80);
 const Color kGreenLime = Color(0xFF86EFAC);
-const Color kGreenBtn = Color(0xFF22C55E);
-const Color kRiwayat = Color(0xFF9CD76A);
-const Color kWhite = Color(0xFFFFFFFF);
-const Color kWhite70 = Color(0xB3FFFFFF);
-const Color kWhite40 = Color(0x66FFFFFF);
-const Color kWhite20 = Color(0x33FFFFFF);
-const Color kCatatan = Color(0xFF163520);
-const Color kNavBg = Color(0xFF132018);
+const Color kGreenBtn  = Color(0xFF22C55E);
+const Color kRiwayat   = Color(0xFF9CD76A);
+const Color kWhite     = Color(0xFFFFFFFF);
+const Color kWhite70   = Color(0xB3FFFFFF);
+const Color kWhite40   = Color(0x66FFFFFF);
+const Color kWhite20   = Color(0x33FFFFFF);
+const Color kCatatan   = Color(0xFF163520);
+const Color kNavBg     = Color(0xFF132018);
 const Color kNavBorder = Color(0xFF2C4334);
-const Color kNavIcon = Color(0xFF6B7E72);
+const Color kNavIcon   = Color(0xFF6B7E72);
 const Color kNavActive = Color(0xFF6CF688);
 
 // ─── Sparkle Model ────────────────────────────────────────────────────────────
@@ -57,24 +59,29 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   void initState() {
     super.initState();
 
-    // Pastikan saat buka Home, navbar aktif di index 2 (Home)
     _vm.onNavTap(2);
+
+    // Inisialisasi pendengar data tabungan
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        context.read<SavingViewModel>().listenSavings(user.uid);
+      }
+    });
 
     _sparkleController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
     )..repeat();
 
-    _sparkles = List.generate(
-        12,
-        (_) => _Sparkle(
-              x: _rng.nextDouble(),
-              y: _rng.nextDouble() * 0.28,
-              size: _rng.nextDouble() * 8 + 4,
-              opacity: _rng.nextDouble() * 0.7 + 0.3,
-              phase: _rng.nextDouble() * 2 * pi,
-              speed: _rng.nextDouble() * 1.5 + 0.5,
-            ));
+    _sparkles = List.generate(12, (_) => _Sparkle(
+      x: _rng.nextDouble(),
+      y: _rng.nextDouble() * 0.28,
+      size: _rng.nextDouble() * 8 + 4,
+      opacity: _rng.nextDouble() * 0.7 + 0.3,
+      phase: _rng.nextDouble() * 2 * pi,
+      speed: _rng.nextDouble() * 1.5 + 0.5,
+    ));
 
     _progressController = AnimationController(
       vsync: this,
@@ -108,31 +115,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               _buildSparkleLayer(),
               SafeArea(
                 bottom: false,
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.only(bottom: 100),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildGreetingSection(),
-                      const SizedBox(height: 20),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Column(
-                          children: [
-                            _buildRiwayatCard(),
-                            const SizedBox(height: 14),
-                            _buildTabunganCard(),
-                            const SizedBox(height: 14),
-                            _buildHppBepCard(),
-                            const SizedBox(height: 14),
-                            _buildBottomRow(),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                child: _buildBody(_vm),
               ),
               Positioned(
                 bottom: 0,
@@ -145,6 +128,53 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         );
       },
     );
+  }
+
+  Widget _buildBody(HomeViewModel vm) {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    
+    switch (vm.selectedIndex) {
+      case 1: // Tabungan
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 80),
+          child: SavingListPage(userId: userId),
+        );
+      case 2: // Home Dashboard
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 100),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildGreetingSection(),
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: [
+                    _buildRiwayatCard(),
+                    const SizedBox(height: 14),
+                    _buildTabunganCard(),
+                    const SizedBox(height: 14),
+                    _buildHppBepCard(),
+                    const SizedBox(height: 14),
+                    _buildBottomRow(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      case 3: // Insight
+        return const InsightView();
+      default:
+        return Center(
+          child: Text(
+            'Halaman ${vm.selectedIndex} Belum Tersedia',
+            style: const TextStyle(color: Colors.white70),
+          ),
+        );
+    }
   }
 
   Widget _buildGradientBg() {
@@ -193,7 +223,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Greeting text ──
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -220,7 +249,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             ),
           ),
           const SizedBox(width: 12),
-          // ── Profile avatar button ──
           GestureDetector(
             onTap: () {
               Navigator.push(
@@ -280,7 +308,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                           ),
                         ),
                 ),
-                // online dot
                 Positioned(
                   bottom: 2,
                   right: 2,
@@ -496,22 +523,12 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     Text(
                       _vm.tabunganTarget,
                       style: const TextStyle(
-                          color: kUngu,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13)),
-                  Text(_vm.tabunganEmoji,
-                      style: const TextStyle(color: kUngu, fontSize: 12)),
-                ],
-              ),
-              GestureDetector(
-                onTap: _vm.onTabunganTap,
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: const BoxDecoration(
-                      color: kPutih, shape: BoxShape.circle),
-                  child: const Icon(Icons.arrow_forward,
-                      color: kHitam, size: 18),
+                        color: kWhite70,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -524,7 +541,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   Widget _buildHppBepCard() {
     return GestureDetector(
       onTap: () async {
-        // Pindahkan active navbar ke HPP (index 0) saat card diklik
         _vm.onNavTap(0);
         await Future.delayed(const Duration(milliseconds: 380));
         if (!mounted) return;
@@ -532,29 +548,26 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           context,
           MaterialPageRoute(builder: (_) => const HitungHppPage()),
         );
-        // Saat user balik ke Home, kembalikan active navbar ke Home (index 2)
         if (mounted) _vm.onNavTap(2);
       },
       child: Container(
         decoration: BoxDecoration(
-          // Hijau terang vivid seperti screenshot
           color: const Color(0xFF6CF688),
           borderRadius: BorderRadius.circular(18),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         child: Row(
           children: [
-            // Lingkaran gelap solid (bukan rounded rect, bukan transparan)
             Container(
               width: 52,
               height: 52,
               decoration: const BoxDecoration(
-                color: Color(0xFF0D1F10), // hijau tua gelap solid
+                color: Color(0xFF0D1F10),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.calculate_outlined,
-                color: Color(0xFFFBBF24), // kuning/amber
+                color: Color(0xFFFBBF24),
                 size: 26,
               ),
             ),
@@ -585,7 +598,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ── Insight ──
           Expanded(
             child: Container(
               decoration: BoxDecoration(
@@ -627,7 +639,13 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                   Align(
                     alignment: Alignment.centerRight,
                     child: GestureDetector(
-                      onTap: _vm.onInsightTap,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const InsightView()),
+                        );
+                      },
                       child: Container(
                         width: 30,
                         height: 30,
@@ -645,11 +663,9 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             ),
           ),
           const SizedBox(width: 12),
-          // ── Catatan ──
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                // Hijau lime medium sesuai screenshot
                 color: const Color(0xFF78C44A),
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -660,7 +676,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                   const Text(
                     'CATATAN',
                     style: TextStyle(
-                      color: Color(0xFF1E3D0F), // hijau tua gelap
+                      color: Color(0xFF1E3D0F),
                       fontSize: 10,
                       letterSpacing: 1.2,
                       fontWeight: FontWeight.w700,
@@ -721,7 +737,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 width: double.infinity,
                 margin: EdgeInsets.only(right: (1 - w) * 60),
                 decoration: BoxDecoration(
-                  // Hijau tua gelap sesuai screenshot
                   color: const Color(0xFF2D5A1B),
                   borderRadius: BorderRadius.circular(3),
                 ),
@@ -744,19 +759,17 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     );
   }
 
-  // ─── Bottom Navbar (FIXED) ────────────────────────────────────────────────
   Widget _buildBottomNav() {
     const navIcons = [
-      Icons.calculate_outlined, // 0 - HPP & BEP
-      Icons.account_balance_wallet_outlined, // 1 - Wallet
-      Icons.home, // 2 - Home (default aktif)
-      Icons.show_chart, // 3 - Chart
-      Icons.history, // 4 - History
+      Icons.calculate_outlined,
+      Icons.account_balance_wallet_outlined,
+      Icons.home,
+      Icons.show_chart,
+      Icons.history,
     ];
     const int navCount = 5;
     const double navHeight = 68.0;
     const double circleSize = 48.0;
-    // circle selalu tepat di tengah vertikal navbar
     const double circleTop = (navHeight - circleSize) / 2;
 
     return Padding(
@@ -765,7 +778,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         builder: (context, constraints) {
           final navWidth = constraints.maxWidth;
           final itemWidth = navWidth / navCount;
-          // posisi horizontal circle mengikuti tab aktif, tepat di tengah item
           final circleLeft =
               itemWidth * _vm.selectedIndex + (itemWidth / 2) - circleSize / 2;
 
@@ -774,7 +786,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                // ── Background pill ──────────────────────────────────────
                 Positioned.fill(
                   child: Container(
                     decoration: BoxDecoration(
@@ -784,13 +795,11 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     ),
                   ),
                 ),
-
-                // ── Animated active circle (selalu rata tengah) ──────────
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 320),
                   curve: Curves.easeInOutCubic,
                   left: circleLeft,
-                  top: circleTop, // ← kunci: tidak hardcode, selalu center
+                  top: circleTop,
                   child: Container(
                     width: circleSize,
                     height: circleSize,
@@ -799,29 +808,64 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.2),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
-                        )
+                          color: kNavActive.withOpacity(0.45),
+                          blurRadius: 16,
+                          spreadRadius: 2,
+                        ),
                       ],
                     ),
-                    child: Row(
-                      children: List.generate(icons.length, (i) {
-                        final isSelected = i == _vm.selectedIndex;
-                        return Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              if (i == 0) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => const HitungHppPage()),
-                                );
-                              } else {
-                                _vm.onNavTap(i);
-                              }
-                            },
-                            child: Container(
-                              color: Colors.transparent,
+                    child: Icon(
+                      navIcons[_vm.selectedIndex],
+                      color: const Color(0xFF0C1B13),
+                      size: 24,
+                    ),
+                  ),
+                ),
+
+                // ── Tap areas + inactive icons ───────────────────────────
+                Row(
+                  children: List.generate(navCount, (i) {
+                    final isActive = i == _vm.selectedIndex;
+                    return Expanded(
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onTap: () async {
+                          if (i == 0) {
+                            // Tap HPP di navbar
+                            _vm.onNavTap(0);
+                            await Future.delayed(
+                                const Duration(milliseconds: 340));
+                            if (!mounted) return;
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const HitungHppPage()),
+                            );
+                            // Kembali ke Home → aktifkan index 2
+                            if (mounted) _vm.onNavTap(2);
+                          } else if (i == 3) {
+                            // Tap Insight di navbar
+                            _vm.onNavTap(3);
+                            await Future.delayed(
+                                const Duration(milliseconds: 340));
+                            if (!mounted) return;
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const InsightView()),
+                            );
+                            // Kembali ke Home → aktifkan index 2
+                            if (mounted) _vm.onNavTap(2);
+                          } else {
+                            _vm.onNavTap(i);
+                          }
+                        },
+                        child: SizedBox(
+                          height: navHeight,
+                          child: Center(
+                            child: AnimatedOpacity(
+                              duration: const Duration(milliseconds: 200),
+                              opacity: isActive ? 0.0 : 1.0,
                               child: Icon(
                                 navIcons[i],
                                 color: kNavIcon,
@@ -906,8 +950,7 @@ class _DonutPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
     const strokeWidth = 12.0;
-    final rect =
-        Rect.fromCircle(center: center, radius: radius - strokeWidth / 2);
+    final rect = Rect.fromCircle(center: center, radius: radius - strokeWidth / 2);
 
     final paint = Paint()
       ..style = PaintingStyle.stroke

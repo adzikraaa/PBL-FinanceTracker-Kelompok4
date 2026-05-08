@@ -8,6 +8,9 @@ import 'viewmodels/auth_viewmodel.dart';
 import 'views/auth/welcome_view.dart';
 import 'views/home/main_navigation.dart';
 import 'viewmodels/finance_viewmodel.dart';
+import 'viewmodels/savings_viewmodel.dart';
+import 'viewmodels/loadingscreen.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,6 +33,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => FinanceViewModel()),
         ChangeNotifierProvider(create: (_) => SavingsViewModel()),
+        ChangeNotifierProvider(create: (_) => SavingViewModel()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
