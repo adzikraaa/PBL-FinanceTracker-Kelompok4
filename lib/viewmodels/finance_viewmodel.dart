@@ -17,8 +17,54 @@ class FinanceViewModel extends ChangeNotifier {
   double biayaTetap = 0.0;
   int? jumlahUnitTerjual;
 
+  double persediaanAwal = 0.0;
+  double pembelianBersih = 0.0;
+  double persediaanAkhir = 0.0;
+
   String namaProduk = "Produk Baru";
 
+<<<<<<< HEAD
+  final List<HppModel> history = [
+    HppModel(
+      id: '1',
+      userId: 'anon',
+      namaProduk: 'Nasi Goreng Spesial',
+      persediaanAwal: 18000,
+      pembelianBersih: 12000,
+      biayaTenagaKerja: 8000,
+      biayaOverhead: 4000,
+      persediaanAkhir: 9000,
+      jumlahUnit: 150,
+      biayaTetap: 120000,
+      hargaJualUnit: 25000,
+      totalHpp: 33000,
+      bepUnit: 8,
+      bepRupiah: 200000,
+      catatan: 'Analisa penjualan bulan ini',
+      createdAt: DateTime.now().subtract(const Duration(days: 3)),
+      biayaProduksi: 0.0, // <-- Diperbaiki dari null
+    ),
+    HppModel(
+      id: '2',
+      userId: 'anon',
+      namaProduk: 'Kopi Susu Kekinian',
+      persediaanAwal: 15000,
+      pembelianBersih: 10000,
+      biayaTenagaKerja: 7000,
+      biayaOverhead: 3500,
+      persediaanAkhir: 8000,
+      jumlahUnit: 120,
+      biayaTetap: 100000,
+      hargaJualUnit: 22000,
+      totalHpp: 25500,
+      bepUnit: 10,
+      bepRupiah: 220000,
+      catatan: 'Produk laris akhir pekan',
+      createdAt: DateTime.now().subtract(const Duration(days: 9)),
+      biayaProduksi: 0.0, // <-- Diperbaiki dari null
+    ),
+  ];
+=======
   List<HppModel> history = [];
 
   FinanceViewModel() {
@@ -40,53 +86,83 @@ class FinanceViewModel extends ChangeNotifier {
     _sub?.cancel();
     super.dispose();
   }
+>>>>>>> develop
 
-  // ================================
-  // PERHITUNGAN
-  // ================================
+  // --- Getters untuk Kalkulasi Otomatis ---
 
+  // Rumus HPP
   double get hitungHPP =>
-      biayaProduksi + biayaTenagaKerja + biayaOverhead;
+      (persediaanAwal + pembelianBersih + biayaTenagaKerja + biayaOverhead) -
+      persediaanAkhir;
 
-  double get modalPerUnit =>
-      jumlahUnit > 0 ? hitungHPP / jumlahUnit : 0;
+  double get modalPerUnit => jumlahUnit > 0 ? hitungHPP / jumlahUnit : 0;
 
   double get hitungBEPUnit {
     double margin = hargaJualUnit - modalPerUnit;
-    if (margin <= 0) return 0;
+    if (margin <= 0) {
+      return 0; // Menghindari bagi nol atau hasil negatif jika rugi
+    }
     return biayaTetap / margin;
   }
 
-  double get hitungBEPRupiah =>
-      hitungBEPUnit * hargaJualUnit;
+  // BEP Rupiah = BEP Unit * Harga Jual
+  double get hitungBEPRupiah => hitungBEPUnit * hargaJualUnit;
 
-  double get marginPerUnit =>
-      hargaJualUnit - modalPerUnit;
+  // Margin
+  double get marginPerUnit => hargaJualUnit > 0 ? hargaJualUnit - modalPerUnit : 0.0; // <-- Diperbaiki dari null
 
-  double get marginPercentage =>
-      hargaJualUnit > 0 ? (marginPerUnit / hargaJualUnit) * 100 : 0;
+  double get marginPercentage => hargaJualUnit > 0 ? (marginPerUnit / hargaJualUnit) * 100 : 0.0; // <-- Diperbaiki dari null
 
-  // ================================
-  // VALIDASI
-  // ================================
-
-  bool isHppValid() {
-    return biayaProduksi >= 0 &&
-        biayaTenagaKerja >= 0 &&
-        biayaOverhead >= 0 &&
-        jumlahUnit > 0;
-  }
-
-  bool isBepValid() {
-    return isHppValid() &&
+  // --- Fungsi Validasi ---
+  bool isValid() {
+    return persediaanAwal >= 0 &&
+        jumlahUnit > 0 &&
         hargaJualUnit > 0 &&
         biayaTetap >= 0;
   }
+
+  bool isBepValid() {
+    // Validasi sederhana, pastikan harga jual lebih besar dari modal agar BEP bisa tercapai
+    return hargaJualUnit > modalPerUnit; 
+  } // <-- Diperbaiki dari empty body
 
   // ================================
   // SIMPAN DATA
   // ================================
 
+<<<<<<< HEAD
+  Future<List<double>> simpanPerhitungan(String userId) async {
+    if (isValid()) {
+      final newHpp = HppModel(
+        userId: userId,
+        namaProduk: namaProduk,
+        persediaanAwal: persediaanAwal,
+        pembelianBersih: pembelianBersih,
+        biayaTenagaKerja: biayaTenagaKerja,
+        biayaOverhead: biayaOverhead,
+        persediaanAkhir: persediaanAkhir,
+        jumlahUnit: jumlahUnit,
+        biayaTetap: biayaTetap,
+        hargaJualUnit: hargaJualUnit,
+        totalHpp: hitungHPP,
+        bepUnit: hitungBEPUnit, // Sudah tidak 0 lagi
+        bepRupiah: hitungBEPRupiah, // Sudah tidak 0 lagi
+        catatan: '',
+        createdAt: DateTime.now(),
+        biayaProduksi: 0.0, // <-- Diperbaiki dari null
+      );
+
+      // Panggil Firestore service kamu di sini
+      // await _firestoreService.addHpp(newHpp);
+
+      // Tambahkan ke lokal jika belum menggunakan Firebase (opsional)
+      // history.insert(0, newHpp);
+
+      notifyListeners();
+    }
+
+    return history.map((item) => item.bepUnit.toDouble()).toList();
+=======
   Future<void> simpanPerhitungan(String? _) async {
     if (!isBepValid()) return;
 
@@ -126,114 +202,27 @@ class FinanceViewModel extends ChangeNotifier {
     jumlahUnitTerjual = null;
     namaProduk = "Produk Baru";
     notifyListeners();
+>>>>>>> develop
   }
 
-  // ================================
-  // INSIGHT
-  // ================================
+  // Getters for insight view
+  List<double> get weeklyBepSeries =>
+      history.map((item) => item.bepUnit).toList();
 
   int get totalProducts => history.length;
 
-  double get averageHpp {
-    if (history.isEmpty) return 0;
+  double get averageHpp => history.isNotEmpty
+      ? history.map((item) => item.totalHpp).reduce((a, b) => a + b) /
+          history.length
+      : 0.0;
 
-    final sum = history.fold<double>(
-      0,
-      (sum, item) => sum + item.totalHpp,
-    );
+  double get totalBepAchievedPercent => 85.0; // dummy
 
-    return sum / history.length;
-  }
+  double get performanceScore => 75.0; // dummy
 
-  String get totalBepAchievedPercent {
-    if (history.isEmpty) return '0%';
+  String get trendLabel => 'Naik'; // dummy
 
-    int totalAchieved = history.where((item) =>
-        item.jumlahUnitTerjual != null &&
-        item.jumlahUnitTerjual! >= item.bepUnit).length;
+  String get popularProduct => 'Produk A'; // dummy
 
-    final percentage = (totalAchieved / history.length) * 100;
-    return '${percentage.toStringAsFixed(0)}%';
-  }
-
-  int get performanceScore {
-    if (history.isEmpty) return 0;
-
-    int score = 0;
-
-    int bepCount = history.where((item) =>
-        item.jumlahUnitTerjual != null &&
-        item.jumlahUnitTerjual! >= item.bepUnit).length;
-
-    score += ((bepCount / history.length) * 30).toInt();
-
-    double avgMargin = history.fold<double>(0, (sum, item) {
-      return sum +
-          ((item.hargaJualUnit -
-                      (item.totalHpp / item.jumlahUnit)) /
-                  item.hargaJualUnit) *
-              100;
-    }) / history.length;
-
-    score += ((avgMargin / 50) * 35).toInt();
-
-    score += ((history.length / 10) * 20).toInt();
-
-    if (history.length > 1) {
-      final newestItem = history.last;
-      final oldestItem = history.first;
-
-      if (newestItem.bepRupiah < oldestItem.bepRupiah) {
-        score += 15;
-      }
-    }
-
-    return score.clamp(0, 100);
-  }
-
-  String get trendLabel =>
-      performanceScore > 75 ? 'TRENDING' : 'STABIL';
-
-  String get popularProduct {
-    if (history.isEmpty) return 'Tidak ada produk';
-
-    HppModel popular = history.first;
-
-    for (var item in history) {
-      if ((item.jumlahUnitTerjual ?? 0) >
-          (popular.jumlahUnitTerjual ?? 0)) {
-        popular = item;
-      }
-    }
-
-    return popular.namaProduk;
-  }
-
-  // ================================
-  // FIX ERROR (AMAN)
-  // ================================
-
-  String get efficiencyHeadline {
-    if (history.isEmpty) return 'Tidak ada data';
-
-    final HppModel lowestBep = history.reduce(
-      (a, b) => a.bepUnit < b.bepUnit ? a : b,
-    );
-
-    return 'BEP Terendah:\n${lowestBep.namaProduk}';
-  }
-
-  // ================================
-  // CHART DATA (SUDAH BENAR)
-  // ================================
-
-  List<double> get weeklyBepSeries {
-    if (history.length < 6) {
-      return [14, 12, 16, 13, 15, 14];
-    }
-
-    return history
-        .map((item) => item.bepUnit.toDouble())
-        .toList();
-  }
+  String get efficiencyHeadline => 'Efisiensi Baik';
 }

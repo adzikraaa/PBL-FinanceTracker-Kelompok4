@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/saving_model.dart';
+import '../models/savings_model.dart';
 import '../models/user_model.dart'; // Wajib di-import
 import '../models/hpp_model.dart';  // Wajib di-import
 

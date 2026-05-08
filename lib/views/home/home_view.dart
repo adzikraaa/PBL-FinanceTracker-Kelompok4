@@ -1,6 +1,15 @@
 import 'dart:math';
+import 'package:BizPrice/views/notes/notes_list_view.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+<<<<<<< HEAD
+import 'package:provider/provider.dart';
+import '../../viewmodels/home_viewmodel.dart';
+import '../../viewmodels/note_viewmodel.dart';
+import '../finance/hitung_hpp_page.dart';
+import '../insight/insight_view.dart';
+import 'profile_view.dart';
+=======
 import '../../viewmodels/home_viewmodel.dart';
 import '../finance/hitung_hpp_page.dart';
 import '../savings/saving_list_page.dart';
@@ -11,24 +20,25 @@ import 'profile_view.dart';
 import '../insight/insight_view.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+>>>>>>> develop
 
 // ─── Color Palette (Dark Green Theme) ────────────────────────────────────────
-const Color kBg        = Color(0xFF0D2818);
-const Color kBgMid     = Color(0xFF122A1C);
-const Color kCard      = Color(0xFF163520);
+const Color kBg = Color(0xFF0D2818);
+const Color kBgMid = Color(0xFF122A1C);
+const Color kCard = Color(0xFF163520);
 const Color kCardLight = Color(0xFF1E4A2C);
-const Color kGreen     = Color(0xFF4ADE80);
+const Color kGreen = Color(0xFF4ADE80);
 const Color kGreenLime = Color(0xFF86EFAC);
-const Color kGreenBtn  = Color(0xFF22C55E);
-const Color kRiwayat   = Color(0xFF9CD76A);
-const Color kWhite     = Color(0xFFFFFFFF);
-const Color kWhite70   = Color(0xB3FFFFFF);
-const Color kWhite40   = Color(0x66FFFFFF);
-const Color kWhite20   = Color(0x33FFFFFF);
-const Color kCatatan   = Color(0xFF163520);
-const Color kNavBg     = Color(0xFF132018);
+const Color kGreenBtn = Color(0xFF22C55E);
+const Color kRiwayat = Color(0xFF9CD76A);
+const Color kWhite = Color(0xFFFFFFFF);
+const Color kWhite70 = Color(0xB3FFFFFF);
+const Color kWhite40 = Color(0x66FFFFFF);
+const Color kWhite20 = Color(0x33FFFFFF);
+const Color kCatatan = Color(0xFF163520);
+const Color kNavBg = Color(0xFF132018);
 const Color kNavBorder = Color(0xFF2C4334);
-const Color kNavIcon   = Color(0xFF6B7E72);
+const Color kNavIcon = Color(0xFF6B7E72);
 const Color kNavActive = Color(0xFF6CF688);
 
 // ─── Sparkle Model ────────────────────────────────────────────────────────────
@@ -62,29 +72,24 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   void initState() {
     super.initState();
 
+    // Pastikan saat buka Home, navbar aktif di index 2 (Home)
     _vm.onNavTap(2);
-
-    // Inisialisasi pendengar data tabungan
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        context.read<SavingViewModel>().listenSavings(user.uid);
-      }
-    });
 
     _sparkleController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
     )..repeat();
 
-    _sparkles = List.generate(12, (_) => _Sparkle(
-      x: _rng.nextDouble(),
-      y: _rng.nextDouble() * 0.28,
-      size: _rng.nextDouble() * 8 + 4,
-      opacity: _rng.nextDouble() * 0.7 + 0.3,
-      phase: _rng.nextDouble() * 2 * pi,
-      speed: _rng.nextDouble() * 1.5 + 0.5,
-    ));
+    _sparkles = List.generate(
+        12,
+        (_) => _Sparkle(
+              x: _rng.nextDouble(),
+              y: _rng.nextDouble() * 0.28,
+              size: _rng.nextDouble() * 8 + 4,
+              opacity: _rng.nextDouble() * 0.7 + 0.3,
+              phase: _rng.nextDouble() * 2 * pi,
+              speed: _rng.nextDouble() * 1.5 + 0.5,
+            ));
 
   }
 
@@ -107,7 +112,31 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               _buildSparkleLayer(),
               SafeArea(
                 bottom: false,
-                child: _buildBody(_vm),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.only(bottom: 100),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildGreetingSection(),
+                      const SizedBox(height: 20),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Column(
+                          children: [
+                            _buildRiwayatCard(),
+                            const SizedBox(height: 14),
+                            _buildTabunganCard(),
+                            const SizedBox(height: 14),
+                            _buildHppBepCard(),
+                            const SizedBox(height: 14),
+                            _buildBottomRow(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
               Positioned(
                 bottom: 0,
@@ -122,6 +151,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     );
   }
 
+<<<<<<< HEAD
+=======
   Widget _buildBody(HomeViewModel vm) {
     final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
     
@@ -164,6 +195,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     }
   }
 
+>>>>>>> develop
   Widget _buildGradientBg() {
     return Container(
       decoration: const BoxDecoration(
@@ -210,6 +242,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Greeting text ──
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,6 +269,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             ),
           ),
           const SizedBox(width: 12),
+          // ── Profile avatar button ──
           GestureDetector(
             onTap: () {
               Navigator.push(
@@ -295,6 +329,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                           ),
                         ),
                 ),
+                // online dot
                 Positioned(
                   bottom: 2,
                   right: 2,
@@ -494,211 +529,125 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   }
 
   Widget _buildTabunganCard() {
-    return Consumer<SavingViewModel>(
-      builder: (context, savingVm, child) {
-        final bool hasData = savingVm.savings.isNotEmpty;
-
-        if (!hasData) {
-          return GestureDetector(
-            onTap: () => _vm.onNavTap(1), // Pindah ke tab tabungan
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: kCard,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: kWhite20, width: 0.8),
-              ),
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: kWhite.withOpacity(0.05),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.account_balance_wallet_outlined,
-                      color: kGreen,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      decoration: BoxDecoration(
+        color: kCard,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: kWhite20, width: 0.8),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'TABUNGAN',
+            style: TextStyle(
+              color: kWhite40,
+              fontSize: 10,
+              letterSpacing: 1.5,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            _vm.tabunganNama,
+            style: const TextStyle(
+              color: kWhite,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              AnimatedBuilder(
+                animation: _progressAnim,
+                builder: (context, _) {
+                  return SizedBox(
+                    width: 86,
+                    height: 86,
+                    child: Stack(
+                      alignment: Alignment.center,
                       children: [
-                        const Text(
-                          'BELUM ADA TABUNGAN',
-                          style: TextStyle(
-                            color: kWhite40,
-                            fontSize: 10,
-                            letterSpacing: 1.2,
-                            fontWeight: FontWeight.w600,
+                        SizedBox(
+                          width: 86,
+                          height: 86,
+                          child: CircularProgressIndicator(
+                            value: _progressAnim.value,
+                            strokeWidth: 8,
+                            backgroundColor: kWhite20,
+                            valueColor:
+                                const AlwaysStoppedAnimation<Color>(kGreen),
+                            strokeCap: StrokeCap.round,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'Yuk, mulai menabung!',
-                          style: TextStyle(
+                        Text(
+                          '${(_progressAnim.value * 100).toInt()}%',
+                          style: const TextStyle(
                             color: kWhite,
-                            fontSize: 15,
                             fontWeight: FontWeight.bold,
+                            fontSize: 16,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF22C55E), Color(0xFF4ADE80)],
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      'TAMBAH',
-                      style: TextStyle(
-                        color: Color(0xFF0D2818),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-                ],
+                  );
+                },
               ),
-            ),
-          );
-        }
-
-        // Ambil data terbaru (pertama di list)
-        final latestSaving = savingVm.savings.first;
-
-        final String nama = latestSaving.title;
-        final double current = latestSaving.currentAmount;
-        final double target = latestSaving.targetAmount;
-        final double progress = (current / target).clamp(0.0, 1.0);
-
-        return GestureDetector(
-          onTap: () => _vm.onNavTap(1), // Pindah ke tab tabungan
-          child: Container(
-            decoration: BoxDecoration(
-              color: kCard,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: kWhite20, width: 0.8),
-            ),
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'TABUNGAN TERBARU',
-                  style: TextStyle(
-                    color: kWhite40,
-                    fontSize: 10,
-                    letterSpacing: 1.5,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  nama,
-                  style: const TextStyle(
-                    color: kWhite,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(
-                      width: 86,
-                      height: 86,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          SizedBox(
-                            width: 86,
-                            height: 86,
-                            child: CircularProgressIndicator(
-                              value: progress,
-                              strokeWidth: 8,
-                              backgroundColor: kWhite20,
-                              valueColor:
-                                  const AlwaysStoppedAnimation<Color>(kGreen),
-                              strokeCap: StrokeCap.round,
-                            ),
-                          ),
-                          Text(
-                            '${(progress * 100).toInt()}%',
-                            style: const TextStyle(
-                              color: kWhite,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
+                    const Text(
+                      'TERKUMPUL',
+                      style: TextStyle(
+                        color: kWhite40,
+                        fontSize: 10,
+                        letterSpacing: 1,
                       ),
                     ),
-                    const SizedBox(width: 20),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'TERKUMPUL',
-                            style: TextStyle(
-                              color: kWhite40,
-                              fontSize: 10,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Rp ${current.toInt().toString().replaceAllMapped(RegExp(r"(\d)(?=(\d{3})+$)"), (m) => "${m[1]}.")}',
-                            style: const TextStyle(
-                              color: kWhite,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          const Text(
-                            'TARGET',
-                            style: TextStyle(
-                              color: kWhite40,
-                              fontSize: 10,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Rp ${target.toInt().toString().replaceAllMapped(RegExp(r"(\d)(?=(\d{3})+$)"), (m) => "${m[1]}.")}',
-                            style: const TextStyle(
-                              color: kWhite70,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
+                    const SizedBox(height: 2),
+                    Text(
+                      _vm.tabunganSaatIni,
+                      style: const TextStyle(
+                        color: kWhite,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'TARGET',
+                      style: TextStyle(
+                        color: kWhite40,
+                        fontSize: 10,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _vm.tabunganTarget,
+                      style: const TextStyle(
+                        color: kWhite70,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 
   Widget _buildHppBepCard() {
     return GestureDetector(
       onTap: () async {
+        // Pindahkan active navbar ke HPP (index 0) saat card diklik
         _vm.onNavTap(0);
         await Future.delayed(const Duration(milliseconds: 380));
         if (!mounted) return;
@@ -706,26 +655,29 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           context,
           MaterialPageRoute(builder: (_) => const HitungHppPage()),
         );
+        // Saat user balik ke Home, kembalikan active navbar ke Home (index 2)
         if (mounted) _vm.onNavTap(2);
       },
       child: Container(
         decoration: BoxDecoration(
+          // Hijau terang vivid seperti screenshot
           color: const Color(0xFF6CF688),
           borderRadius: BorderRadius.circular(18),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         child: Row(
           children: [
+            // Lingkaran gelap solid
             Container(
               width: 52,
               height: 52,
               decoration: const BoxDecoration(
-                color: Color(0xFF0D1F10),
+                color: Color(0xFF0D1F10), // hijau tua gelap solid
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.calculate_outlined,
-                color: Color(0xFFFBBF24),
+                color: Color(0xFFFBBF24), // kuning/amber
                 size: 26,
               ),
             ),
@@ -756,83 +708,71 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: Consumer<SavingViewModel>(
-              builder: (context, savingVm, _) {
-                double totalCurrent = savingVm.savings
-                    .fold(0.0, (sum, item) => sum + item.currentAmount);
-                double totalTarget = savingVm.savings
-                    .fold(0.0, (sum, item) => sum + item.targetAmount);
-
-                double totalProgress = totalTarget > 0
-                    ? (totalCurrent / totalTarget).clamp(0.0, 1.0)
-                    : 0.0;
-
-                return Container(
-                  decoration: BoxDecoration(
-                    color: kCard,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: kWhite20, width: 0.8),
-                  ),
-                  padding: const EdgeInsets.all(14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'INSIGHT',
-                        style: TextStyle(
-                          color: kWhite40,
-                          fontSize: 10,
-                          letterSpacing: 1.2,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      Center(
-                        child: SizedBox(
-                          width: 68,
-                          height: 68,
-                          child: CustomPaint(
-                            painter: _DonutPainter(
-                              slices: [totalProgress, 1.0 - totalProgress],
-                              colors: [kGreen, kCardLight],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      _insightLegend(kGreen,
-                          'Terkumpul: ${(totalProgress * 100).toInt()}%'),
-                      const SizedBox(height: 4),
-                      _insightLegend(kWhite40,
-                          'Sisa: ${((1.0 - totalProgress) * 100).toInt()}%'),
-                      const Spacer(),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: GestureDetector(
-                          onTap: _vm.onInsightTap,
-                          child: Container(
-                            width: 30,
-                            height: 30,
-                            decoration: const BoxDecoration(
-                              color: kWhite20,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.arrow_forward,
-                                color: kWhite, size: 15),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(width: 12),
+          // ── Insight ──
           Expanded(
             child: Container(
               decoration: BoxDecoration(
+                color: kCard,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: kWhite20, width: 0.8),
+              ),
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'INSIGHT',
+                    style: TextStyle(
+                      color: kWhite40,
+                      fontSize: 10,
+                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Center(
+                    child: SizedBox(
+                      width: 68,
+                      height: 68,
+                      child: CustomPaint(
+                        painter: _DonutPainter(
+                          slices: const [0.4, 0.6],
+                          colors: [kGreen, kCardLight],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _insightLegend(kGreen, 'Cat A: 40%'),
+                  const SizedBox(height: 4),
+                  _insightLegend(kWhite40, 'Cat B: 60%'),
+                  const Spacer(),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: GestureDetector(
+                      onTap: _vm.onInsightTap,
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: const BoxDecoration(
+                          color: kWhite20,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.arrow_forward,
+                            color: kWhite, size: 15),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // ── Catatan ──
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                // Hijau lime medium sesuai screenshot
                 color: const Color(0xFF78C44A),
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -843,7 +783,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                   const Text(
                     'CATATAN',
                     style: TextStyle(
-                      color: Color(0xFF1E3D0F),
+                      color: Color(0xFF1E3D0F), // hijau tua gelap
                       fontSize: 10,
                       letterSpacing: 1.2,
                       fontWeight: FontWeight.w700,
@@ -855,7 +795,12 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                   Row(
                     children: [
                       GestureDetector(
-                        onTap: _vm.onCatatanTap,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const NotesListView(),
+                          ),
+                        ),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8),
@@ -876,7 +821,12 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                       ),
                       const Spacer(),
                       GestureDetector(
-                        onTap: _vm.onCatatanTap,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const NotesListView(),
+                          ),
+                        ),
                         child: const Icon(
                           Icons.arrow_forward,
                           color: Color(0xFF1E3D0F),
@@ -895,21 +845,53 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   }
 
   List<Widget> _buildNoteLines() {
-    final widths = [1.0, 0.75, 0.88];
-    return widths
-        .map((w) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Container(
-                height: 5,
-                width: double.infinity,
-                margin: EdgeInsets.only(right: (1 - w) * 60),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2D5A1B),
-                  borderRadius: BorderRadius.circular(3),
+    final noteVm = context.watch<NoteViewModel>();
+    final notes = noteVm.notes;
+
+    if (notes.isEmpty) {
+      return [
+        const Text(
+          'Belum ada catatan',
+          style: TextStyle(
+            color: Color(0xFF2D5A1B),
+            fontSize: 13,
+            height: 1.5,
+          ),
+        ),
+      ];
+    }
+
+    final latestNote = notes.first;
+    final lines = latestNote.content.split('\n').take(2).toList();
+
+    return [
+      Text(
+        latestNote.title,
+        style: const TextStyle(
+          color: Color(0xFF2D5A1B),
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          height: 1.5,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      ...lines
+          .map((line) => Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  line,
+                  style: const TextStyle(
+                    color: Color(0xFF2D5A1B),
+                    fontSize: 12,
+                    height: 1.4,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ))
-        .toList();
+              ))
+          .toList(),
+    ];
   }
 
   Widget _insightLegend(Color color, String label) {
@@ -926,17 +908,19 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     );
   }
 
+  // ─── Bottom Navbar ────────────────────────────────────────────────
   Widget _buildBottomNav() {
     const navIcons = [
-      Icons.calculate_outlined,
-      Icons.account_balance_wallet_outlined,
-      Icons.home,
-      Icons.show_chart,
-      Icons.history,
+      Icons.calculate_outlined, // 0 - HPP & BEP
+      Icons.account_balance_wallet_outlined, // 1 - Wallet
+      Icons.home, // 2 - Home (default aktif)
+      Icons.show_chart, // 3 - Chart
+      Icons.history, // 4 - History
     ];
     const int navCount = 5;
     const double navHeight = 68.0;
     const double circleSize = 48.0;
+    // circle selalu tepat di tengah vertikal navbar
     const double circleTop = (navHeight - circleSize) / 2;
 
     return Padding(
@@ -945,6 +929,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         builder: (context, constraints) {
           final navWidth = constraints.maxWidth;
           final itemWidth = navWidth / navCount;
+          // posisi horizontal circle mengikuti tab aktif, tepat di tengah item
           final circleLeft =
               itemWidth * _vm.selectedIndex + (itemWidth / 2) - circleSize / 2;
 
@@ -953,6 +938,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             child: Stack(
               clipBehavior: Clip.none,
               children: [
+                // ── Background pill ──────────────────────────────────────
                 Positioned.fill(
                   child: Container(
                     decoration: BoxDecoration(
@@ -962,6 +948,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     ),
                   ),
                 ),
+
+                // ── Animated active circle ──────────
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 320),
                   curve: Curves.easeInOutCubic,
@@ -988,6 +976,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     ),
                   ),
                 ),
+
+                // ── Tap areas + inactive icons ───────────────────────────
                 Row(
                   children: List.generate(navCount, (i) {
                     final isActive = i == _vm.selectedIndex;
@@ -1016,6 +1006,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                               MaterialPageRoute(
                                   builder: (_) => const InsightView()),
                             );
+<<<<<<< HEAD
+=======
                             if (mounted) _vm.onNavTap(2);
                           } else if (i == 4) {
                             _vm.onNavTap(4);
@@ -1027,6 +1019,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                               MaterialPageRoute(
                                   builder: (_) => const RiwayatView()),
                             );
+>>>>>>> develop
                             if (mounted) _vm.onNavTap(2);
                           } else {
                             _vm.onNavTap(i);
@@ -1122,7 +1115,8 @@ class _DonutPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
     const strokeWidth = 12.0;
-    final rect = Rect.fromCircle(center: center, radius: radius - strokeWidth / 2);
+    final rect =
+        Rect.fromCircle(center: center, radius: radius - strokeWidth / 2);
 
     final paint = Paint()
       ..style = PaintingStyle.stroke
