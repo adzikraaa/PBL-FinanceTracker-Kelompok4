@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'BizPrice Tracker',
         theme: ThemeData(
-          colorScheme: ColorScheme.dark(
+          colorScheme: const ColorScheme.dark(
             primary: AppColors.primaryPurple,
             secondary: AppColors.accentYellow,
             surface: AppColors.darkCard,

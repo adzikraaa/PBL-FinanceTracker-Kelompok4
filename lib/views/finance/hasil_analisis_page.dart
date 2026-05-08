@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/finance_viewmodel.dart';
 import '../home/home_view.dart'; // Navigate back to home on save
+import '../notes/note_form_view.dart';
 
 class HasilAnalisisPage extends StatefulWidget {
   const HasilAnalisisPage({super.key});
@@ -470,7 +471,12 @@ class _HasilAnalisisPageState extends State<HasilAnalisisPage> {
                         
                         // Buttons
                         OutlinedButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const NoteFormView()),
+                            );
+                          },
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(color: Color(0xFF2C4334)),
                             shape: RoundedRectangleBorder(
