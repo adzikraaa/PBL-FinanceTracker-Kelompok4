@@ -13,9 +13,16 @@ class SavingDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final vm = context.read<SavingViewModel>();
-    double progress = vm.getProgress(saving);
-    double sisa = saving.targetAmount - saving.currentAmount;
+    final vm = context.watch<SavingViewModel>();
+    
+    // Cari data terbaru dari list di ViewModel berdasarkan ID
+    final currentSaving = vm.savings.firstWhere(
+      (s) => s.id == saving.id,
+      orElse: () => saving,
+    );
+
+    double progress = vm.getProgress(currentSaving);
+    double sisa = currentSaving.targetAmount - currentSaving.currentAmount;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D2818),
@@ -41,14 +48,14 @@ class SavingDetailPage extends StatelessWidget {
               decoration: BoxDecoration(
                 color: const Color(0xFF163520),
                 borderRadius: BorderRadius.circular(16),
-                image: saving.imageUrl != null
+                image: currentSaving.imageUrl != null
                     ? DecorationImage(
-                        image: _getImageProvider(saving.imageUrl!),
+                        image: _getImageProvider(currentSaving.imageUrl!),
                         fit: BoxFit.cover,
                       )
                     : null,
               ),
-              child: saving.imageUrl == null
+              child: currentSaving.imageUrl == null
                   ? const Icon(Icons.savings, color: Colors.white24, size: 80)
                   : null,
             ),
@@ -60,7 +67,7 @@ class SavingDetailPage extends StatelessWidget {
                     fontSize: 12,
                     letterSpacing: 1.2)),
             const SizedBox(height: 4),
-            Text(saving.title,
+            Text(currentSaving.title,
                 style: const TextStyle(
                     color: Colors.white,
                     fontSize: 28,
@@ -136,7 +143,7 @@ class SavingDetailPage extends StatelessWidget {
                           style: TextStyle(
                               color: Colors.white54, fontSize: 11)),
                       Text(
-                        'Rp ${_formatRupiah(vm.getMonthlyGoal(saving))}',
+                        'Rp ${_formatRupiah(vm.getMonthlyGoal(currentSaving))}',
                         style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
@@ -170,7 +177,7 @@ class SavingDetailPage extends StatelessWidget {
                           style: TextStyle(
                               color: Colors.white54, fontSize: 11)),
                       Text(
-                        vm.getExpectedCompletion(saving),
+                        vm.getExpectedCompletion(currentSaving),
                         style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
@@ -198,27 +205,37 @@ class SavingDetailPage extends StatelessWidget {
               height: 52,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4AFF91),
+                  backgroundColor: progress >= 1.0 
+                      ? Colors.white10 
+                      : const Color(0xFF4AFF91),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
                 ),
-                icon: const Icon(Icons.edit, color: Colors.black),
-                label: const Text('Edit Goal',
-                    style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold)),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => SavingFormPage(
-                        userId: userId,
-                        existingSaving: saving,
-                      ),
-                    ),
-                  );
-                },
+                icon: Icon(
+                  progress >= 1.0 ? Icons.check_circle : Icons.edit,
+                  color: progress >= 1.0 ? Colors.white38 : Colors.black,
+                ),
+                label: Text(
+                  progress >= 1.0 ? 'Goal Tercapai' : 'Edit Goal',
+                  style: TextStyle(
+                    color: progress >= 1.0 ? Colors.white38 : Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                onPressed: progress >= 1.0
+                    ? null
+                    : () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => SavingFormPage(
+                              userId: userId,
+                              existingSaving: currentSaving,
+                            ),
+                          ),
+                        );
+                      },
               ),
             ),
             const SizedBox(height: 12),

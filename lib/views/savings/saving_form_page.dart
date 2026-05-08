@@ -151,8 +151,17 @@ class _SavingFormPageState extends State<SavingFormPage> {
               onChanged: (val) {
                 final cleanVal = val.replaceAll('.', '');
                 vm.currentAmount = double.tryParse(cleanVal) ?? 0;
+                setState(() {}); // Update to show warning
               },
             ),
+            if ((double.tryParse(_currentController.text.replaceAll('.', '')) ?? 0) >= 1000000000)
+              const Padding(
+                padding: EdgeInsets.only(top: 4),
+                child: Text(
+                  'Batas maksimal 1 Miliar telah tercapai',
+                  style: TextStyle(color: Colors.orange, fontSize: 11, fontWeight: FontWeight.w500),
+                ),
+              ),
             const SizedBox(height: 20),
 
             _buildLabel('NOMINAL TARGET'),
@@ -161,12 +170,21 @@ class _SavingFormPageState extends State<SavingFormPage> {
               onChanged: (val) {
                 final cleanVal = val.replaceAll('.', '');
                 vm.targetAmount = double.tryParse(cleanVal) ?? 0;
+                setState(() {}); // Update to show warning
               },
               errorText: vm.errorMessage != null &&
                       vm.errorMessage!.contains('valid')
                   ? vm.errorMessage
                   : null,
             ),
+            if ((double.tryParse(_targetController.text.replaceAll('.', '')) ?? 0) >= 1000000000)
+              const Padding(
+                padding: EdgeInsets.only(top: 4),
+                child: Text(
+                  'Batas maksimal 1 Miliar telah tercapai',
+                  style: TextStyle(color: Colors.orange, fontSize: 11, fontWeight: FontWeight.w500),
+                ),
+              ),
             const SizedBox(height: 32),
 
             // Tombol Simpan
@@ -407,7 +425,17 @@ class ThousandSeparatorFormatter extends TextInputFormatter {
       return newValue.copyWith(text: '');
     }
 
-    final String cleanText = newValue.text.replaceAll('.', '');
+    String cleanText = newValue.text.replaceAll('.', '');
+    
+    // Batasan maksimal 1 Miliar (1,000,000,000)
+    if (cleanText.length > 10) {
+      cleanText = cleanText.substring(0, 10);
+    }
+    final double? val = double.tryParse(cleanText);
+    if (val != null && val > 1000000000) {
+      cleanText = '1000000000';
+    }
+
     final String formatted = cleanText.replaceAllMapped(
         RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]}.');
 

@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../viewmodels/home_viewmodel.dart';
@@ -77,13 +78,13 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       duration: const Duration(seconds: 3),
     )..repeat();
 
-    _sparkles = List.generate(12, (_) => _Sparkle(
+    _sparkles = List.generate(25, (_) => _Sparkle(
       x: _rng.nextDouble(),
-      y: _rng.nextDouble() * 0.28,
-      size: _rng.nextDouble() * 8 + 4,
-      opacity: _rng.nextDouble() * 0.7 + 0.3,
+      y: _rng.nextDouble(),
+      size: _rng.nextDouble() * 7 + 3,
+      opacity: _rng.nextDouble() * 0.6 + 0.2,
       phase: _rng.nextDouble() * 2 * pi,
-      speed: _rng.nextDouble() * 1.5 + 0.5,
+      speed: _rng.nextDouble() * 1.2 + 0.4,
     ));
 
     _progressController = AnimationController(
@@ -517,108 +518,160 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           onTap: () => _vm.onNavTap(1), // Pindah ke tab tabungan
           child: Container(
             decoration: BoxDecoration(
-              color: kCard,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: kWhite20, width: 0.8),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  kCard,
+                  kCard.withOpacity(0.85),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: kWhite.withOpacity(0.08), width: 0.8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 12,
+                  offset: const Offset(0, 5),
+                ),
+              ],
             ),
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.all(18),
+            child: Stack(
               children: [
-                const Text(
-                  'TABUNGAN TERBARU',
-                  style: TextStyle(
-                    color: kWhite40,
-                    fontSize: 10,
-                    letterSpacing: 1.5,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  nama,
-                  style: const TextStyle(
-                    color: kWhite,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(
-                      width: 86,
-                      height: 86,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          SizedBox(
-                            width: 86,
-                            height: 86,
-                            child: CircularProgressIndicator(
-                              value: progress,
-                              strokeWidth: 8,
-                              backgroundColor: kWhite20,
-                              valueColor:
-                                  const AlwaysStoppedAnimation<Color>(kGreen),
-                              strokeCap: StrokeCap.round,
-                            ),
-                          ),
-                          Text(
-                            '${(progress * 100).toInt()}%',
-                            style: const TextStyle(
-                              color: kWhite,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
+                    const Text(
+                      'TABUNGAN TERBARU',
+                      style: TextStyle(
+                        color: kWhite40,
+                        fontSize: 10,
+                        letterSpacing: 1.5,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(width: 20),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'TERKUMPUL',
-                            style: TextStyle(
-                              color: kWhite40,
-                              fontSize: 10,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Rp ${current.toInt().toString().replaceAllMapped(RegExp(r"(\d)(?=(\d{3})+$)"), (m) => "${m[1]}.")}',
-                            style: const TextStyle(
-                              color: kWhite,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          const Text(
-                            'TARGET',
-                            style: TextStyle(
-                              color: kWhite40,
-                              fontSize: 10,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Rp ${target.toInt().toString().replaceAllMapped(RegExp(r"(\d)(?=(\d{3})+$)"), (m) => "${m[1]}.")}',
-                            style: const TextStyle(
-                              color: kWhite70,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
+                    const SizedBox(height: 6),
+                    Text(
+                      nama,
+                      style: const TextStyle(
+                        color: kWhite,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.2,
                       ),
+                    ),
+                    const SizedBox(height: 18),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Progress Circle
+                        SizedBox(
+                          width: 68,
+                          height: 68,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              SizedBox(
+                                width: 64, // Sedikit lebih kecil agar tidak kepotong
+                                height: 64,
+                                child: CircularProgressIndicator(
+                                  value: progress,
+                                  strokeWidth: 5,
+                                  backgroundColor: kWhite20,
+                                  valueColor:
+                                      const AlwaysStoppedAnimation<Color>(kGreen),
+                                  strokeCap: StrokeCap.round,
+                                ),
+                              ),
+                              Text(
+                                '${(progress * 100).toInt()}%',
+                                style: const TextStyle(
+                                  color: kWhite,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        // Detail Teks
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'TERKUMPUL',
+                                style: TextStyle(
+                                  color: kWhite40,
+                                  fontSize: 9,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                              const SizedBox(height: 1),
+                              Text(
+                                'Rp ${current.toInt().toString().replaceAllMapped(RegExp(r"(\d)(?=(\d{3})+$)"), (m) => "${m[1]}.")}',
+                                style: const TextStyle(
+                                  color: kWhite,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              const Text(
+                                'TARGET',
+                                style: TextStyle(
+                                  color: kWhite40,
+                                  fontSize: 9,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                              const SizedBox(height: 1),
+                              Text(
+                                'Rp ${target.toInt().toString().replaceAllMapped(RegExp(r"(\d)(?=(\d{3})+$)"), (m) => "${m[1]}.")}',
+                                style: TextStyle(
+                                  color: kWhite.withOpacity(0.55),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8), // Gap lebih kecil antara teks dan foto
+                        // Gambar Goal
+                        Container(
+                          width: 68,
+                          height: 68,
+                          decoration: BoxDecoration(
+                            color: kWhite.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: kWhite.withOpacity(0.1), width: 1),
+                            image: latestSaving.imageUrl != null
+                                ? DecorationImage(
+                                    image: _getImageProvider(latestSaving.imageUrl!),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
+                          ),
+                          child: latestSaving.imageUrl == null
+                              ? Icon(Icons.savings_outlined, color: kWhite.withOpacity(0.2), size: 28)
+                              : null,
+                        ),
+                      ],
                     ),
                   ],
+                ),
+                // Panah di pojok kanan bawah
+                Positioned(
+                  bottom: -4,
+                  right: -4,
+                  child: Icon(
+                    Icons.arrow_forward_ios_rounded, 
+                    color: kWhite.withOpacity(0.15), 
+                    size: 14
+                  ),
                 ),
               ],
             ),
@@ -1019,6 +1072,15 @@ class _SparklePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_SparklePainter old) => old.time != time;
+}
+
+// Helper untuk image provider (ditambahkan untuk support gambar tabungan)
+ImageProvider _getImageProvider(String url) {
+  if (url.startsWith('data:image')) {
+    final base64String = url.split(',').last;
+    return MemoryImage(base64Decode(base64String));
+  }
+  return NetworkImage(url);
 }
 
 // ── Donut Painter ─────────────────────────────────────────────────────────────

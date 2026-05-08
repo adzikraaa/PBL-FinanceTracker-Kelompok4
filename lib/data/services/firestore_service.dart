@@ -33,6 +33,7 @@ class FirestoreService {
     return _db
         .collection('savings')
         .where('userId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => SavingModel.fromJson(doc.data(), doc.id))

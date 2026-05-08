@@ -210,4 +210,25 @@ class SavingViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+  // Update cepat nominal (tambah saldo)
+  Future<bool> quickUpdateAmount(String id, double current, double amountToAdd) async {
+    if (amountToAdd <= 0) return false;
+    
+    isLoading = true;
+    notifyListeners();
+    
+    try {
+      final newTotal = current + amountToAdd;
+      await _firestoreService.updateSaving(id, newTotal)
+          .timeout(const Duration(seconds: 3))
+          .catchError((_) => null);
+      return true;
+    } catch (e) {
+      errorMessage = 'Gagal update nominal: $e';
+      return false;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
 }
