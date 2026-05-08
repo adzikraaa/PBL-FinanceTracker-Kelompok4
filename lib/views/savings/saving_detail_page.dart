@@ -304,10 +304,47 @@ class SavingDetailPage extends StatelessWidget {
                   ),
                   onPressed: () async {
                     Navigator.pop(context);
-                    final success =
-                        await vm.deleteSaving(saving.id!);
-                    if (success && context.mounted) {
+                    final success = await vm.deleteSaving(saving.id!);
+                    if (!context.mounted) return;
+
+                    if (success) {
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Row(
+                            children: [
+                              Icon(Icons.check_circle,
+                                  color: Color(0xFF4AFF91)),
+                              SizedBox(width: 12),
+                              Text('Tabungan berhasil dihapus',
+                                  style: TextStyle(color: Colors.white)),
+                            ],
+                          ),
+                          backgroundColor: Color(0xFF163520),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
                       Navigator.pop(context);
+                    } else {
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Row(
+                            children: [
+                              const Icon(Icons.error_outline,
+                                  color: Colors.red),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                  child: Text(
+                                      vm.errorMessage ?? 'Gagal menghapus data',
+                                      style: const TextStyle(
+                                          color: Colors.white))),
+                            ],
+                          ),
+                          backgroundColor: const Color(0xFF163520),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
                     }
                   },
                   child: const Text('Iya',
