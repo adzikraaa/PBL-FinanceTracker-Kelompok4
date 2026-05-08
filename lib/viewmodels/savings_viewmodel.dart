@@ -1,78 +1,88 @@
+import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
-class SavingItem {
-  final String id;
-  final String name;
-  final double targetAmount;
-  final double currentAmount;
-  final DateTime createdAt;
-
-  SavingItem({
-    required this.id,
-    required this.name,
-    required this.targetAmount,
-    required this.currentAmount,
-    required this.createdAt,
-  });
-}
+import '../data/models/saving_model.dart';
+import '../data/services/firestore_service.dart';
 
 class SavingsViewModel extends ChangeNotifier {
-  final List<SavingItem> _savings = [
-    SavingItem(
-      id: '1',
-      name: 'Modal Baru',
-      targetAmount: 5000000,
-      currentAmount: 3500000,
-      createdAt: DateTime.now().subtract(const Duration(days: 30)),
-    ),
-    SavingItem(
-      id: '2',
-      name: 'Cicilan Mesin',
-      targetAmount: 10000000,
-      currentAmount: 6200000,
-      createdAt: DateTime.now().subtract(const Duration(days: 60)),
-    ),
-    SavingItem(
-      id: '3',
-      name: 'Dana Darurat',
-      targetAmount: 2000000,
-      currentAmount: 1800000,
-      createdAt: DateTime.now().subtract(const Duration(days: 15)),
-    ),
-  ];
+  final FirestoreService _firestoreService = FirestoreService();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  List<SavingItem> get savings => _savings;
+  List<SavingModel> _savings = [];
+  bool isLoading = true;
+  String? error;
 
-  double get totalSavings => _savings.fold(0, (sum, item) => sum + item.currentAmount);
+  StreamSubscription<List<SavingModel>>? _sub;
 
-  double get totalTarget => _savings.fold(0, (sum, item) => sum + item.targetAmount);
+  List<SavingModel> get savings => _savings;
+
+  SavingModel? get firstSaving => _savings.isNotEmpty ? _savings.first : null;
+
+  double get totalSavings =>
+      _savings.fold(0, (sum, item) => sum + item.currentAmount);
+
+  double get totalTarget =>
+      _savings.fold(0, (sum, item) => sum + item.targetAmount);
 
   double get savingsPercentage {
     if (totalTarget == 0) return 0;
     return (totalSavings / totalTarget) * 100;
   }
 
-  void addSaving(SavingItem item) {
-    _savings.add(item);
-    notifyListeners();
+  SavingsViewModel() {
+    _init();
   }
 
-  void removeSaving(String id) {
-    _savings.removeWhere((item) => item.id == id);
-    notifyListeners();
-  }
-
-  void updateSaving(String id, double newAmount) {
-    final index = _savings.indexWhere((item) => item.id == id);
-    if (index != -1) {
-      _savings[index] = SavingItem(
-        id: _savings[index].id,
-        name: _savings[index].name,
-        targetAmount: _savings[index].targetAmount,
-        currentAmount: newAmount,
-        createdAt: _savings[index].createdAt,
-      );
+  void _init() {
+    final user = _auth.currentUser;
+    if (user == null) {
+      isLoading = false;
       notifyListeners();
+      return;
     }
+    _sub = _firestoreService.streamSavings(user.uid).listen(
+      (list) {
+        _savings = list;
+        isLoading = false;
+        error = null;
+        notifyListeners();
+      },
+      onError: (e) {
+        error = e.toString();
+        isLoading = false;
+        notifyListeners();
+      },
+    );
+  }
+
+  Future<void> addSaving({
+    required String title,
+    required double targetAmount,
+    required double currentAmount,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    final saving = SavingModel(
+      userId: user.uid,
+      title: title,
+      targetAmount: targetAmount,
+      currentAmount: currentAmount.clamp(0, targetAmount),
+      createdAt: DateTime.now(),
+    );
+    await _firestoreService.addSaving(saving);
+  }
+
+  Future<void> updateSaving(String id, double newAmount) async {
+    await _firestoreService.updateSaving(id, newAmount);
+  }
+
+  Future<void> removeSaving(String id) async {
+    await _firestoreService.deleteSaving(id);
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
   }
 }

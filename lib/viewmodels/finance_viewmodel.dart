@@ -1,7 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../data/models/hpp_model.dart';
+import '../data/services/firestore_service.dart';
 
 class FinanceViewModel extends ChangeNotifier {
+  final FirestoreService _firestoreService = FirestoreService();
+  StreamSubscription<List<HppModel>>? _sub;
   // --- Input Variables (State) ---
   double biayaProduksi = 0.0;
   double biayaTenagaKerja = 0.0;
@@ -14,26 +19,27 @@ class FinanceViewModel extends ChangeNotifier {
 
   String namaProduk = "Produk Baru";
 
-  // --- History (Dummy Data untuk testing) ---
-  final List<HppModel> history = [
-    HppModel(
-      id: '1',
-      userId: 'anon',
-      namaProduk: 'Nasi Goreng Spesial',
-      biayaProduksi: 18000,
-      biayaTenagaKerja: 8000,
-      biayaOverhead: 4000,
-      jumlahUnit: 150,
-      biayaTetap: 120000,
-      hargaJualUnit: 25000,
-      jumlahUnitTerjual: 120,
-      totalHpp: 30000,
-      bepUnit: 8,
-      bepRupiah: 200000,
-      catatan: 'Analisa penjualan bulan ini',
-      createdAt: DateTime.now().subtract(const Duration(days: 3)),
-    ),
-  ];
+  List<HppModel> history = [];
+
+  FinanceViewModel() {
+    _init();
+  }
+
+  void _init() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _sub = _firestoreService.streamHistory(user.uid).listen((data) {
+        history = data;
+        notifyListeners();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
 
   // ================================
   // PERHITUNGAN
@@ -81,11 +87,14 @@ class FinanceViewModel extends ChangeNotifier {
   // SIMPAN DATA
   // ================================
 
-  Future<void> simpanPerhitungan(String userId) async {
+  Future<void> simpanPerhitungan(String? _) async {
     if (!isBepValid()) return;
 
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
     final newHpp = HppModel(
-      userId: userId,
+      userId: user.uid,
       namaProduk: namaProduk,
       biayaProduksi: biayaProduksi,
       biayaTenagaKerja: biayaTenagaKerja,
@@ -101,7 +110,21 @@ class FinanceViewModel extends ChangeNotifier {
       createdAt: DateTime.now(),
     );
 
-    history.add(newHpp);
+    // Reset UI state immediately before awaiting network
+    resetData();
+
+    await _firestoreService.addHistory(newHpp);
+  }
+
+  void resetData() {
+    biayaProduksi = 0.0;
+    biayaTenagaKerja = 0.0;
+    biayaOverhead = 0.0;
+    jumlahUnit = 0;
+    hargaJualUnit = 0.0;
+    biayaTetap = 0.0;
+    jumlahUnitTerjual = null;
+    namaProduk = "Produk Baru";
     notifyListeners();
   }
 
