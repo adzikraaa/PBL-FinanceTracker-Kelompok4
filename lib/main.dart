@@ -11,6 +11,8 @@ import 'viewmodels/finance_viewmodel.dart';
 import 'viewmodels/savings_viewmodel.dart';
 import 'viewmodels/loadingscreen.dart';
 import 'viewmodels/saving_viewmodel.dart';
+import 'viewmodels/riwayat_viewmodel.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +20,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await initializeDateFormatting('id_ID', null);
   //await FirebaseAuth.instance.signOut();
 
   runApp(const MyApp());
@@ -34,6 +37,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => FinanceViewModel()),
         ChangeNotifierProvider(create: (_) => SavingsViewModel()),
         ChangeNotifierProvider(create: (_) => SavingViewModel()),
+        ChangeNotifierProvider(create: (_) => RiwayatViewModel()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
