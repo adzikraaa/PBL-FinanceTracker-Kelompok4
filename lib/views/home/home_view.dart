@@ -2,12 +2,25 @@ import 'dart:math';
 import 'package:BizPrice/views/notes/notes_list_view.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+<<<<<<< HEAD
 import 'package:provider/provider.dart';
 import '../../viewmodels/home_viewmodel.dart';
 import '../../viewmodels/note_viewmodel.dart';
 import '../finance/hitung_hpp_page.dart';
 import '../insight/insight_view.dart';
 import 'profile_view.dart';
+=======
+import '../../viewmodels/home_viewmodel.dart';
+import '../finance/hitung_hpp_page.dart';
+import '../savings/saving_list_page.dart';
+import '../../viewmodels/saving_viewmodel.dart';
+import '../../viewmodels/riwayat_viewmodel.dart';
+import '../riwayat/riwayat_view.dart';
+import 'profile_view.dart';
+import '../insight/insight_view.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+>>>>>>> develop
 
 // ─── Color Palette (Dark Green Theme) ────────────────────────────────────────
 const Color kBg = Color(0xFF0D2818);
@@ -55,9 +68,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   late List<_Sparkle> _sparkles;
   final Random _rng = Random();
 
-  late AnimationController _progressController;
-  late Animation<double> _progressAnim;
-
   @override
   void initState() {
     super.initState();
@@ -81,22 +91,11 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               speed: _rng.nextDouble() * 1.5 + 0.5,
             ));
 
-    _progressController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
-    _progressAnim = Tween<double>(begin: 0, end: _vm.tabunganProgress).animate(
-      CurvedAnimation(parent: _progressController, curve: Curves.easeOutCubic),
-    );
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) _progressController.forward();
-    });
   }
 
   @override
   void dispose() {
     _sparkleController.dispose();
-    _progressController.dispose();
     super.dispose();
   }
 
@@ -152,6 +151,51 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     );
   }
 
+<<<<<<< HEAD
+=======
+  Widget _buildBody(HomeViewModel vm) {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    
+    switch (vm.selectedIndex) {
+      case 1: // Tabungan
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 80),
+          child: SavingListPage(userId: userId),
+        );
+      case 2: // Home Dashboard
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 100),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildGreetingSection(),
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: [
+                    _buildRiwayatCard(),
+                    const SizedBox(height: 14),
+                    _buildTabunganCard(),
+                    const SizedBox(height: 14),
+                    _buildHppBepCard(),
+                    const SizedBox(height: 14),
+                    _buildBottomRow(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      case 3: // Insight
+        return const InsightView();
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+>>>>>>> develop
   Widget _buildGradientBg() {
     return Container(
       decoration: const BoxDecoration(
@@ -308,94 +352,178 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   }
 
   Widget _buildRiwayatCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: kRiwayat,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFB8E88A), width: 0.8),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'RIWAYAT',
-            style: TextStyle(
-              color: Color(0xFF1E3D0F),
-              fontSize: 10,
-              letterSpacing: 1.5,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
+    final riwayatVm = context.watch<RiwayatViewModel>();
+    final latest = riwayatVm.latest;
+    final currFmt = NumberFormat.currency(
+        locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+
+    void goToRiwayat() async {
+      _vm.onNavTap(4);
+      await Future.delayed(const Duration(milliseconds: 320));
+      if (!mounted) return;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const RiwayatView()),
+      );
+      if (mounted) _vm.onNavTap(2);
+    }
+
+    return GestureDetector(
+      onTap: goToRiwayat,
+      child: Container(
+        decoration: BoxDecoration(
+          color: kRiwayat,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFB8E88A), width: 0.8),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1E3D0F).withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.restaurant_menu,
+                const Text(
+                  'RIWAYAT',
+                  style: TextStyle(
                     color: Color(0xFF1E3D0F),
-                    size: 22,
+                    fontSize: 10,
+                    letterSpacing: 1.5,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    _vm.riwayatNama,
-                    style: const TextStyle(
-                      color: Color(0xFF1A3A10),
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                const Spacer(),
+                if (riwayatVm.history.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E3D0F).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${riwayatVm.history.length} data',
+                      style: const TextStyle(
+                          color: Color(0xFF1E3D0F),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600),
                     ),
                   ),
-                ),
-                Text(
-                  'Rp ${_vm.riwayatHarga}',
-                  style: const TextStyle(
-                    color: Color(0xFF1A3A10),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
               ],
             ),
-          ),
-          const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: _vm.onLihatRiwayat,
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFF5A9A30), width: 1),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
+            const SizedBox(height: 12),
+            if (riwayatVm.isLoading)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: CircularProgressIndicator(
+                      color: Color(0xFF1E3D0F), strokeWidth: 2),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                foregroundColor: const Color(0xFF1E3D0F),
+              )
+            else if (latest == null)
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.receipt_long_outlined,
+                        color: Color(0xFF5A9A30), size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'Belum ada riwayat perhitungan',
+                      style: TextStyle(
+                          color: Color(0xFF1A3A10),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E3D0F).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.restaurant_menu,
+                        color: Color(0xFF1E3D0F),
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            latest.namaProduk,
+                            style: const TextStyle(
+                              color: Color(0xFF1A3A10),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'HPP/unit: ${currFmt.format(latest.jumlahUnit > 0 ? latest.totalHpp / latest.jumlahUnit : 0)}',
+                            style: const TextStyle(
+                                color: Color(0xFF5A9A30), fontSize: 11),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      currFmt.format(latest.hargaJualUnit),
+                      style: const TextStyle(
+                        color: Color(0xFF1A3A10),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: const Text(
-                'LIHAT SEMUA RIWAYAT',
-                style: TextStyle(
-                  color: Color(0xFF1E3D0F),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  letterSpacing: 0.8,
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: goToRiwayat,
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Color(0xFF5A9A30), width: 1),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  foregroundColor: const Color(0xFF1E3D0F),
+                ),
+                child: const Text(
+                  'LIHAT SEMUA RIWAYAT',
+                  style: TextStyle(
+                    color: Color(0xFF1E3D0F),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    letterSpacing: 0.8,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -878,6 +1006,20 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                               MaterialPageRoute(
                                   builder: (_) => const InsightView()),
                             );
+<<<<<<< HEAD
+=======
+                            if (mounted) _vm.onNavTap(2);
+                          } else if (i == 4) {
+                            _vm.onNavTap(4);
+                            await Future.delayed(
+                                const Duration(milliseconds: 340));
+                            if (!mounted) return;
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const RiwayatView()),
+                            );
+>>>>>>> develop
                             if (mounted) _vm.onNavTap(2);
                           } else {
                             _vm.onNavTap(i);

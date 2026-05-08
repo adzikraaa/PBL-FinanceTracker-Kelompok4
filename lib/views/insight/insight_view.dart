@@ -106,8 +106,20 @@ class _InsightViewState extends State<InsightView>
 
   Widget _buildHeader() {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: Container(
+            width: 40, height: 40,
+            margin: const EdgeInsets.only(right: 14),
+            decoration: BoxDecoration(
+              color: const Color(0xFF163520),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white24),
+            ),
+            child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 16),
+          ),
+        ),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
