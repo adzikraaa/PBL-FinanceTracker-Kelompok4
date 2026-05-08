@@ -2,6 +2,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 import '../models/hpp_model.dart';
 
 class PdfService {
@@ -134,17 +135,24 @@ class PdfService {
   static Future<void> shareHpp(HppModel data) async {
     final pdf = await _generatePdf(data);
     final bytes = await pdf.save();
-    await Printing.sharePdf(
-      bytes: bytes,
-      filename: 'Laporan_HPP_${data.namaProduk.replaceAll(' ', '_')}.pdf',
+    
+    // Gunakan share_plus untuk membagikan file PDF ke WA, IG, dll.
+    final filename = 'Laporan_HPP_${data.namaProduk.replaceAll(' ', '_')}.pdf';
+    await Share.shareXFiles(
+      [XFile.fromData(bytes, mimeType: 'application/pdf', name: filename)],
+      text: 'Laporan Perhitungan HPP & BEP - ${data.namaProduk} (via BizPrice)',
     );
   }
 
   static Future<void> downloadHpp(HppModel data) async {
     final pdf = await _generatePdf(data);
-    await Printing.layoutPdf(
-      onLayout: (PdfPageFormat format) async => pdf.save(),
-      name: 'Laporan_HPP_${data.namaProduk.replaceAll(' ', '_')}.pdf',
+    final bytes = await pdf.save();
+    
+    // Pada platform Web, sharePdf akan otomatis men-download file.
+    // Pada mobile, ini akan memunculkan opsi "Save to Files".
+    await Printing.sharePdf(
+      bytes: bytes,
+      filename: 'Laporan_HPP_${data.namaProduk.replaceAll(' ', '_')}.pdf',
     );
   }
 
