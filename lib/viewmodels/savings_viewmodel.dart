@@ -1,59 +1,63 @@
-<<<<<<< HEAD
-import 'dart:convert';
-import 'package:BizPrice/models/saving_item.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:flutter/material.dart';
-import '../data/models/savings_model.dart';
-=======
 import 'dart:async';
+import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../data/models/saving_model.dart';
->>>>>>> develop
+import 'package:image_picker/image_picker.dart';
+import '../data/models/savings_model.dart';
 import '../data/services/firestore_service.dart';
 
 class SavingsViewModel extends ChangeNotifier {
   final FirestoreService _firestoreService = FirestoreService();
-<<<<<<< HEAD
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   List<SavingModel> _savings = [];
-  List<SavingModel> get savings => _savings;
-
-  bool isLoading = false;
+  bool isLoading = true;
   String? errorMessage;
+  StreamSubscription<List<SavingModel>>? _sub;
 
-  // Form fields dengan properti reaktif
-  String _title = '';
-  String get title => _title;
-  set title(String value) {
-    _title = value;
-    notifyListeners();
-  }
-
-  double _currentAmount = 0.0;
-  double get currentAmount => _currentAmount;
-  set currentAmount(double value) {
-    _currentAmount = value;
-    notifyListeners();
-  }
-
-  double _targetAmount = 5000.0;
-  double get targetAmount => _targetAmount;
-  set targetAmount(double value) {
-    _targetAmount = value;
-    notifyListeners();
-  }
-
-  String? imageUrl; // Field untuk menampung gambar yang dipilih
-
-  // Editing state
+  // Form Fields
+  String title = '';
+  double currentAmount = 0.0;
+  double targetAmount = 5000.0;
+  String? imageUrl;
   SavingModel? editingSaving;
 
-  // Total semua tabungan
-  double get totalSavings =>
-      _savings.fold(0.0, (sum, item) => sum + item.currentAmount);
+  List<SavingModel> get savings => _savings;
+  double get totalSavings => _savings.fold(0, (sum, item) => sum + item.currentAmount);
+  double get totalTarget => _savings.fold(0, (sum, item) => sum + item.targetAmount);
 
-  get totalCurrentAmount => null;
+  SavingModel? get firstSaving => _savings.isNotEmpty ? _savings.first : null;
+
+  double get savingsPercentage {
+    if (totalTarget == 0) return 0;
+    return (totalSavings / totalTarget) * 100;
+  }
+
+  SavingsViewModel() {
+    _init();
+  }
+
+  void _init() {
+    final user = _auth.currentUser;
+    if (user == null) {
+      isLoading = false;
+      notifyListeners();
+      return;
+    }
+    _sub = _firestoreService.streamSavings(user.uid).listen(
+      (list) {
+        _savings = list;
+        isLoading = false;
+        errorMessage = null;
+        notifyListeners();
+      },
+      onError: (e) {
+        errorMessage = e.toString();
+        isLoading = false;
+        notifyListeners();
+      },
+    );
+  }
 
   // Persentase progress per item
   double getProgress(SavingModel saving) {
@@ -91,14 +95,6 @@ class SavingsViewModel extends ChangeNotifier {
       'Dec'
     ];
     return '${monthNames[selesai.month]} ${selesai.year}';
-  }
-
-  // Listen realtime dari Firestore
-  void listenSavings(String userId) {
-    _firestoreService.streamSavings(userId).listen((data) {
-      _savings = data;
-      notifyListeners();
-    });
   }
 
   // Isi form untuk edit
@@ -141,7 +137,6 @@ class SavingsViewModel extends ChangeNotifier {
         // Validasi format: JPEG, JPG, PNG
         if (extension == 'jpg' || extension == 'jpeg' || extension == 'png') {
           final bytes = await image.readAsBytes();
-          // Simpan as base64 untuk persistensi sederhana
           imageUrl = 'data:image/$extension;base64,${base64Encode(bytes)}';
           errorMessage = null;
         } else {
@@ -151,86 +146,8 @@ class SavingsViewModel extends ChangeNotifier {
       }
     } catch (e) {
       errorMessage = 'Gagal mengambil gambar';
-=======
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  List<SavingModel> _savings = [];
-  bool isLoading = true;
-  String? error;
-
-  StreamSubscription<List<SavingModel>>? _sub;
-
-  List<SavingModel> get savings => _savings;
-
-  SavingModel? get firstSaving => _savings.isNotEmpty ? _savings.first : null;
-
-  double get totalSavings =>
-      _savings.fold(0, (sum, item) => sum + item.currentAmount);
-
-  double get totalTarget =>
-      _savings.fold(0, (sum, item) => sum + item.targetAmount);
-
-  double get savingsPercentage {
-    if (totalTarget == 0) return 0;
-    return (totalSavings / totalTarget) * 100;
-  }
-
-  SavingsViewModel() {
-    _init();
-  }
-
-  void _init() {
-    final user = _auth.currentUser;
-    if (user == null) {
-      isLoading = false;
->>>>>>> develop
       notifyListeners();
-      return;
     }
-    _sub = _firestoreService.streamSavings(user.uid).listen(
-      (list) {
-        _savings = list;
-        isLoading = false;
-        error = null;
-        notifyListeners();
-      },
-      onError: (e) {
-        error = e.toString();
-        isLoading = false;
-        notifyListeners();
-      },
-    );
-  }
-
-  Future<void> addSaving({
-    required String title,
-    required double targetAmount,
-    required double currentAmount,
-  }) async {
-    final user = _auth.currentUser;
-    if (user == null) return;
-    final saving = SavingModel(
-      userId: user.uid,
-      title: title,
-      targetAmount: targetAmount,
-      currentAmount: currentAmount.clamp(0, targetAmount),
-      createdAt: DateTime.now(),
-    );
-    await _firestoreService.addSaving(saving);
-  }
-
-  Future<void> updateSaving(String id, double newAmount) async {
-    await _firestoreService.updateSaving(id, newAmount);
-  }
-
-  Future<void> removeSaving(String id) async {
-    await _firestoreService.deleteSaving(id);
-  }
-
-  @override
-  void dispose() {
-    _sub?.cancel();
-    super.dispose();
   }
 
   // Validasi form
@@ -268,7 +185,6 @@ class SavingsViewModel extends ChangeNotifier {
         imageUrl: imageUrl,
       );
 
-      // Gunakan timeout yang lebih pendek dan tetap anggap sukses jika data sudah masuk buffer lokal
       if (editingSaving != null) {
         await _firestoreService
             .updateSavingFull(saving)
@@ -292,6 +208,29 @@ class SavingsViewModel extends ChangeNotifier {
     }
   }
 
+  // Tambah tabungan baru langsung
+  Future<void> addSaving({
+    required String title,
+    required double targetAmount,
+    required double currentAmount,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    final saving = SavingModel(
+      userId: user.uid,
+      title: title,
+      targetAmount: targetAmount,
+      currentAmount: currentAmount.clamp(0, targetAmount),
+      createdAt: DateTime.now(),
+    );
+    await _firestoreService.addSaving(saving);
+  }
+
+  // Update jumlah tabungan
+  Future<void> updateSavingAmount(String id, double newAmount) async {
+    await _firestoreService.updateSaving(id, newAmount);
+  }
+
   // Hapus tabungan
   Future<bool> deleteSaving(String id) async {
     isLoading = true;
@@ -311,7 +250,9 @@ class SavingsViewModel extends ChangeNotifier {
     }
   }
 
-  void updateSaving(SavingItem newItem) {}
-
-  void addSaving(SavingItem newItem) {}
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
 }

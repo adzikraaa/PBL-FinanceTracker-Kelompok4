@@ -52,21 +52,20 @@ class _SavingsFormViewState extends State<SavingsFormView> {
   void _saveForm() {
     if (_formKey.currentState!.validate()) {
       final vm = Provider.of<SavingsViewModel>(context, listen: false);
-      
-      final newItem = SavingItem(
-        id: widget.savingToEdit?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
-        name: _nameController.text,
-        currentAmount: double.tryParse(_currentAmountController.text) ?? 0,
-        targetAmount: double.tryParse(_targetAmountController.text) ?? 0,
-        notes: _notesController.text,
-        expectedCompletion: widget.savingToEdit?.expectedCompletion ?? 'Dec 2025',
-        iconUrl: widget.savingToEdit?.iconUrl,
-      );
+      final name = _nameController.text.trim();
+      final current = double.tryParse(_currentAmountController.text) ?? 0;
+      final target = double.tryParse(_targetAmountController.text) ?? 0;
 
       if (widget.savingToEdit != null) {
-        vm.updateSaving(newItem);
+        // Update jumlah tabungan yang sudah ada
+        vm.updateSavingAmount(widget.savingToEdit!.id, current);
       } else {
-        vm.addSaving(newItem);
+        // Tambah tabungan baru
+        vm.addSaving(
+          title: name,
+          targetAmount: target,
+          currentAmount: current,
+        );
       }
 
       Navigator.pop(context);

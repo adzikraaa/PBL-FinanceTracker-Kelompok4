@@ -2,7 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/savings_viewmodel.dart';
-import '../../data/models/saving_model.dart';
+import '../../data/models/savings_model.dart';
 
 const Color _kBg = Color(0xFF0D2818);
 const Color _kCard = Color(0xFF163520);
@@ -112,11 +112,11 @@ class _SavingsViewState extends State<SavingsView> with TickerProviderStateMixin
         formatRupiah: _formatRupiah,
         onSave: (newAmount) async {
           Navigator.pop(context);
-          await vm.updateSaving(item.id!, newAmount);
+          await vm.updateSavingAmount(item.id!, newAmount);
         },
         onDelete: () async {
           Navigator.pop(context);
-          await vm.removeSaving(item.id!);
+          await vm.deleteSaving(item.id!);
         },
       ),
     );
@@ -141,8 +141,8 @@ class _SavingsViewState extends State<SavingsView> with TickerProviderStateMixin
                       _buildHeader(context),
                       if (vm.isLoading)
                         const Expanded(child: Center(child: CircularProgressIndicator(color: _kGreen)))
-                      else if (vm.error != null)
-                        Expanded(child: Center(child: Text(vm.error!, style: const TextStyle(color: Colors.redAccent))))
+                       else if (vm.errorMessage != null)
+                        Expanded(child: Center(child: Text(vm.errorMessage!, style: const TextStyle(color: Colors.redAccent))))
                       else ...[
                         _buildSummaryCard(vm),
                         const SizedBox(height: 16),

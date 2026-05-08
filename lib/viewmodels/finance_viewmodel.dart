@@ -7,6 +7,7 @@ import '../data/services/firestore_service.dart';
 class FinanceViewModel extends ChangeNotifier {
   final FirestoreService _firestoreService = FirestoreService();
   StreamSubscription<List<HppModel>>? _sub;
+
   // --- Input Variables (State) ---
   double biayaProduksi = 0.0;
   double biayaTenagaKerja = 0.0;
@@ -23,48 +24,6 @@ class FinanceViewModel extends ChangeNotifier {
 
   String namaProduk = "Produk Baru";
 
-<<<<<<< HEAD
-  final List<HppModel> history = [
-    HppModel(
-      id: '1',
-      userId: 'anon',
-      namaProduk: 'Nasi Goreng Spesial',
-      persediaanAwal: 18000,
-      pembelianBersih: 12000,
-      biayaTenagaKerja: 8000,
-      biayaOverhead: 4000,
-      persediaanAkhir: 9000,
-      jumlahUnit: 150,
-      biayaTetap: 120000,
-      hargaJualUnit: 25000,
-      totalHpp: 33000,
-      bepUnit: 8,
-      bepRupiah: 200000,
-      catatan: 'Analisa penjualan bulan ini',
-      createdAt: DateTime.now().subtract(const Duration(days: 3)),
-      biayaProduksi: 0.0, // <-- Diperbaiki dari null
-    ),
-    HppModel(
-      id: '2',
-      userId: 'anon',
-      namaProduk: 'Kopi Susu Kekinian',
-      persediaanAwal: 15000,
-      pembelianBersih: 10000,
-      biayaTenagaKerja: 7000,
-      biayaOverhead: 3500,
-      persediaanAkhir: 8000,
-      jumlahUnit: 120,
-      biayaTetap: 100000,
-      hargaJualUnit: 22000,
-      totalHpp: 25500,
-      bepUnit: 10,
-      bepRupiah: 220000,
-      catatan: 'Produk laris akhir pekan',
-      createdAt: DateTime.now().subtract(const Duration(days: 9)),
-      biayaProduksi: 0.0, // <-- Diperbaiki dari null
-    ),
-  ];
-=======
   List<HppModel> history = [];
 
   FinanceViewModel() {
@@ -86,7 +45,6 @@ class FinanceViewModel extends ChangeNotifier {
     _sub?.cancel();
     super.dispose();
   }
->>>>>>> develop
 
   // --- Getters untuk Kalkulasi Otomatis ---
 
@@ -109,9 +67,9 @@ class FinanceViewModel extends ChangeNotifier {
   double get hitungBEPRupiah => hitungBEPUnit * hargaJualUnit;
 
   // Margin
-  double get marginPerUnit => hargaJualUnit > 0 ? hargaJualUnit - modalPerUnit : 0.0; // <-- Diperbaiki dari null
+  double get marginPerUnit => hargaJualUnit > 0 ? hargaJualUnit - modalPerUnit : 0.0;
 
-  double get marginPercentage => hargaJualUnit > 0 ? (marginPerUnit / hargaJualUnit) * 100 : 0.0; // <-- Diperbaiki dari null
+  double get marginPercentage => hargaJualUnit > 0 ? (marginPerUnit / hargaJualUnit) * 100 : 0.0;
 
   // --- Fungsi Validasi ---
   bool isValid() {
@@ -122,47 +80,13 @@ class FinanceViewModel extends ChangeNotifier {
   }
 
   bool isBepValid() {
-    // Validasi sederhana, pastikan harga jual lebih besar dari modal agar BEP bisa tercapai
-    return hargaJualUnit > modalPerUnit; 
-  } // <-- Diperbaiki dari empty body
+    return hargaJualUnit > modalPerUnit;
+  }
 
   // ================================
   // SIMPAN DATA
   // ================================
 
-<<<<<<< HEAD
-  Future<List<double>> simpanPerhitungan(String userId) async {
-    if (isValid()) {
-      final newHpp = HppModel(
-        userId: userId,
-        namaProduk: namaProduk,
-        persediaanAwal: persediaanAwal,
-        pembelianBersih: pembelianBersih,
-        biayaTenagaKerja: biayaTenagaKerja,
-        biayaOverhead: biayaOverhead,
-        persediaanAkhir: persediaanAkhir,
-        jumlahUnit: jumlahUnit,
-        biayaTetap: biayaTetap,
-        hargaJualUnit: hargaJualUnit,
-        totalHpp: hitungHPP,
-        bepUnit: hitungBEPUnit, // Sudah tidak 0 lagi
-        bepRupiah: hitungBEPRupiah, // Sudah tidak 0 lagi
-        catatan: '',
-        createdAt: DateTime.now(),
-        biayaProduksi: 0.0, // <-- Diperbaiki dari null
-      );
-
-      // Panggil Firestore service kamu di sini
-      // await _firestoreService.addHpp(newHpp);
-
-      // Tambahkan ke lokal jika belum menggunakan Firebase (opsional)
-      // history.insert(0, newHpp);
-
-      notifyListeners();
-    }
-
-    return history.map((item) => item.bepUnit.toDouble()).toList();
-=======
   Future<void> simpanPerhitungan(String? _) async {
     if (!isBepValid()) return;
 
@@ -184,12 +108,14 @@ class FinanceViewModel extends ChangeNotifier {
       bepRupiah: hitungBEPRupiah,
       catatan: '',
       createdAt: DateTime.now(),
+      persediaanAwal: persediaanAwal,
+      pembelianBersih: pembelianBersih,
+      persediaanAkhir: persediaanAkhir,
     );
 
-    // Reset UI state immediately before awaiting network
-    resetData();
-
     await _firestoreService.addHistory(newHpp);
+
+    resetData();
   }
 
   void resetData() {
@@ -201,8 +127,10 @@ class FinanceViewModel extends ChangeNotifier {
     biayaTetap = 0.0;
     jumlahUnitTerjual = null;
     namaProduk = "Produk Baru";
+    persediaanAwal = 0.0;
+    pembelianBersih = 0.0;
+    persediaanAkhir = 0.0;
     notifyListeners();
->>>>>>> develop
   }
 
   // Getters for insight view

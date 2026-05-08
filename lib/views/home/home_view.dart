@@ -2,25 +2,15 @@ import 'dart:math';
 import 'package:BizPrice/views/notes/notes_list_view.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-<<<<<<< HEAD
-import 'package:provider/provider.dart';
-import '../../viewmodels/home_viewmodel.dart';
-import '../../viewmodels/note_viewmodel.dart';
-import '../finance/hitung_hpp_page.dart';
-import '../insight/insight_view.dart';
-import 'profile_view.dart';
-=======
-import '../../viewmodels/home_viewmodel.dart';
-import '../finance/hitung_hpp_page.dart';
-import '../savings/saving_list_page.dart';
-import '../../viewmodels/saving_viewmodel.dart';
-import '../../viewmodels/riwayat_viewmodel.dart';
-import '../riwayat/riwayat_view.dart';
-import 'profile_view.dart';
-import '../insight/insight_view.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
->>>>>>> develop
+import '../../viewmodels/home_viewmodel.dart';
+import '../../viewmodels/note_viewmodel.dart';
+import '../../viewmodels/riwayat_viewmodel.dart';
+import '../finance/hitung_hpp_page.dart';
+import '../insight/insight_view.dart';
+import '../riwayat/riwayat_view.dart';
+import 'profile_view.dart';
 
 // ─── Color Palette (Dark Green Theme) ────────────────────────────────────────
 const Color kBg = Color(0xFF0D2818);
@@ -65,6 +55,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   final HomeViewModel _vm = HomeViewModel();
 
   late AnimationController _sparkleController;
+  late AnimationController _progressAnimController;
+  late Animation<double> _progressAnim;
   late List<_Sparkle> _sparkles;
   final Random _rng = Random();
 
@@ -80,6 +72,15 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       duration: const Duration(seconds: 3),
     )..repeat();
 
+    _progressAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+    _progressAnim = Tween<double>(begin: 0, end: _vm.tabunganProgress).animate(
+      CurvedAnimation(parent: _progressAnimController, curve: Curves.easeOut),
+    );
+    _progressAnimController.forward();
+
     _sparkles = List.generate(
         12,
         (_) => _Sparkle(
@@ -90,12 +91,12 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               phase: _rng.nextDouble() * 2 * pi,
               speed: _rng.nextDouble() * 1.5 + 0.5,
             ));
-
   }
 
   @override
   void dispose() {
     _sparkleController.dispose();
+    _progressAnimController.dispose();
     super.dispose();
   }
 
@@ -151,51 +152,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     );
   }
 
-<<<<<<< HEAD
-=======
-  Widget _buildBody(HomeViewModel vm) {
-    final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
-    
-    switch (vm.selectedIndex) {
-      case 1: // Tabungan
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 80),
-          child: SavingListPage(userId: userId),
-        );
-      case 2: // Home Dashboard
-        return SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: 100),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildGreetingSection(),
-              const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  children: [
-                    _buildRiwayatCard(),
-                    const SizedBox(height: 14),
-                    _buildTabunganCard(),
-                    const SizedBox(height: 14),
-                    _buildHppBepCard(),
-                    const SizedBox(height: 14),
-                    _buildBottomRow(),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      case 3: // Insight
-        return const InsightView();
-      default:
-        return const SizedBox.shrink();
-    }
-  }
 
->>>>>>> develop
   Widget _buildGradientBg() {
     return Container(
       decoration: const BoxDecoration(
@@ -1006,8 +963,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                               MaterialPageRoute(
                                   builder: (_) => const InsightView()),
                             );
-<<<<<<< HEAD
-=======
                             if (mounted) _vm.onNavTap(2);
                           } else if (i == 4) {
                             _vm.onNavTap(4);
@@ -1019,7 +974,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                               MaterialPageRoute(
                                   builder: (_) => const RiwayatView()),
                             );
->>>>>>> develop
                             if (mounted) _vm.onNavTap(2);
                           } else {
                             _vm.onNavTap(i);
