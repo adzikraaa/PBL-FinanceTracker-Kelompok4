@@ -32,6 +32,16 @@ class SavingModel {
     );
   }
 
+  get iconUrl => null;
+
+  String? get name => null;
+
+  get progress => null;
+
+  get remainingAmount => null;
+
+  String? get expectedCompletion => null;
+
   // Konversi dari Object Flutter ke JSON untuk disimpan di Firestore
   Map<String, dynamic> toJson() {
     return {

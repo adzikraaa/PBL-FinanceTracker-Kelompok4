@@ -1,10 +1,11 @@
 import 'dart:convert';
+import 'package:BizPrice/models/saving_item.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
-import '../data/models/saving_model.dart';
+import '../data/models/savings_model.dart';
 import '../data/services/firestore_service.dart';
 
-class SavingViewModel extends ChangeNotifier {
+class SavingsViewModel extends ChangeNotifier {
   final FirestoreService _firestoreService = FirestoreService();
 
   List<SavingModel> _savings = [];
@@ -43,6 +44,8 @@ class SavingViewModel extends ChangeNotifier {
   // Total semua tabungan
   double get totalSavings =>
       _savings.fold(0.0, (sum, item) => sum + item.currentAmount);
+
+  get totalCurrentAmount => null;
 
   // Persentase progress per item
   double getProgress(SavingModel saving) {
@@ -221,4 +224,8 @@ class SavingViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  void updateSaving(SavingItem newItem) {}
+
+  void addSaving(SavingItem newItem) {}
 }

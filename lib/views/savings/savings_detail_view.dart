@@ -1,3 +1,4 @@
+import 'package:BizPrice/models/saving_item.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -16,6 +17,8 @@ class SavingsDetailView extends StatelessWidget {
   final String savingId;
 
   const SavingsDetailView({super.key, required this.savingId});
+
+  SavingItem? get savingsItem => null;
 
   @override
   Widget build(BuildContext context) {
@@ -36,8 +39,13 @@ class SavingsDetailView extends StatelessWidget {
       body: Stack(
         children: [
           _buildBackground(),
-          Consumer<SavingViewModel>(
+          Consumer<SavingsViewModel>(
             builder: (context, vm, child) {
+              // Validasi data
+              if (vm.savings.isEmpty) {
+                return const Center(child: Text("Data tidak ditemukan", style: TextStyle(color: kPutih)));
+              }
+
               final savingItem = vm.savings.firstWhere(
                 (item) => item.id == savingId,
                 orElse: () => vm.savings.first,
@@ -51,8 +59,7 @@ class SavingsDetailView extends StatelessWidget {
 
               return SafeArea(
                 child: SingleChildScrollView(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -65,7 +72,7 @@ class SavingsDetailView extends StatelessWidget {
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.3),
+                              color: Colors.black.withValues(alpha: 0.3),
                               blurRadius: 20,
                               offset: const Offset(0, 10),
                             ),
@@ -98,7 +105,7 @@ class SavingsDetailView extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        savingItem.name,
+                        savingItem.name ?? 'Tanpa Nama',
                         style: const TextStyle(
                             color: kPutih,
                             fontSize: 24,
@@ -150,8 +157,7 @@ class SavingsDetailView extends StatelessWidget {
                                             letterSpacing: 1)),
                                     const SizedBox(height: 4),
                                     Text(
-                                      formatter
-                                          .format(savingItem.remainingAmount),
+                                      formatter.format(savingItem.remainingAmount),
                                       style: const TextStyle(
                                           color: kPutih,
                                           fontSize: 18,
@@ -173,7 +179,7 @@ class SavingsDetailView extends StatelessWidget {
                                   ),
                                 ),
                                 FractionallySizedBox(
-                                  widthFactor: savingItem.progress,
+                                  widthFactor: savingItem.progress.clamp(0.0, 1.0),
                                   child: Container(
                                     height: 8,
                                     decoration: BoxDecoration(
@@ -181,7 +187,7 @@ class SavingsDetailView extends StatelessWidget {
                                       borderRadius: BorderRadius.circular(4),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: kHijauAksen.withOpacity(0.4),
+                                          color: kHijauAksen.withValues(alpha: 0.4),
                                           blurRadius: 8,
                                           offset: const Offset(0, 2),
                                         ),
@@ -190,60 +196,6 @@ class SavingsDetailView extends StatelessWidget {
                                   ),
                                 ),
                               ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Monthly Goal Card
-                      Container(
-                        decoration: BoxDecoration(
-                          color: kHijauCard,
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: Colors.white12, width: 1),
-                        ),
-                        padding: const EdgeInsets.all(20),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 4,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: kHijauAksen,
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('MONTHLY GOAL',
-                                      style: TextStyle(
-                                          color: kAbu,
-                                          fontSize: 10,
-                                          letterSpacing: 1)),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    formatter.format(savingItem.targetAmount /
-                                        12), // Dummy calculation
-                                    style: const TextStyle(
-                                        color: kPutih,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: kHijauTerang,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(Icons.trending_up,
-                                  color: kHijauAksen, size: 20),
                             ),
                           ],
                         ),
@@ -310,12 +262,11 @@ class SavingsDetailView extends StatelessWidget {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    SavingsFormView(savingToEdit: savingItem),
+                                    SavingsFormView(savingToEdit: savingsItem),
                               ),
                             );
                           },
-                          icon: const Icon(Icons.edit,
-                              color: kHijauGelap, size: 20),
+                          icon: const Icon(Icons.edit, color: kHijauGelap, size: 20),
                           label: const Text(
                             'Edit Goal',
                             style: TextStyle(
@@ -339,7 +290,9 @@ class SavingsDetailView extends StatelessWidget {
                             ),
                           ),
                           onPressed: () {
-                            vm.deleteSaving(savingItem.id);
+                            if (savingItem.id != null) {
+                              vm.deleteSaving(savingItem.id!);
+                            }
                             Navigator.pop(context);
                           },
                           icon: const Icon(Icons.delete_outline,
@@ -353,18 +306,15 @@ class SavingsDetailView extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 100), // padding bottom
+                      const SizedBox(height: 100),
                     ],
                   ),
                 ),
               );
             },
           ),
-          // Bottom Nav
           Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
+            bottom: 0, left: 0, right: 0,
             child: _buildBottomNav(context),
           ),
         ],
@@ -376,32 +326,28 @@ class SavingsDetailView extends StatelessWidget {
     return Container(
       height: 90,
       padding: const EdgeInsets.only(bottom: 20, top: 10, left: 16, right: 16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: kHijauGelap,
-        border: const Border(top: BorderSide(color: Colors.white10)),
+        border: Border(top: BorderSide(color: Colors.white10)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          Icon(Icons.calculate_outlined, color: kAbu, size: 24),
-          Icon(Icons.account_balance_wallet_outlined, color: kAbu, size: 24),
+          const Icon(Icons.calculate_outlined, color: kAbu, size: 24),
+          const Icon(Icons.account_balance_wallet_outlined, color: kAbu, size: 24),
           GestureDetector(
-            onTap: () {
-              // Pop 2 times to return to HomeView
-              Navigator.popUntil(context, (route) => route.isFirst);
-            },
+            onTap: () => Navigator.popUntil(context, (route) => route.isFirst),
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: kHijauCard,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child:
-                  const Icon(Icons.home_rounded, color: kHijauAksen, size: 24),
+              child: const Icon(Icons.home_rounded, color: kHijauAksen, size: 24),
             ),
           ),
-          Icon(Icons.pie_chart_outline, color: kAbu, size: 24),
-          Icon(Icons.access_time, color: kAbu, size: 24),
+          const Icon(Icons.pie_chart_outline, color: kAbu, size: 24),
+          const Icon(Icons.access_time, color: kAbu, size: 24),
         ],
       ),
     );
@@ -423,7 +369,7 @@ class _SavingsDetailBlobPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = kHijauAksen.withOpacity(0.1)
+      ..color = kHijauAksen.withValues(alpha: 0.1)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 

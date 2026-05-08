@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'data/config/firebase_options.dart';
 import 'shared/colors.dart';
 import 'viewmodels/auth_viewmodel.dart';
@@ -9,8 +8,8 @@ import 'views/auth/welcome_view.dart';
 import 'views/home/main_navigation.dart';
 import 'viewmodels/finance_viewmodel.dart';
 import 'viewmodels/savings_viewmodel.dart';
+import 'viewmodels/note_viewmodel.dart';
 import 'viewmodels/loadingscreen.dart';
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,7 +31,8 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => FinanceViewModel()),
-        ChangeNotifierProvider(create: (_) => SavingViewModel()),
+        ChangeNotifierProvider(create: (_) => SavingsViewModel()),
+        ChangeNotifierProvider(create: (_) => NoteViewModel()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

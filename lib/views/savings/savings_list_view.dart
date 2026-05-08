@@ -26,7 +26,7 @@ class SavingsListView extends StatelessWidget {
           _buildBackground(),
 
           SafeArea(
-            child: Consumer<SavingViewModel>(
+            child: Consumer<SavingsViewModel>(
               builder: (context, vm, child) {
                 final formatter = NumberFormat.currency(
                   locale: 'id_ID',
@@ -91,7 +91,7 @@ class SavingsListView extends StatelessWidget {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) =>
-                                      SavingsDetailView(savingId: item.id),
+                                      SavingsDetailView(savingId: item.id!),
                                 ),
                               );
                             },

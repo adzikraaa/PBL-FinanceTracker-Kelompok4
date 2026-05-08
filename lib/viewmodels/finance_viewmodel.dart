@@ -36,6 +36,7 @@ class FinanceViewModel extends ChangeNotifier {
       bepRupiah: 200000,
       catatan: 'Analisa penjualan bulan ini',
       createdAt: DateTime.now().subtract(const Duration(days: 3)),
+      biayaProduksi: 0.0, // <-- Diperbaiki dari null
     ),
     HppModel(
       id: '2',
@@ -54,6 +55,7 @@ class FinanceViewModel extends ChangeNotifier {
       bepRupiah: 220000,
       catatan: 'Produk laris akhir pekan',
       createdAt: DateTime.now().subtract(const Duration(days: 9)),
+      biayaProduksi: 0.0, // <-- Diperbaiki dari null
     ),
   ];
 
@@ -68,13 +70,19 @@ class FinanceViewModel extends ChangeNotifier {
 
   double get hitungBEPUnit {
     double margin = hargaJualUnit - modalPerUnit;
-    if (margin <= 0)
+    if (margin <= 0) {
       return 0; // Menghindari bagi nol atau hasil negatif jika rugi
+    }
     return biayaTetap / margin;
   }
 
   // BEP Rupiah = BEP Unit * Harga Jual
   double get hitungBEPRupiah => hitungBEPUnit * hargaJualUnit;
+
+  // Margin
+  double get marginPerUnit => hargaJualUnit > 0 ? hargaJualUnit - modalPerUnit : 0.0; // <-- Diperbaiki dari null
+
+  double get marginPercentage => hargaJualUnit > 0 ? (marginPerUnit / hargaJualUnit) * 100 : 0.0; // <-- Diperbaiki dari null
 
   // --- Fungsi Validasi ---
   bool isValid() {
@@ -83,6 +91,11 @@ class FinanceViewModel extends ChangeNotifier {
         hargaJualUnit > 0 &&
         biayaTetap >= 0;
   }
+
+  bool isBepValid() {
+    // Validasi sederhana, pastikan harga jual lebih besar dari modal agar BEP bisa tercapai
+    return hargaJualUnit > modalPerUnit; 
+  } // <-- Diperbaiki dari empty body
 
   // ================================
   // SIMPAN DATA
@@ -106,10 +119,14 @@ class FinanceViewModel extends ChangeNotifier {
         bepRupiah: hitungBEPRupiah, // Sudah tidak 0 lagi
         catatan: '',
         createdAt: DateTime.now(),
+        biayaProduksi: 0.0, // <-- Diperbaiki dari null
       );
 
       // Panggil Firestore service kamu di sini
       // await _firestoreService.addHpp(newHpp);
+
+      // Tambahkan ke lokal jika belum menggunakan Firebase (opsional)
+      // history.insert(0, newHpp);
 
       notifyListeners();
     }
@@ -136,5 +153,5 @@ class FinanceViewModel extends ChangeNotifier {
 
   String get popularProduct => 'Produk A'; // dummy
 
-  String get efficiencyHeadline => 'Efisiensi Baik'; // dummy
+  String get efficiencyHeadline => 'Efisiensi Baik';
 }

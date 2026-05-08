@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/finance_viewmodel.dart';
-import '../../viewmodels/saving_viewmodel.dart';
+import '../../viewmodels/savings_viewmodel.dart';
 import '../finance/hitung_hpp_page.dart';
 
 class InsightView extends StatefulWidget {
@@ -53,7 +53,7 @@ class _InsightViewState extends State<InsightView>
   @override
   Widget build(BuildContext context) {
     final finance = context.watch<FinanceViewModel>();
-    final savings = context.watch<SavingViewModel>();
+    final savings = context.watch<SavingsViewModel>();
     final formatter = NumberFormat.currency(
       locale: 'id_ID',
       symbol: 'Rp ',
@@ -293,7 +293,7 @@ class _InsightViewState extends State<InsightView>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      finance.totalBepAchievedPercent,
+                      finance.totalBepAchievedPercent as String,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 15,
@@ -583,7 +583,7 @@ class _InsightViewState extends State<InsightView>
     );
   }
 
-  Widget _buildInsightStrategies(SavingViewModel savings) {
+  Widget _buildInsightStrategies(SavingsViewModel savings) {
     final items = [
       {
         'title': 'Restok Bahan Baku',

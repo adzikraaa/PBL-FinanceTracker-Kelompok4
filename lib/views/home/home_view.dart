@@ -1,15 +1,13 @@
 import 'dart:math';
+import 'package:BizPrice/views/notes/notes_list_view.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 import '../../viewmodels/home_viewmodel.dart';
+import '../../viewmodels/note_viewmodel.dart';
 import '../finance/hitung_hpp_page.dart';
-<<<<<<< HEAD
-import '../savings/savings_list_view.dart';
-import 'insight_view.dart';
-=======
 import '../insight/insight_view.dart';
 import 'profile_view.dart';
->>>>>>> 63a87b8386331e4983cf28dbdf72a0c7d28ea491
 
 // ─── Color Palette (Dark Green Theme) ────────────────────────────────────────
 const Color kBg = Color(0xFF0D2818);
@@ -156,11 +154,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
   Widget _buildGradientBg() {
     return Container(
-<<<<<<< HEAD
-      decoration: BoxDecoration(
-        color: kUngu,
-        borderRadius: BorderRadius.circular(16),
-=======
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -320,98 +313,11 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         color: kRiwayat,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0xFFB8E88A), width: 0.8),
->>>>>>> 63a87b8386331e4983cf28dbdf72a0c7d28ea491
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-<<<<<<< HEAD
-          const Row(
-            children: [
-              Icon(Icons.access_time, color: kPutih, size: 20),
-              SizedBox(width: 8),
-              Text('Riwayat',
-                  style: TextStyle(
-                      color: kPutih,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          const Text('RIWAYAT TERBARU',
-              style: TextStyle(color: kAbu, fontSize: 11, letterSpacing: 1)),
-          const SizedBox(height: 4),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(_vm.riwayatNama,
-                      style: const TextStyle(
-                          color: kPutih,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16)),
-                  const SizedBox(height: 4),
-                  Text(_vm.riwayatHarga,
-                      style: const TextStyle(
-                          color: kKuning,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15)),
-                ],
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: kKuning,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  children: [
-                    Icon(
-                      _vm.riwayatUntung
-                          ? Icons.trending_up
-                          : Icons.trending_down,
-                      color: kUngu,
-                      size: 18,
-                    ),
-                    Text(
-                      _vm.riwayatUntung ? 'UNTUNG' : 'RUGI',
-                      style: const TextStyle(
-                          color: kUngu,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 10),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Center(
-            child: OutlinedButton(
-              onPressed: _vm.onLihatRiwayat,
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: kPutih),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30)),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('LIHAT SEMUA RIWAYAT',
-                      style: TextStyle(
-                          color: kPutih,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12)),
-                  SizedBox(width: 6),
-                  Icon(Icons.arrow_forward, color: kPutih, size: 16),
-                ],
-=======
           const Text(
             'RIWAYAT',
             style: TextStyle(
@@ -486,7 +392,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                   fontSize: 12,
                   letterSpacing: 0.8,
                 ),
->>>>>>> 63a87b8386331e4983cf28dbdf72a0c7d28ea491
               ),
             ),
           ),
@@ -495,38 +400,17 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     );
   }
 
-<<<<<<< HEAD
-  // ── Kartu Tabungan ────────────────────────────────────────────────────────
-  Widget _buildTabunganCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: kKuning,
-        borderRadius: BorderRadius.circular(16),
-=======
   Widget _buildTabunganCard() {
     return Container(
       decoration: BoxDecoration(
         color: kCard,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: kWhite20, width: 0.8),
->>>>>>> 63a87b8386331e4983cf28dbdf72a0c7d28ea491
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-<<<<<<< HEAD
-          const Row(
-            children: [
-              Icon(Icons.account_balance_wallet, color: kUngu, size: 20),
-              SizedBox(width: 8),
-              Text('Tabungan',
-                  style: TextStyle(
-                      color: kUngu,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16)),
-            ],
-=======
           const Text(
             'TABUNGAN',
             style: TextStyle(
@@ -544,50 +428,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
->>>>>>> 63a87b8386331e4983cf28dbdf72a0c7d28ea491
           ),
           const SizedBox(height: 16),
           Row(
             children: [
-<<<<<<< HEAD
-              SizedBox(
-                width: 100,
-                height: 100,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: 100,
-                      height: 100,
-                      child: CircularProgressIndicator(
-                        value: _vm.tabunganProgress,
-                        strokeWidth: 12,
-                        backgroundColor: kPutih.withValues(alpha: 0.5),
-                        valueColor: const AlwaysStoppedAnimation<Color>(kUngu),
-                        strokeCap: StrokeCap.round,
-                      ),
-                    ),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.directions_car,
-                            color: kUngu, size: 30),
-                        Text(
-                          '${(_vm.tabunganProgress * 100).toInt()}%',
-                          style: const TextStyle(
-                              color: kUngu,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              Container(width: 1, height: 70, color: kUngu),
-              const SizedBox(width: 16),
-=======
               AnimatedBuilder(
                 animation: _progressAnim,
                 builder: (context, _) {
@@ -623,42 +467,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 },
               ),
               const SizedBox(width: 20),
->>>>>>> 63a87b8386331e4983cf28dbdf72a0c7d28ea491
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-<<<<<<< HEAD
-                    const Text('TARGET',
-                        style: TextStyle(
-                            fontSize: 11, color: kUngu, letterSpacing: 1)),
-                    Row(
-                      children: [
-                        const Icon(Icons.track_changes,
-                            color: kUngu, size: 16),
-                        const SizedBox(width: 4),
-                        Text(_vm.tabunganTarget,
-                            style: const TextStyle(
-                                color: kUngu,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14)),
-                      ],
-                    ),
-                    Divider(color: kUngu.withValues(alpha: 0.3)),
-                    const Text('TABUNGAN SAAT INI',
-                        style: TextStyle(
-                            fontSize: 11, color: kUngu, letterSpacing: 1)),
-                    Row(
-                      children: [
-                        const Icon(Icons.savings, color: kUngu, size: 16),
-                        const SizedBox(width: 4),
-                        Text(_vm.tabunganSaatIni,
-                            style: const TextStyle(
-                                color: kUngu,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14)),
-                      ],
-=======
                     const Text(
                       'TERKUMPUL',
                       style: TextStyle(
@@ -693,78 +505,17 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
->>>>>>> 63a87b8386331e4983cf28dbdf72a0c7d28ea491
                     ),
                   ],
                 ),
               ),
             ],
           ),
-<<<<<<< HEAD
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(_vm.tabunganSisa,
-                      style: const TextStyle(
-                          color: kUngu,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13)),
-                  Text(_vm.tabunganEmoji,
-                      style: const TextStyle(color: kUngu, fontSize: 12)),
-                ],
-              ),
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SavingsListView()),
-                  );
-                },
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: const BoxDecoration(
-                      color: kPutih, shape: BoxShape.circle),
-                  child: const Icon(Icons.arrow_forward,
-                      color: kHitam, size: 18),
-                ),
-              ),
-            ],
-          ),
-=======
->>>>>>> 63a87b8386331e4983cf28dbdf72a0c7d28ea491
         ],
       ),
     );
   }
 
-<<<<<<< HEAD
-  // ── Kartu HPP & BEP ───────────────────────────────────────────────────────
-  Widget _buildHppBepCard() {
-    return GestureDetector(
-      onTap: _vm.onHppBepTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: kUngu,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: kPutih.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.calculate_outlined,
-                  color: kKuning, size: 26),
-=======
   Widget _buildHppBepCard() {
     return GestureDetector(
       onTap: () async {
@@ -788,7 +539,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         child: Row(
           children: [
-            // Lingkaran gelap solid (bukan rounded rect, bukan transparan)
+            // Lingkaran gelap solid
             Container(
               width: 52,
               height: 52,
@@ -801,22 +552,12 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 color: Color(0xFFFBBF24), // kuning/amber
                 size: 26,
               ),
->>>>>>> 63a87b8386331e4983cf28dbdf72a0c7d28ea491
             ),
             const SizedBox(width: 16),
             const Expanded(
               child: Text(
                 'Hitung HPP & BEP',
                 style: TextStyle(
-<<<<<<< HEAD
-                    color: kPutih,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18),
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios,
-                color: kPutih.withValues(alpha: 0.7), size: 18),
-=======
                   color: Color(0xFF0A1A0A),
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
@@ -828,7 +569,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               color: Color(0xFF0A1A0A),
               size: 22,
             ),
->>>>>>> 63a87b8386331e4983cf28dbdf72a0c7d28ea491
           ],
         ),
       ),
@@ -927,7 +667,12 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                   Row(
                     children: [
                       GestureDetector(
-                        onTap: _vm.onCatatanTap,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const NotesListView(),
+                          ),
+                        ),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8),
@@ -948,7 +693,12 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                       ),
                       const Spacer(),
                       GestureDetector(
-                        onTap: _vm.onCatatanTap,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const NotesListView(),
+                          ),
+                        ),
                         child: const Icon(
                           Icons.arrow_forward,
                           color: Color(0xFF1E3D0F),
@@ -967,22 +717,53 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   }
 
   List<Widget> _buildNoteLines() {
-    final widths = [1.0, 0.75, 0.88];
-    return widths
-        .map((w) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Container(
-                height: 5,
-                width: double.infinity,
-                margin: EdgeInsets.only(right: (1 - w) * 60),
-                decoration: BoxDecoration(
-                  // Hijau tua gelap sesuai screenshot
-                  color: const Color(0xFF2D5A1B),
-                  borderRadius: BorderRadius.circular(3),
+    final noteVm = context.watch<NoteViewModel>();
+    final notes = noteVm.notes;
+
+    if (notes.isEmpty) {
+      return [
+        const Text(
+          'Belum ada catatan',
+          style: TextStyle(
+            color: Color(0xFF2D5A1B),
+            fontSize: 13,
+            height: 1.5,
+          ),
+        ),
+      ];
+    }
+
+    final latestNote = notes.first;
+    final lines = latestNote.content.split('\n').take(2).toList();
+
+    return [
+      Text(
+        latestNote.title,
+        style: const TextStyle(
+          color: Color(0xFF2D5A1B),
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          height: 1.5,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      ...lines
+          .map((line) => Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  line,
+                  style: const TextStyle(
+                    color: Color(0xFF2D5A1B),
+                    fontSize: 12,
+                    height: 1.4,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ))
-        .toList();
+              ))
+          .toList(),
+    ];
   }
 
   Widget _insightLegend(Color color, String label) {
@@ -999,7 +780,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     );
   }
 
-  // ─── Bottom Navbar (FIXED) ────────────────────────────────────────────────
+  // ─── Bottom Navbar ────────────────────────────────────────────────
   Widget _buildBottomNav() {
     const navIcons = [
       Icons.calculate_outlined, // 0 - HPP & BEP
@@ -1040,12 +821,12 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                   ),
                 ),
 
-                // ── Animated active circle (selalu rata tengah) ──────────
+                // ── Animated active circle ──────────
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 320),
                   curve: Curves.easeInOutCubic,
                   left: circleLeft,
-                  top: circleTop, // ← kunci: tidak hardcode, selalu center
+                  top: circleTop,
                   child: Container(
                     width: circleSize,
                     height: circleSize,
@@ -1060,30 +841,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                         ),
                       ],
                     ),
-<<<<<<< HEAD
-                    child: Row(
-                      children: List.generate(icons.length, (i) {
-                        final isSelected = i == _vm.selectedIndex;
-                        return Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              if (i == 0) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => const HitungHppPage()),
-                                );
-                              } else if (i == 1) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => const SavingsListView()),
-                                );
-                              } else {
-                                _vm.onNavTap(i);
-                              }
-                            },
-                            child: Container(
-                              color: Colors.transparent,
-=======
                     child: Icon(
                       navIcons[_vm.selectedIndex],
                       color: const Color(0xFF0C1B13),
@@ -1101,7 +858,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                         behavior: HitTestBehavior.translucent,
                         onTap: () async {
                           if (i == 0) {
-                            // Tap HPP di navbar
                             _vm.onNavTap(0);
                             await Future.delayed(
                                 const Duration(milliseconds: 340));
@@ -1111,10 +867,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                               MaterialPageRoute(
                                   builder: (_) => const HitungHppPage()),
                             );
-                            // Kembali ke Home → aktifkan index 2
                             if (mounted) _vm.onNavTap(2);
                           } else if (i == 3) {
-                            // Tap Insight di navbar
                             _vm.onNavTap(3);
                             await Future.delayed(
                                 const Duration(milliseconds: 340));
@@ -1124,7 +878,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                               MaterialPageRoute(
                                   builder: (_) => const InsightView()),
                             );
-                            // Kembali ke Home → aktifkan index 2
                             if (mounted) _vm.onNavTap(2);
                           } else {
                             _vm.onNavTap(i);
@@ -1136,7 +889,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                             child: AnimatedOpacity(
                               duration: const Duration(milliseconds: 200),
                               opacity: isActive ? 0.0 : 1.0,
->>>>>>> 63a87b8386331e4983cf28dbdf72a0c7d28ea491
                               child: Icon(
                                 navIcons[i],
                                 color: kNavIcon,

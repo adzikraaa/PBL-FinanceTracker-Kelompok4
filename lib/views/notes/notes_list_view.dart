@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/note_viewmodel.dart';
 import 'note_form_view.dart';
-import '../home/home_view.dart'; // Needed for Home nav if we replicate bottom nav
 
 class NotesListView extends StatefulWidget {
   const NotesListView({super.key});
@@ -28,7 +27,7 @@ class _NotesListViewState extends State<NotesListView> {
           Positioned.fill(
             child: CustomPaint(painter: _NotesBackgroundPainter()),
           ),
-          
+
           SafeArea(
             bottom: false,
             child: Column(
@@ -43,7 +42,8 @@ class _NotesListViewState extends State<NotesListView> {
                         children: [
                           GestureDetector(
                             onTap: () => Navigator.pop(context),
-                            child: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
+                            child: const Icon(Icons.arrow_back,
+                                color: Colors.white, size: 24),
                           ),
                           const SizedBox(width: 16),
                           const Text(
@@ -71,16 +71,21 @@ class _NotesListViewState extends State<NotesListView> {
                 const SizedBox(height: 24),
                 Expanded(
                   child: ListView.separated(
-                    padding: const EdgeInsets.only(left: 24, right: 24, bottom: 120), // Extra padding for FAB & Bottom Nav
+                    padding: const EdgeInsets.only(
+                        left: 24,
+                        right: 24,
+                        bottom: 120), // Extra padding for FAB & Bottom Nav
                     physics: const BouncingScrollPhysics(),
                     itemCount: notes.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 16),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 16),
                     itemBuilder: (context, index) {
                       final note = notes[index];
                       return Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1B3324), // matching card color in screenshot
+                          color: const Color(
+                              0xFF1B3324), // matching card color in screenshot
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: const Color(0xFF2C4334)),
                         ),
@@ -105,18 +110,21 @@ class _NotesListViewState extends State<NotesListView> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => NoteFormView(noteId: note.id),
+                                        builder: (_) =>
+                                            NoteFormView(noteId: note.id),
                                       ),
                                     );
                                   },
-                                  child: const Icon(Icons.edit, color: Color(0xFF6B7E72), size: 20),
+                                  child: const Icon(Icons.edit,
+                                      color: Color(0xFF6B7E72), size: 20),
                                 ),
                                 const SizedBox(width: 12),
                                 GestureDetector(
                                   onTap: () {
                                     _showDeleteConfirmation(context, note.id);
                                   },
-                                  child: const Icon(Icons.delete_outline, color: Color(0xFF6B7E72), size: 20),
+                                  child: const Icon(Icons.delete_outline,
+                                      color: Color(0xFF6B7E72), size: 20),
                                 ),
                               ],
                             ),
@@ -138,7 +146,7 @@ class _NotesListViewState extends State<NotesListView> {
               ],
             ),
           ),
-          
+
           // Floating Action Button
           Positioned(
             right: 24,
@@ -164,11 +172,12 @@ class _NotesListViewState extends State<NotesListView> {
                     ),
                   ],
                 ),
-                child: const Icon(Icons.add, color: Color(0xFF0C1B13), size: 28),
+                child:
+                    const Icon(Icons.add, color: Color(0xFF0C1B13), size: 28),
               ),
             ),
           ),
-          
+
           // Bottom Navigation
           Positioned(
             left: 20,
@@ -211,7 +220,8 @@ class _NotesListViewState extends State<NotesListView> {
                   decoration: BoxDecoration(
                     color: const Color(0xFF132018).withOpacity(0.95),
                     borderRadius: BorderRadius.circular(34),
-                    border: Border.all(color: const Color(0xFF2C4334), width: 1.5),
+                    border:
+                        Border.all(color: const Color(0xFF2C4334), width: 1.5),
                   ),
                 ),
               ),
@@ -249,12 +259,12 @@ class _NotesListViewState extends State<NotesListView> {
                       behavior: HitTestBehavior.translucent,
                       onTap: () async {
                         if (i == _selectedIndex) return;
-                        
+
                         // We act as if going back to home or other root pages
                         if (i == 2) {
-                           Navigator.popUntil(context, (route) => route.isFirst);
+                          Navigator.popUntil(context, (route) => route.isFirst);
                         } else {
-                          // other nav items not implemented here since it's a sub-page, 
+                          // other nav items not implemented here since it's a sub-page,
                           // but can mimic InsightView's logic.
                           Navigator.popUntil(context, (route) => route.isFirst);
                           // For a complete flow, we'd use a main layout with a persistent bottom nav.
@@ -290,19 +300,23 @@ class _NotesListViewState extends State<NotesListView> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1B3324),
-        title: const Text('Hapus Catatan?', style: TextStyle(color: Colors.white)),
-        content: const Text('Catatan ini akan dihapus secara permanen.', style: TextStyle(color: Colors.white70)),
+        title:
+            const Text('Hapus Catatan?', style: TextStyle(color: Colors.white)),
+        content: const Text('Catatan ini akan dihapus secara permanen.',
+            style: TextStyle(color: Colors.white70)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Batal', style: TextStyle(color: Color(0xFF8BCA6E))),
+            child:
+                const Text('Batal', style: TextStyle(color: Color(0xFF8BCA6E))),
           ),
           TextButton(
             onPressed: () {
               context.read<NoteViewModel>().deleteNote(noteId);
               Navigator.pop(ctx);
             },
-            child: const Text('Hapus', style: TextStyle(color: Colors.redAccent)),
+            child:
+                const Text('Hapus', style: TextStyle(color: Colors.redAccent)),
           ),
         ],
       ),
@@ -313,10 +327,12 @@ class _NotesListViewState extends State<NotesListView> {
 class _NotesBackgroundPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30);
+    final paint = Paint()
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30);
 
     paint.color = const Color(0xFF146443).withOpacity(0.35);
-    canvas.drawCircle(Offset(size.width * 0.18, size.height * 0.15), 110, paint);
+    canvas.drawCircle(
+        Offset(size.width * 0.18, size.height * 0.15), 110, paint);
 
     paint.color = const Color(0xFF3CAE7A).withOpacity(0.25);
     canvas.drawCircle(Offset(size.width * 0.86, size.height * 0.23), 80, paint);

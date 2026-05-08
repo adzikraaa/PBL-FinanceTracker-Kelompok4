@@ -37,7 +37,7 @@ class _InsightViewState extends State<InsightView>
   @override
   Widget build(BuildContext context) {
     final finance = context.watch<FinanceViewModel>();
-    final savings = context.watch<SavingViewModel>();
+    final savings = context.watch<SavingsViewModel>();
     final formatter = NumberFormat.currency(
       locale: 'id_ID',
       symbol: 'Rp ',
@@ -230,7 +230,7 @@ class _InsightViewState extends State<InsightView>
                     const Text('TOTAL BEP TERCAPAI',
                         style: TextStyle(color: Colors.white54, fontSize: 12)),
                     const SizedBox(height: 6),
-                    Text(finance.totalBepAchievedPercent,
+                    Text(finance.totalBepAchievedPercent as String,
                         style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
@@ -444,7 +444,7 @@ class _InsightViewState extends State<InsightView>
     );
   }
 
-  Widget _buildInsightStrategies(SavingViewModel savings) {
+  Widget _buildInsightStrategies(SavingsViewModel savings) {
     final messages = [
       {
         'title': 'Restok Bahan Baku',
