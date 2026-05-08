@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../../shared/colors.dart';
+import 'login_view.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -525,8 +526,8 @@ class _RegisterViewState extends State<RegisterView>
       decoration: BoxDecoration(
         color: AppColors.white.withValues(alpha: 0.93),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-            color: AppColors.white.withValues(alpha: 0.6), width: 1),
+        border:
+            Border.all(color: AppColors.white.withValues(alpha: 0.6), width: 1),
         boxShadow: [
           BoxShadow(
             color: AppColors.black.withValues(alpha: 0.15),
@@ -627,8 +628,7 @@ class _RegisterViewState extends State<RegisterView>
                 if (!_agreeToTerms) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                        content:
-                            Text('Harap setujui syarat dan ketentuan.')),
+                        content: Text('Harap setujui syarat dan ketentuan.')),
                   );
                   return;
                 }
@@ -640,8 +640,7 @@ class _RegisterViewState extends State<RegisterView>
                 if (!mounted) return;
                 if (success) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Registrasi berhasil! 🎉')),
+                    const SnackBar(content: Text('Registrasi berhasil! 🎉')),
                   );
                   Navigator.of(context).pop();
                 } else if (vm.errorMessage != null) {
@@ -729,7 +728,8 @@ class _RegisterViewState extends State<RegisterView>
       style: const TextStyle(fontFamily: 'Lexend', fontSize: 14),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(fontFamily: 'Lexend', color: AppColors.textTertiary, fontSize: 14),
+        hintStyle: const TextStyle(
+            fontFamily: 'Lexend', color: AppColors.textTertiary, fontSize: 14),
         prefixIcon: prefixIcon != null
             ? Icon(prefixIcon, color: AppColors.textTertiary, size: 18)
             : null,
@@ -761,7 +761,8 @@ class _RegisterViewState extends State<RegisterView>
       style: const TextStyle(fontFamily: 'Lexend', fontSize: 14),
       decoration: InputDecoration(
         hintText: 'Enter Password',
-        hintStyle: const TextStyle(fontFamily: 'Lexend', color: AppColors.textTertiary, fontSize: 14),
+        hintStyle: const TextStyle(
+            fontFamily: 'Lexend', color: AppColors.textTertiary, fontSize: 14),
         prefixIcon: const Icon(Icons.lock_outline,
             color: AppColors.textTertiary, size: 18),
         suffixIcon: GestureDetector(
@@ -888,8 +889,9 @@ class _RegisterViewState extends State<RegisterView>
     return AnimatedBuilder(
       animation: _floatCtrl,
       builder: (context, child) {
-        final floatOffset = sin((_floatCtrl.value * 2 * pi) + delay * 2 * pi) * 10;
-        
+        final floatOffset =
+            sin((_floatCtrl.value * 2 * pi) + delay * 2 * pi) * 10;
+
         return Positioned(
           top: top != null ? top + floatOffset : null,
           bottom: bottom != null ? bottom - floatOffset : null,
@@ -898,9 +900,11 @@ class _RegisterViewState extends State<RegisterView>
           child: AnimatedBuilder(
             animation: _sparkleCtrl,
             builder: (context, child) {
-              final scale = 0.8 + 0.2 * sin((_sparkleCtrl.value * 2 * pi) + delay * pi);
-              final opacity = 0.5 + 0.5 * sin((_sparkleCtrl.value * 2 * pi) + delay * pi);
-              
+              final scale =
+                  0.8 + 0.2 * sin((_sparkleCtrl.value * 2 * pi) + delay * pi);
+              final opacity =
+                  0.5 + 0.5 * sin((_sparkleCtrl.value * 2 * pi) + delay * pi);
+
               return Opacity(
                 opacity: opacity.clamp(0.0, 1.0),
                 child: Transform.scale(

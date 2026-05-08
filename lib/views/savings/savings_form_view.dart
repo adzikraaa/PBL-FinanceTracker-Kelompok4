@@ -51,7 +51,7 @@ class _SavingsFormViewState extends State<SavingsFormView> {
 
   void _saveForm() {
     if (_formKey.currentState!.validate()) {
-      final vm = Provider.of<SavingsViewModel>(context, listen: false);
+      final vm = Provider.of<SavingViewModel>(context, listen: false);
       
       final newItem = SavingItem(
         id: widget.savingToEdit?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
@@ -229,7 +229,7 @@ class _SavingsFormViewState extends State<SavingsFormView> {
                             ),
                           ),
                           onPressed: () {
-                            final vm = Provider.of<SavingsViewModel>(context, listen: false);
+                            final vm = Provider.of<SavingViewModel>(context, listen: false);
                             vm.deleteSaving(widget.savingToEdit!.id);
                             Navigator.pop(context); // close form
                             Navigator.pop(context); // close detail if we came from detail

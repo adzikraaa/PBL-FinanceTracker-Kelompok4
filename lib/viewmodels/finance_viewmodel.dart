@@ -12,6 +12,10 @@ class FinanceViewModel extends ChangeNotifier {
   double biayaTetap = 0.0;
   int? jumlahUnitTerjual;
 
+  double persediaanAwal = 0.0;
+  double pembelianBersih = 0.0;
+  double persediaanAkhir = 0.0;
+
   String namaProduk = "Produk Baru";
 
   final List<HppModel> history = [
@@ -56,15 +60,16 @@ class FinanceViewModel extends ChangeNotifier {
   // --- Getters untuk Kalkulasi Otomatis ---
 
   // Rumus HPP
-  double get hitungHPP => 
-      (persediaanAwal + pembelianBersih + biayaTenagaKerja + biayaOverhead) - persediaanAkhir;
+  double get hitungHPP =>
+      (persediaanAwal + pembelianBersih + biayaTenagaKerja + biayaOverhead) -
+      persediaanAkhir;
 
-  double get modalPerUnit =>
-      jumlahUnit > 0 ? hitungHPP / jumlahUnit : 0;
+  double get modalPerUnit => jumlahUnit > 0 ? hitungHPP / jumlahUnit : 0;
 
   double get hitungBEPUnit {
     double margin = hargaJualUnit - modalPerUnit;
-    if (margin <= 0) return 0; // Menghindari bagi nol atau hasil negatif jika rugi
+    if (margin <= 0)
+      return 0; // Menghindari bagi nol atau hasil negatif jika rugi
     return biayaTetap / margin;
   }
 
@@ -73,17 +78,17 @@ class FinanceViewModel extends ChangeNotifier {
 
   // --- Fungsi Validasi ---
   bool isValid() {
-    return persediaanAwal >= 0 && 
-           jumlahUnit > 0 && 
-           hargaJualUnit > 0 && 
-           biayaTetap >= 0;
+    return persediaanAwal >= 0 &&
+        jumlahUnit > 0 &&
+        hargaJualUnit > 0 &&
+        biayaTetap >= 0;
   }
 
   // ================================
   // SIMPAN DATA
   // ================================
 
-  Future<void> simpanPerhitungan(String userId) async {
+  Future<List<double>> simpanPerhitungan(String userId) async {
     if (isValid()) {
       final newHpp = HppModel(
         userId: userId,
@@ -97,20 +102,39 @@ class FinanceViewModel extends ChangeNotifier {
         biayaTetap: biayaTetap,
         hargaJualUnit: hargaJualUnit,
         totalHpp: hitungHPP,
-        bepUnit: hitungBEPUnit,     // Sudah tidak 0 lagi
+        bepUnit: hitungBEPUnit, // Sudah tidak 0 lagi
         bepRupiah: hitungBEPRupiah, // Sudah tidak 0 lagi
-        catatan: '', 
+        catatan: '',
         createdAt: DateTime.now(),
       );
 
       // Panggil Firestore service kamu di sini
-      // await _firestoreService.addHpp(newHpp); 
-      
+      // await _firestoreService.addHpp(newHpp);
+
       notifyListeners();
     }
 
-    return history
-        .map((item) => item.bepUnit.toDouble())
-        .toList();
+    return history.map((item) => item.bepUnit.toDouble()).toList();
   }
+
+  // Getters for insight view
+  List<double> get weeklyBepSeries =>
+      history.map((item) => item.bepUnit).toList();
+
+  int get totalProducts => history.length;
+
+  double get averageHpp => history.isNotEmpty
+      ? history.map((item) => item.totalHpp).reduce((a, b) => a + b) /
+          history.length
+      : 0.0;
+
+  double get totalBepAchievedPercent => 85.0; // dummy
+
+  double get performanceScore => 75.0; // dummy
+
+  String get trendLabel => 'Naik'; // dummy
+
+  String get popularProduct => 'Produk A'; // dummy
+
+  String get efficiencyHeadline => 'Efisiensi Baik'; // dummy
 }

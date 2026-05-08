@@ -32,7 +32,6 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => FinanceViewModel()),
-        ChangeNotifierProvider(create: (_) => SavingsViewModel()),
         ChangeNotifierProvider(create: (_) => SavingViewModel()),
       ],
       child: MaterialApp(

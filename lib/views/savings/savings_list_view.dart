@@ -24,21 +24,22 @@ class SavingsListView extends StatelessWidget {
         children: [
           // Background blobs
           _buildBackground(),
-          
+
           SafeArea(
-            child: Consumer<SavingsViewModel>(
+            child: Consumer<SavingViewModel>(
               builder: (context, vm, child) {
                 final formatter = NumberFormat.currency(
                   locale: 'id_ID',
                   symbol: 'Rp ',
                   decimalDigits: 0,
                 );
-                
+
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                       child: Text(
                         'Daftar Tabungan',
                         style: TextStyle(
@@ -77,9 +78,11 @@ class SavingsListView extends StatelessWidget {
                     const SizedBox(height: 32),
                     Expanded(
                       child: ListView.separated(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 8),
                         itemCount: vm.savings.length,
-                        separatorBuilder: (context, index) => const SizedBox(height: 16),
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: 16),
                         itemBuilder: (context, index) {
                           final item = vm.savings[index];
                           return GestureDetector(
@@ -87,7 +90,8 @@ class SavingsListView extends StatelessWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => SavingsDetailView(savingId: item.id),
+                                  builder: (context) =>
+                                      SavingsDetailView(savingId: item.id),
                                 ),
                               );
                             },
@@ -102,7 +106,7 @@ class SavingsListView extends StatelessWidget {
               },
             ),
           ),
-          
+
           // FAB
           Positioned(
             bottom: 110,
@@ -123,7 +127,7 @@ class SavingsListView extends StatelessWidget {
               child: const Icon(Icons.add, color: kHijauGelap, size: 28),
             ),
           ),
-          
+
           // Bottom Nav (Dummy/Visual only for this demo to match image)
           Positioned(
             bottom: 0,
@@ -156,17 +160,17 @@ class SavingsListView extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: kHijauTerang,
                   borderRadius: BorderRadius.circular(12),
-                  image: savingItem.iconUrl != null 
-                    ? DecorationImage(
-                        image: AssetImage(savingItem.iconUrl!), 
-                        fit: BoxFit.cover,
-                        onError: (e, s) => {},
-                      )
-                    : null,
+                  image: savingItem.iconUrl != null
+                      ? DecorationImage(
+                          image: AssetImage(savingItem.iconUrl!),
+                          fit: BoxFit.cover,
+                          onError: (e, s) => {},
+                        )
+                      : null,
                 ),
                 child: savingItem.iconUrl == null
-                  ? const Icon(Icons.image, color: kHijauAksen)
-                  : null,
+                    ? const Icon(Icons.image, color: kHijauAksen)
+                    : null,
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -294,7 +298,8 @@ class SavingsListView extends StatelessWidget {
                 color: kHijauCard,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Icon(Icons.home_rounded, color: kHijauAksen, size: 24),
+              child:
+                  const Icon(Icons.home_rounded, color: kHijauAksen, size: 24),
             ),
           ),
           Icon(Icons.pie_chart_outline, color: kAbu, size: 24),

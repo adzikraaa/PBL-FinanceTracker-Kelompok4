@@ -37,7 +37,7 @@ class _InsightViewState extends State<InsightView>
   @override
   Widget build(BuildContext context) {
     final finance = context.watch<FinanceViewModel>();
-    final savings = context.watch<SavingsViewModel>();
+    final savings = context.watch<SavingViewModel>();
     final formatter = NumberFormat.currency(
       locale: 'id_ID',
       symbol: 'Rp ',
@@ -444,7 +444,7 @@ class _InsightViewState extends State<InsightView>
     );
   }
 
-  Widget _buildInsightStrategies(SavingsViewModel savings) {
+  Widget _buildInsightStrategies(SavingViewModel savings) {
     final messages = [
       {
         'title': 'Restok Bahan Baku',
