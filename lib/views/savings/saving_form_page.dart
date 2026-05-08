@@ -185,32 +185,63 @@ class _SavingFormPageState extends State<SavingFormPage> {
                     : () async {
                         final success =
                             await vm.saveSaving(widget.userId);
-                        if (success && context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Row(
-                                children: [
-                                  Icon(Icons.check_circle,
-                                      color: Color(0xFF4AFF91)),
-                                  SizedBox(width: 8),
-                                  Text('Data tabungan berhasil disimpan'),
-                                ],
-                              ),
-                              backgroundColor: Color(0xFF163520),
-                            ),
-                          );
-                          Navigator.pop(context);
-                        } else if (!success && context.mounted) {
+                        
+                        if (!context.mounted) return;
+
+                        if (success) {
+                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Row(
                                 children: [
-                                  const Icon(Icons.error_outline, color: Colors.red),
+                                  const Icon(Icons.check_circle,
+                                      color: Color(0xFF4AFF91)),
+                                  const SizedBox(width: 12),
+                                  const Text(
+                                    'Berhasil!',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white),
+                                  ),
                                   const SizedBox(width: 8),
-                                  Expanded(child: Text(vm.errorMessage ?? 'Gagal menyimpan data')),
+                                  Expanded(
+                                    child: Text(
+                                      widget.existingSaving != null
+                                          ? 'Data tabungan diperbarui'
+                                          : 'Data tabungan ditambahkan',
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    ),
+                                  ),
                                 ],
                               ),
                               backgroundColor: const Color(0xFF163520),
+                              behavior: SnackBarBehavior.floating,
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                          Navigator.pop(context);
+                        } else {
+                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Row(
+                                children: [
+                                  const Icon(Icons.error_outline,
+                                      color: Colors.red),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      vm.errorMessage ??
+                                          'Gagal menyimpan data',
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              backgroundColor: const Color(0xFF163520),
+                              behavior: SnackBarBehavior.floating,
                             ),
                           );
                         }

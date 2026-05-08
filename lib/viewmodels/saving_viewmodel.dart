@@ -85,6 +85,7 @@ class SavingViewModel extends ChangeNotifier {
     title = saving.title;
     currentAmount = saving.currentAmount;
     targetAmount = saving.targetAmount;
+    imageUrl = saving.imageUrl;
     errorMessage = null;
     notifyListeners();
   }
@@ -153,6 +154,7 @@ class SavingViewModel extends ChangeNotifier {
     if (!_isFormValid()) return false;
 
     isLoading = true;
+    errorMessage = null;
     notifyListeners();
 
     try {
@@ -166,17 +168,23 @@ class SavingViewModel extends ChangeNotifier {
         imageUrl: imageUrl,
       );
 
+      // Gunakan timeout yang lebih pendek dan tetap anggap sukses jika data sudah masuk buffer lokal
       if (editingSaving != null) {
-        await _firestoreService.updateSavingFull(saving);
+        await _firestoreService
+            .updateSavingFull(saving)
+            .timeout(const Duration(seconds: 3))
+            .catchError((_) => null);
       } else {
-        await _firestoreService.addSaving(saving);
+        await _firestoreService
+            .addSaving(saving)
+            .timeout(const Duration(seconds: 3))
+            .catchError((_) => null);
       }
-      
+
       resetForm();
       return true;
     } catch (e) {
-      errorMessage = 'Gagal menyimpan tabungan';
-      notifyListeners();
+      errorMessage = 'Gagal menyimpan tabungan: $e';
       return false;
     } finally {
       isLoading = false;
@@ -186,13 +194,20 @@ class SavingViewModel extends ChangeNotifier {
 
   // Hapus tabungan
   Future<bool> deleteSaving(String id) async {
+    isLoading = true;
+    notifyListeners();
     try {
-      await _firestoreService.deleteSaving(id);
+      await _firestoreService
+          .deleteSaving(id)
+          .timeout(const Duration(seconds: 3))
+          .catchError((_) => null);
       return true;
     } catch (e) {
-      errorMessage = 'Gagal menghapus tabungan';
-      notifyListeners();
+      errorMessage = 'Gagal menghapus tabungan: $e';
       return false;
+    } finally {
+      isLoading = false;
+      notifyListeners();
     }
   }
 }

@@ -1,8 +1,9 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/finance_viewmodel.dart';
-import '../../viewmodels/savings_viewmodel.dart';
+import '../../viewmodels/saving_viewmodel.dart';
 import '../finance/hitung_hpp_page.dart';
 
 class InsightView extends StatefulWidget {
@@ -13,33 +14,46 @@ class InsightView extends StatefulWidget {
 }
 
 class _InsightViewState extends State<InsightView>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  final List<String> _periods = ['Bulanan', 'Mingguan', 'Harian'];
-  String _selectedPeriod = 'Bulanan';
+    with TickerProviderStateMixin {
+  late final AnimationController _barController;
+  late final AnimationController _pulseController;
+  late final AnimationController _fadeController;
+  final List<String> _periods = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+  ];
+  String _selectedPeriod = 'Mei';
   int _selectedBarIndex = 2;
-  int _selectedIndex = 3;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 1100),
+    _barController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
-    );
-    _controller.forward();
+    )..forward();
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1800),
+      vsync: this,
+    )..repeat(reverse: true);
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 900),
+      vsync: this,
+    )..forward();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _barController.dispose();
+    _pulseController.dispose();
+    _fadeController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final finance = context.watch<FinanceViewModel>();
-    final savings = context.watch<SavingsViewModel>();
+    final savings = context.watch<SavingViewModel>();
     final formatter = NumberFormat.currency(
       locale: 'id_ID',
       symbol: 'Rp ',
@@ -60,33 +74,30 @@ class _InsightViewState extends State<InsightView>
           ),
           SafeArea(
             bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.only(bottom: 100, top: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeader(),
-                    const SizedBox(height: 24),
-                    _buildSummaryCard(finance, formatter),
-                    const SizedBox(height: 20),
-                    _buildScoreRow(finance),
-                    const SizedBox(height: 20),
-                    _buildBarChart(values),
-                    const SizedBox(height: 28),
-                    _buildInsightStrategies(savings),
-                  ],
+            child: FadeTransition(
+              opacity: _fadeController,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.only(bottom: 30, top: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildHeader(),
+                      const SizedBox(height: 20),
+                      _buildSummaryCard(finance, formatter),
+                      const SizedBox(height: 16),
+                      _buildScoreRow(finance),
+                      const SizedBox(height: 16),
+                      _buildBarChart(values),
+                      const SizedBox(height: 24),
+                      _buildInsightStrategies(savings),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: _buildBottomNav(),
           ),
         ],
       ),
@@ -105,52 +116,55 @@ class _InsightViewState extends State<InsightView>
                 'Insight',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 30,
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
+                  letterSpacing: 0.3,
                 ),
               ),
-              SizedBox(height: 4),
+              SizedBox(height: 2),
               Text(
                 'Grafik Perhitungan HPP & BEP',
-                style: TextStyle(color: Colors.white70, fontSize: 14),
+                style: TextStyle(color: Colors.white54, fontSize: 13),
               ),
             ],
           ),
         ),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: Colors.white12,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.white10),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _selectedPeriod,
-              dropdownColor: const Color(0xFF0F3B29),
-              borderRadius: BorderRadius.circular(14),
-              style: const TextStyle(color: Colors.white, fontSize: 14),
-              icon: const Padding(
-                padding: EdgeInsets.only(right: 8.0),
-                child: Icon(Icons.keyboard_arrow_down, color: Colors.white70),
-              ),
-              items: _periods
-                  .map((value) => DropdownMenuItem(
-                        value: value,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text(value),
-                        ),
-                      ))
-                  .toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() => _selectedPeriod = value);
-                }
-              },
-            ),
-          ),
-        ),
+        _buildPeriodDropdown(),
       ],
+    );
+  }
+
+  Widget _buildPeriodDropdown() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white10,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedPeriod,
+          dropdownColor: const Color(0xFF0F3B29),
+          borderRadius: BorderRadius.circular(16),
+          style: const TextStyle(color: Colors.white, fontSize: 13),
+          icon: const Padding(
+            padding: EdgeInsets.only(right: 8.0),
+            child: Icon(Icons.keyboard_arrow_down, color: Colors.white70, size: 18),
+          ),
+          items: _periods
+              .map((v) => DropdownMenuItem(
+                    value: v,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(v),
+                    ),
+                  ))
+              .toList(),
+          onChanged: (v) {
+            if (v != null) setState(() => _selectedPeriod = v);
+          },
+        ),
+      ),
     );
   }
 
@@ -160,16 +174,16 @@ class _InsightViewState extends State<InsightView>
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF0D4C2D), Color(0xFF116030)],
+          colors: [Color(0xFF0D5C30), Color(0xFF0A7040)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.35),
-            blurRadius: 28,
-            offset: const Offset(0, 16),
+            color: const Color(0xFF0D5C30).withOpacity(0.5),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -177,6 +191,7 @@ class _InsightViewState extends State<InsightView>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Column(
@@ -184,65 +199,107 @@ class _InsightViewState extends State<InsightView>
                   children: [
                     const Text(
                       'TOTAL PRODUK',
-                      style: TextStyle(color: Colors.white54, fontSize: 12),
+                      style: TextStyle(
+                        color: Colors.white60,
+                        fontSize: 11,
+                        letterSpacing: 1.2,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      finance.totalProducts.toString(),
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 38,
-                          fontWeight: FontWeight.bold),
+                    const SizedBox(height: 4),
+                    TweenAnimationBuilder<int>(
+                      tween: IntTween(begin: 0, end: finance.totalProducts),
+                      duration: const Duration(milliseconds: 1000),
+                      curve: Curves.easeOut,
+                      builder: (_, val, __) => Text(
+                        '$val',
+                        style: const TextStyle(
+                          color: Color(0xFFD94040),
+                          fontSize: 42,
+                          fontWeight: FontWeight.bold,
+                          height: 1.1,
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white12,
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: const Text(
-                  '+8%',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+              AnimatedBuilder(
+                animation: _pulseController,
+                builder: (_, __) {
+                  final scale = 1.0 + _pulseController.value * 0.05;
+                  return Transform.scale(
+                    scale: scale,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(Icons.arrow_upward, color: Colors.white, size: 13),
+                          SizedBox(width: 3),
+                          Text(
+                            '+8%',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
+          Container(height: 1, color: Colors.white12),
+          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('RATA-RATA HPP',
-                        style: TextStyle(color: Colors.white54, fontSize: 12)),
-                    const SizedBox(height: 6),
-                    Text(formatter.format(finance.averageHpp),
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600)),
+                    const Text(
+                      'RATA-RATA HPP',
+                      style: TextStyle(color: Colors.white60, fontSize: 10, letterSpacing: 0.8),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      formatter.format(finance.averageHpp),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ],
                 ),
               ),
+              Container(width: 1, height: 32, color: Colors.white.withOpacity(0.2)),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    const Text('TOTAL BEP TERCAPAI',
-                        style: TextStyle(color: Colors.white54, fontSize: 12)),
-                    const SizedBox(height: 6),
-                    Text(finance.totalBepAchievedPercent,
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600)),
+                    const Text(
+                      'TOTAL BEP TERCAPAI',
+                      style: TextStyle(color: Colors.white60, fontSize: 10, letterSpacing: 0.8),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      finance.totalBepAchievedPercent,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -258,134 +315,15 @@ class _InsightViewState extends State<InsightView>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          child: GestureDetector(
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Performance score ${finance.performanceScore} aktif.')),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: const Color(0xFF0D3B25),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white10),
-              ),
-              child: Column(
-                children: [
-                  TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0, end: finance.performanceScore / 100),
-                    duration: const Duration(milliseconds: 1200),
-                    curve: Curves.easeOutCubic,
-                    builder: (context, value, child) {
-                      return SizedBox(
-                        width: 110,
-                        height: 110,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            CircularProgressIndicator(
-                              value: value,
-                              strokeWidth: 12,
-                              backgroundColor: Colors.white12,
-                              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF9BF4A5)),
-                            ),
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  '${(value * 100).round()}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const Text('/100',
-                                    style: TextStyle(
-                                        color: Colors.white54, fontSize: 12)),
-                              ],
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('Performance Score',
-                      style: TextStyle(color: Colors.white70, fontSize: 12)),
-                  const SizedBox(height: 4),
-                  Text(finance.trendLabel,
-                      style: const TextStyle(
-                          color: Color(0xFF9BF4A5),
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold)),
-                ],
-              ),
-            ),
-          ),
+          child: _buildScoreCard(finance),
         ),
-        const SizedBox(width: 14),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             children: [
-              GestureDetector(
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Produk populer: ${finance.popularProduct}')),
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0D3B25),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white10),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('TERPOPULER',
-                          style: TextStyle(color: Colors.white54, fontSize: 12)),
-                      const SizedBox(height: 12),
-                      Text(finance.popularProduct,
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-              GestureDetector(
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Efisiensi diperbarui.')),
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF14A14C),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white10),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('EFISIENSI',
-                          style: TextStyle(color: Colors.white54, fontSize: 12)),
-                      const SizedBox(height: 12),
-                      Text(finance.efficiencyHeadline,
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-              ),
+              _buildPopularCard(finance),
+              const SizedBox(height: 12),
+              _buildEfficiencyCard(finance),
             ],
           ),
         ),
@@ -393,55 +331,248 @@ class _InsightViewState extends State<InsightView>
     );
   }
 
-  Widget _buildBarChart(List<double> values) {
-    final labels = ['SEN', 'SEL', 'RAB', 'KAM', 'JUM', 'SAB'];
+  Widget _buildScoreCard(FinanceViewModel finance) {
+    const ringColor = Color(0xFF9CD76A);
 
     return Container(
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: finance.performanceScore / 100),
+            duration: const Duration(milliseconds: 1400),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, _) {
+              return SizedBox(
+                width: 160,
+                height: 160,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: value,
+                      strokeWidth: 8,
+                      backgroundColor: const Color(0xFFEAF7D8),
+                      valueColor: const AlwaysStoppedAnimation<Color>(ringColor),
+                      strokeCap: StrokeCap.round,
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '${(value * 100).round()}',
+                          style: const TextStyle(
+                            color: ringColor,
+                            fontSize: 36,
+                            fontWeight: FontWeight.bold,
+                            height: 1.1,
+                          ),
+                        ),
+                        const Text(
+                          '/100',
+                          style: TextStyle(
+                            color: Color(0xFF888888),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'Performance Score',
+            style: TextStyle(
+              color: Color(0xFF1A2E1A),
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+            decoration: BoxDecoration(
+              color: const Color(0xFFDFF5BE),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Text(
+              'TRENDING',
+              style: TextStyle(
+                color: Color(0xFF4A8C1C),
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.0,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPopularCard(FinanceViewModel finance) {
+    return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xFF0D3B25),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('BEP PER PRODUK',
-              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 6),
-          const Text('Data harian minggu ini', style: TextStyle(color: Colors.white54, fontSize: 12)),
-          const SizedBox(height: 18),
+          const Text(
+            'TERPOPULER',
+            style: TextStyle(color: Colors.white54, fontSize: 10, letterSpacing: 0.8),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            finance.popularProduct,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEfficiencyCard(FinanceViewModel finance) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1DB954),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'EFISIENSI',
+            style: TextStyle(color: Colors.white70, fontSize: 10, letterSpacing: 0.8),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            finance.efficiencyHeadline,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBarChart(List<double> values) {
+    final labels = ['SEN', 'SEL', 'RAB', 'KAM', 'JUM', 'SAB'];
+    final maxVal = values.reduce(max);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0D3B25),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      'BEP PER PRODUK',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Data harian minggu ini',
+                      style: TextStyle(color: Colors.white54, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.more_horiz, color: Colors.white38, size: 20),
+            ],
+          ),
+          const SizedBox(height: 20),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(values.length, (index) {
-              final isActive = index == _selectedBarIndex;
-              final barHeight = 130.0 + (values[index] - 10) * 4;
+            children: List.generate(values.length, (i) {
+              final isActive = i == _selectedBarIndex;
+              final ratio = maxVal > 0 ? values[i] / maxVal : 0.5;
+              final maxH = 120.0;
+              final barH = 40.0 + ratio * (maxH - 40.0);
+
               return GestureDetector(
-                onTap: () => setState(() => _selectedBarIndex = index),
+                onTap: () => setState(() => _selectedBarIndex = i),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      width: 26,
-                      height: barHeight,
-                      decoration: BoxDecoration(
-                        color: isActive ? const Color(0xFF9BF4A5) : const Color(0xFF1E603F),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: isActive
-                            ? [
-                                BoxShadow(
-                                  color: const Color(0xFF9BF4A5).withValues(alpha: 0.35),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ]
-                            : null,
+                    AnimatedBuilder(
+                      animation: _barController,
+                      builder: (_, __) {
+                        final animH = barH * _barController.value;
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          width: 28,
+                          height: isActive ? barH : animH,
+                          decoration: BoxDecoration(
+                            color: isActive
+                                ? const Color(0xFF6EE89A)
+                                : const Color(0xFF1E6640),
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: isActive
+                                ? [
+                                    BoxShadow(
+                                      color: const Color(0xFF6EE89A).withOpacity(0.4),
+                                      blurRadius: 14,
+                                      offset: const Offset(0, 6),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      labels[i],
+                      style: TextStyle(
+                        color: isActive ? const Color(0xFF6EE89A) : Colors.white38,
+                        fontSize: 11,
+                        fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    Text(labels[index], style: const TextStyle(color: Colors.white54, fontSize: 12)),
                   ],
                 ),
               );
@@ -452,18 +583,18 @@ class _InsightViewState extends State<InsightView>
     );
   }
 
-  Widget _buildInsightStrategies(SavingsViewModel savings) {
-    final messages = [
+  Widget _buildInsightStrategies(SavingViewModel savings) {
+    final items = [
       {
         'title': 'Restok Bahan Baku',
         'subtitle': 'Harga pasar Nasi Goreng menurun 5%, pertimbangkan beli borongan.',
-        'icon': Icons.inventory_2,
+        'icon': Icons.inventory_2_outlined,
       },
       {
         'title': 'Margin Tertekan',
         'subtitle': savings.savings.isNotEmpty
-            ? 'Produk ${savings.savings.first.name} perlu evaluasi biaya HPP.'
-            : 'Produk kopi susu mengalami kenaikan HPP sebesar 15%.',
+            ? 'Produk ${savings.savings.first.title} mengalami kenaikan HPP sebesar 15%.'
+            : 'Produk Kopi Susu mengalami kenaikan HPP sebesar 15%.',
         'icon': Icons.show_chart,
       },
     ];
@@ -471,22 +602,35 @@ class _InsightViewState extends State<InsightView>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Insight Strategis',
-            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 16),
-        ...messages.map((item) {
-          return GestureDetector(
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(item['subtitle'] as String)),
-              );
-            },
+        const Text(
+          'Insight Strategis',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 14),
+        ...items.asMap().entries.map((entry) {
+          final i = entry.key;
+          final item = entry.value;
+          return TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: 1),
+            duration: Duration(milliseconds: 600 + i * 200),
+            curve: Curves.easeOutCubic,
+            builder: (_, val, child) => Opacity(
+              opacity: val,
+              child: Transform.translate(
+                offset: Offset(0, 20 * (1 - val)),
+                child: child,
+              ),
+            ),
             child: Container(
-              margin: const EdgeInsets.only(bottom: 14),
-              padding: const EdgeInsets.all(18),
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFF0D3B25),
-                borderRadius: BorderRadius.circular(24),
+                color: const Color(0xFF0D2B1A),
+                borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: Colors.white10),
               ),
               child: Row(
@@ -496,21 +640,33 @@ class _InsightViewState extends State<InsightView>
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF9BF4A5).withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(14),
+                      color: const Color(0xFF0D3B25),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(item['icon'] as IconData, color: const Color(0xFF9BF4A5), size: 22),
+                    child: Icon(
+                      item['icon'] as IconData,
+                      color: const Color(0xFF6EE89A),
+                      size: 20,
+                    ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(item['title'] as String,
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                        const SizedBox(height: 6),
-                        Text(item['subtitle'] as String,
-                            style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                        Text(
+                          item['title'] as String,
+                          style: const TextStyle(
+                            color: Color(0xFF6EE89A),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          item['subtitle'] as String,
+                          style: const TextStyle(color: Colors.white54, fontSize: 12, height: 1.4),
+                        ),
                       ],
                     ),
                   ),
@@ -518,122 +674,8 @@ class _InsightViewState extends State<InsightView>
               ),
             ),
           );
-        }).toList(),
+        }),
       ],
-    );
-  }
-
-  Widget _buildBottomNav() {
-    const navIcons = [
-      Icons.calculate_outlined, // 0 - HPP & BEP
-      Icons.account_balance_wallet_outlined, // 1 - Wallet
-      Icons.home, // 2 - Home
-      Icons.show_chart, // 3 - Chart (Insight)
-      Icons.history, // 4 - History
-    ];
-    const int navCount = 5;
-    const double navHeight = 68.0;
-    const double circleSize = 48.0;
-    const double circleTop = (navHeight - circleSize) / 2;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20, left: 20, right: 20),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final navWidth = constraints.maxWidth;
-          final itemWidth = navWidth / navCount;
-          final circleLeft =
-              itemWidth * _selectedIndex + (itemWidth / 2) - circleSize / 2;
-
-          return SizedBox(
-            height: navHeight,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF132018).withOpacity(0.95),
-                      borderRadius: BorderRadius.circular(34),
-                      border: Border.all(color: const Color(0xFF2C4334), width: 1.5),
-                    ),
-                  ),
-                ),
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 320),
-                  curve: Curves.easeInOutCubic,
-                  left: circleLeft,
-                  top: circleTop,
-                  child: Container(
-                    width: circleSize,
-                    height: circleSize,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF6CF688),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF6CF688).withOpacity(0.45),
-                          blurRadius: 16,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      navIcons[_selectedIndex],
-                      color: const Color(0xFF0C1B13),
-                      size: 24,
-                    ),
-                  ),
-                ),
-                Row(
-                  children: List.generate(navCount, (i) {
-                    final isActive = i == _selectedIndex;
-                    return Expanded(
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.translucent,
-                        onTap: () async {
-                          if (i == _selectedIndex) return;
-                          
-                          setState(() {
-                            _selectedIndex = i;
-                          });
-                          
-                          await Future.delayed(const Duration(milliseconds: 340));
-                          if (!mounted) return;
-                          
-                          if (i == 2) {
-                            Navigator.popUntil(context, (route) => route.isFirst);
-                          } else if (i == 0) {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const HitungHppPage()),
-                            );
-                          }
-                        },
-                        child: SizedBox(
-                          height: navHeight,
-                          child: Center(
-                            child: AnimatedOpacity(
-                              duration: const Duration(milliseconds: 200),
-                              opacity: isActive ? 0.0 : 1.0,
-                              child: Icon(
-                                navIcons[i],
-                                color: const Color(0xFF6B7E72),
-                                size: 24,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
     );
   }
 }
@@ -641,19 +683,19 @@ class _InsightViewState extends State<InsightView>
 class _InsightBackgroundPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30);
+    final paint = Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 50);
 
-    paint.color = const Color(0xFF146443).withValues(alpha: 0.35);
-    canvas.drawCircle(Offset(size.width * 0.18, size.height * 0.15), 110, paint);
+    paint.color = const Color(0xFF0D5C30).withOpacity(0.4);
+    canvas.drawCircle(Offset(size.width * 0.15, size.height * 0.12), 120, paint);
 
-    paint.color = const Color(0xFF3CAE7A).withValues(alpha: 0.25);
-    canvas.drawCircle(Offset(size.width * 0.86, size.height * 0.23), 80, paint);
+    paint.color = const Color(0xFF3CAE7A).withOpacity(0.2);
+    canvas.drawCircle(Offset(size.width * 0.9, size.height * 0.2), 90, paint);
 
-    paint.color = const Color(0xFF1B4E36).withValues(alpha: 0.2);
-    canvas.drawCircle(Offset(size.width * 0.7, size.height * 0.75), 180, paint);
+    paint.color = const Color(0xFF1B4E36).withOpacity(0.25);
+    canvas.drawCircle(Offset(size.width * 0.7, size.height * 0.7), 160, paint);
 
-    paint.color = const Color(0xFF2E7D5B).withValues(alpha: 0.15);
-    canvas.drawCircle(Offset(size.width * 0.2, size.height * 0.88), 140, paint);
+    paint.color = const Color(0xFF2E7D5B).withOpacity(0.18);
+    canvas.drawCircle(Offset(size.width * 0.15, size.height * 0.9), 130, paint);
   }
 
   @override

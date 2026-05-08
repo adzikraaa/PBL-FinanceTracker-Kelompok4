@@ -428,14 +428,90 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   Widget _buildTabunganCard() {
     return Consumer<SavingViewModel>(
       builder: (context, savingVm, child) {
-        // Ambil data terbaru (pertama di list)
         final bool hasData = savingVm.savings.isNotEmpty;
-        final latestSaving = hasData ? savingVm.savings.first : null;
-        
-        final String nama = latestSaving?.title ?? 'Mulai Menabung';
-        final double current = latestSaving?.currentAmount ?? 0;
-        final double target = latestSaving?.targetAmount ?? 1000000;
-        final double progress = hasData ? (current / target).clamp(0.0, 1.0) : 0.0;
+
+        if (!hasData) {
+          return GestureDetector(
+            onTap: () => _vm.onNavTap(1), // Pindah ke tab tabungan
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: kCard,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: kWhite20, width: 0.8),
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: kWhite.withOpacity(0.05),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.account_balance_wallet_outlined,
+                      color: kGreen,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'BELUM ADA TABUNGAN',
+                          style: TextStyle(
+                            color: kWhite40,
+                            fontSize: 10,
+                            letterSpacing: 1.2,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Yuk, mulai menabung!',
+                          style: TextStyle(
+                            color: kWhite,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF22C55E), Color(0xFF4ADE80)],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      'TAMBAH',
+                      style: TextStyle(
+                        color: Color(0xFF0D2818),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        // Ambil data terbaru (pertama di list)
+        final latestSaving = savingVm.savings.first;
+
+        final String nama = latestSaving.title;
+        final double current = latestSaving.currentAmount;
+        final double target = latestSaving.targetAmount;
+        final double progress = (current / target).clamp(0.0, 1.0);
 
         return GestureDetector(
           onTap: () => _vm.onNavTap(1), // Pindah ke tab tabungan
@@ -483,7 +559,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                               value: progress,
                               strokeWidth: 8,
                               backgroundColor: kWhite20,
-                              valueColor: const AlwaysStoppedAnimation<Color>(kGreen),
+                              valueColor:
+                                  const AlwaysStoppedAnimation<Color>(kGreen),
                               strokeCap: StrokeCap.round,
                             ),
                           ),
@@ -612,61 +689,76 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: kCard,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: kWhite20, width: 0.8),
-              ),
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'INSIGHT',
-                    style: TextStyle(
-                      color: kWhite40,
-                      fontSize: 10,
-                      letterSpacing: 1.2,
-                      fontWeight: FontWeight.w600,
-                    ),
+            child: Consumer<SavingViewModel>(
+              builder: (context, savingVm, _) {
+                double totalCurrent = savingVm.savings
+                    .fold(0.0, (sum, item) => sum + item.currentAmount);
+                double totalTarget = savingVm.savings
+                    .fold(0.0, (sum, item) => sum + item.targetAmount);
+
+                double totalProgress = totalTarget > 0
+                    ? (totalCurrent / totalTarget).clamp(0.0, 1.0)
+                    : 0.0;
+
+                return Container(
+                  decoration: BoxDecoration(
+                    color: kCard,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: kWhite20, width: 0.8),
                   ),
-                  const SizedBox(height: 14),
-                  Center(
-                    child: SizedBox(
-                      width: 68,
-                      height: 68,
-                      child: CustomPaint(
-                        painter: _DonutPainter(
-                          slices: const [0.4, 0.6],
-                          colors: [kGreen, kCardLight],
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'INSIGHT',
+                        style: TextStyle(
+                          color: kWhite40,
+                          fontSize: 10,
+                          letterSpacing: 1.2,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _insightLegend(kGreen, 'Cat A: 40%'),
-                  const SizedBox(height: 4),
-                  _insightLegend(kWhite40, 'Cat B: 60%'),
-                  const Spacer(),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: GestureDetector(
-                      onTap: _vm.onInsightTap,
-                      child: Container(
-                        width: 30,
-                        height: 30,
-                        decoration: const BoxDecoration(
-                          color: kWhite20,
-                          shape: BoxShape.circle,
+                      const SizedBox(height: 14),
+                      Center(
+                        child: SizedBox(
+                          width: 68,
+                          height: 68,
+                          child: CustomPaint(
+                            painter: _DonutPainter(
+                              slices: [totalProgress, 1.0 - totalProgress],
+                              colors: [kGreen, kCardLight],
+                            ),
+                          ),
                         ),
-                        child: const Icon(Icons.arrow_forward,
-                            color: kWhite, size: 15),
                       ),
-                    ),
+                      const SizedBox(height: 12),
+                      _insightLegend(kGreen,
+                          'Terkumpul: ${(totalProgress * 100).toInt()}%'),
+                      const SizedBox(height: 4),
+                      _insightLegend(kWhite40,
+                          'Sisa: ${((1.0 - totalProgress) * 100).toInt()}%'),
+                      const Spacer(),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: GestureDetector(
+                          onTap: _vm.onInsightTap,
+                          child: Container(
+                            width: 30,
+                            height: 30,
+                            decoration: const BoxDecoration(
+                              color: kWhite20,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.arrow_forward,
+                                color: kWhite, size: 15),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                );
+              },
             ),
           ),
           const SizedBox(width: 12),
