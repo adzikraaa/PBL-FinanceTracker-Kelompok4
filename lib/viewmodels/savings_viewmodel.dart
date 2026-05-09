@@ -1,36 +1,31 @@
-import 'dart:async';
 import 'dart:convert';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
+import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
 import '../data/models/saving_model.dart';
 import '../data/services/firestore_service.dart';
 
 class SavingsViewModel extends ChangeNotifier {
   final FirestoreService _firestoreService = FirestoreService();
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  List<SavingModel> _savings = [];
-  bool isLoading = true;
-  String? errorMessage;
   StreamSubscription<List<SavingModel>>? _sub;
 
-  // Form Fields
-  String title = '';
-  double currentAmount = 0.0;
-  double targetAmount = 5000.0;
-  String? imageUrl;
-  SavingModel? editingSaving;
-
+  List<SavingModel> _savings = [];
   List<SavingModel> get savings => _savings;
-  double get totalSavings => _savings.fold(0, (sum, item) => sum + item.currentAmount);
-  double get totalTarget => _savings.fold(0, (sum, item) => sum + item.targetAmount);
 
-  SavingModel? get firstSaving => _savings.isNotEmpty ? _savings.first : null;
+  bool isLoading = false;
+  String? errorMessage;
+  
+  // Cache untuk data gambar agar tidak flicker
+  Uint8List? _cachedImageData;
+  Uint8List? get cachedImageData => _cachedImageData;
 
-  double get savingsPercentage {
-    if (totalTarget == 0) return 0;
-    return (totalSavings / totalTarget) * 100;
+  void safeNotify() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (hasListeners) notifyListeners();
+    });
   }
 
   SavingsViewModel() {
@@ -38,10 +33,11 @@ class SavingsViewModel extends ChangeNotifier {
   }
 
   void _init() {
+    isLoading = true;
     final user = _auth.currentUser;
     if (user == null) {
       isLoading = false;
-      notifyListeners();
+      safeNotify();
       return;
     }
     _sub = _firestoreService.streamSavings(user.uid).listen(
@@ -49,14 +45,53 @@ class SavingsViewModel extends ChangeNotifier {
         _savings = list;
         isLoading = false;
         errorMessage = null;
-        notifyListeners();
+        safeNotify();
       },
       onError: (e) {
         errorMessage = e.toString();
         isLoading = false;
-        notifyListeners();
+        safeNotify();
       },
     );
+  }
+
+  // Form fields dengan properti reaktif
+  String _title = '';
+  String get title => _title;
+  set title(String value) {
+    _title = value;
+    safeNotify();
+  }
+
+  double _currentAmount = 0.0;
+  double get currentAmount => _currentAmount;
+  set currentAmount(double value) {
+    _currentAmount = value;
+    safeNotify();
+  }
+
+  double _targetAmount = 5000.0;
+  double get targetAmount => _targetAmount;
+  set targetAmount(double value) {
+    _targetAmount = value;
+    safeNotify();
+  }
+
+  String? imageUrl; // Field untuk menampung gambar yang dipilih
+
+  // Editing state
+  SavingModel? editingSaving;
+
+  // Total semua tabungan
+  double get totalSavings =>
+      _savings.fold(0.0, (sum, item) => sum + item.currentAmount);
+
+  double get totalTarget =>
+      _savings.fold(0.0, (sum, item) => sum + item.targetAmount);
+
+  double get savingsPercentage {
+    if (totalTarget == 0) return 0;
+    return (totalSavings / totalTarget) * 100;
   }
 
   // Persentase progress per item
@@ -80,21 +115,28 @@ class SavingsViewModel extends ChangeNotifier {
     int bulan = (sisa / monthly).ceil();
     DateTime selesai = DateTime.now().add(Duration(days: bulan * 30));
     const monthNames = [
-      '',
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'
+      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
     return '${monthNames[selesai.month]} ${selesai.year}';
+  }
+
+  // Listen realtime dari Firestore
+  void listenSavings(String userId) {
+    _sub?.cancel();
+    isLoading = true;
+    _sub = _firestoreService.streamSavings(userId).listen(
+      (data) {
+        _savings = data;
+        isLoading = false;
+        safeNotify();
+      },
+      onError: (e) {
+        isLoading = false;
+        errorMessage = 'Gagal memuat data: $e';
+        safeNotify();
+      },
+    );
   }
 
   // Isi form untuk edit
@@ -104,8 +146,22 @@ class SavingsViewModel extends ChangeNotifier {
     currentAmount = saving.currentAmount;
     targetAmount = saving.targetAmount;
     imageUrl = saving.imageUrl;
+    
+    // Decode cache jika ada imageUrl
+    if (imageUrl != null && imageUrl!.startsWith('data:image')) {
+      try {
+        final base64String = imageUrl!.split(',').last;
+        _cachedImageData = base64Decode(base64String);
+      } catch (_) {
+        _cachedImageData = null;
+      }
+    } else {
+      _cachedImageData = null;
+    }
+    
     errorMessage = null;
-    notifyListeners();
+    isLoading = false;
+    safeNotify();
   }
 
   // Reset form (untuk tambah baru)
@@ -115,8 +171,10 @@ class SavingsViewModel extends ChangeNotifier {
     currentAmount = 0.0;
     targetAmount = 5000.0;
     imageUrl = null;
+    _cachedImageData = null;
     errorMessage = null;
-    notifyListeners();
+    isLoading = false;
+    safeNotify();
   }
 
   // Fungsi untuk memilih gambar dengan validasi format
@@ -133,33 +191,34 @@ class SavingsViewModel extends ChangeNotifier {
       if (image != null) {
         final String fileName = image.name.toLowerCase();
         final String extension = fileName.split('.').last;
-
+        
         // Validasi format: JPEG, JPG, PNG
         if (extension == 'jpg' || extension == 'jpeg' || extension == 'png') {
           final bytes = await image.readAsBytes();
+          _cachedImageData = bytes;
           imageUrl = 'data:image/$extension;base64,${base64Encode(bytes)}';
           errorMessage = null;
         } else {
           errorMessage = 'Format file tidak sesuai (Hanya JPG, JPEG, PNG)';
         }
-        notifyListeners();
+        safeNotify();
       }
     } catch (e) {
       errorMessage = 'Gagal mengambil gambar';
-      notifyListeners();
+      safeNotify();
     }
   }
 
   // Validasi form
   bool _isFormValid() {
     if (title.trim().isEmpty) {
-      errorMessage = 'Field tidak boleh kosong';
-      notifyListeners();
+      errorMessage = 'Nama tabungan tidak boleh kosong';
+      safeNotify();
       return false;
     }
-    if (targetAmount < 1000) {
-      errorMessage = 'Nominal tidak valid, minimal 1.000';
-      notifyListeners();
+    if (targetAmount <= 0) {
+      errorMessage = 'Nominal target tidak boleh kosong atau 0';
+      safeNotify();
       return false;
     }
     errorMessage = null;
@@ -172,7 +231,7 @@ class SavingsViewModel extends ChangeNotifier {
 
     isLoading = true;
     errorMessage = null;
-    notifyListeners();
+    safeNotify();
 
     try {
       final saving = SavingModel(
@@ -186,55 +245,27 @@ class SavingsViewModel extends ChangeNotifier {
       );
 
       if (editingSaving != null) {
-        await _firestoreService
-            .updateSavingFull(saving)
-            .timeout(const Duration(seconds: 3))
-            .catchError((_) => null);
+        await _firestoreService.updateSavingFull(saving);
       } else {
-        await _firestoreService
-            .addSaving(saving)
-            .timeout(const Duration(seconds: 3))
-            .catchError((_) => null);
+        await _firestoreService.addSaving(saving);
       }
 
       resetForm();
       return true;
     } catch (e) {
-      errorMessage = 'Gagal menyimpan tabungan: $e';
+      errorMessage = 'Gagal menyimpan data: $e';
+      print('DEBUG: Error saving saving: $e');
       return false;
     } finally {
       isLoading = false;
-      notifyListeners();
+      safeNotify();
     }
-  }
-
-  // Tambah tabungan baru langsung
-  Future<void> addSaving({
-    required String title,
-    required double targetAmount,
-    required double currentAmount,
-  }) async {
-    final user = _auth.currentUser;
-    if (user == null) return;
-    final saving = SavingModel(
-      userId: user.uid,
-      title: title,
-      targetAmount: targetAmount,
-      currentAmount: currentAmount.clamp(0, targetAmount),
-      createdAt: DateTime.now(),
-    );
-    await _firestoreService.addSaving(saving);
-  }
-
-  // Update jumlah tabungan
-  Future<void> updateSavingAmount(String id, double newAmount) async {
-    await _firestoreService.updateSaving(id, newAmount);
   }
 
   // Hapus tabungan
   Future<bool> deleteSaving(String id) async {
     isLoading = true;
-    notifyListeners();
+    safeNotify();
     try {
       await _firestoreService
           .deleteSaving(id)
@@ -246,7 +277,28 @@ class SavingsViewModel extends ChangeNotifier {
       return false;
     } finally {
       isLoading = false;
-      notifyListeners();
+      safeNotify();
+    }
+  }
+
+  // Update cepat nominal (tambah saldo)
+  Future<bool> quickUpdateAmount(String id, double current, double amountToAdd) async {
+    if (amountToAdd <= 0) return false;
+    
+    isLoading = true;
+    safeNotify();
+    
+    try {
+      final newTotal = current + amountToAdd;
+      await _firestoreService.updateSaving(id, newTotal);
+      return true;
+    } catch (e) {
+      errorMessage = 'Gagal update nominal: $e';
+      print('DEBUG: Error updating amount: $e');
+      return false;
+    } finally {
+      isLoading = false;
+      safeNotify();
     }
   }
 

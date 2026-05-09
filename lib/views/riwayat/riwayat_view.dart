@@ -7,6 +7,11 @@ import '../../data/models/hpp_model.dart';
 import '../../data/services/pdf_service.dart';
 import '../finance/hitung_hpp_page.dart';
 
+import '../../viewmodels/auth_viewmodel.dart';
+
+String _fmtTime(DateTime d) => DateFormat('HH:mm', 'id_ID').format(d);
+String _fmtDateFull(DateTime d) => DateFormat('dd MMM yyyy', 'id_ID').format(d);
+
 // ─── Colors ──────────────────────────────────────────────────────────────────
 const Color _kBg       = Color(0xFF0B2114);
 const Color _kGlow     = Color(0xFF1E472A);
@@ -53,9 +58,6 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
     _sparkleCtrl.dispose();
     super.dispose();
   }
-
-  String _fmtTime(DateTime d) => DateFormat('HH:mm', 'id_ID').format(d);
-  String _fmtDateFull(DateTime d) => DateFormat('dd MMM yyyy', 'id_ID').format(d);
 
   void _showDeleteDialog(BuildContext ctx, RiwayatViewModel vm, HppModel item) {
     showDialog(
@@ -153,11 +155,12 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                             itemBuilder: (_, i) {
                               final key = groupKeys[i];
                               final items = groupedHistory[key]!;
+                              final isPremium = context.read<AuthViewModel>().isPremium;
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   _buildDateHeader(key),
-                                  ...items.map((item) => _buildRiwayatCard(item, vm, context)),
+                                  ...items.map((item) => _buildRiwayatCard(item, vm, context, isPremium)),
                                 ],
                               );
                             },
@@ -166,12 +169,6 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                     ],
                   ),
                 ),
-              ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: _buildBottomNav(),
               ),
             ],
           ),
@@ -214,11 +211,6 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: const Icon(Icons.arrow_back, color: _kWhite, size: 24),
-          ),
-          const SizedBox(width: 16),
           const Text(
             'Riwayat Kalkulasi',
             style: TextStyle(
@@ -260,7 +252,7 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
   }
 
   // ─── Riwayat Card ──────────────────────────────────────────────────────────
-  Widget _buildRiwayatCard(HppModel item, RiwayatViewModel vm, BuildContext ctx) {
+  Widget _buildRiwayatCard(HppModel item, RiwayatViewModel vm, BuildContext ctx, bool isPremium) {
     final hppPerUnit = item.jumlahUnit > 0 ? item.totalHpp / item.jumlahUnit : 0.0;
     final margin = item.hargaJualUnit - hppPerUnit;
     final marginPct = item.hargaJualUnit > 0 ? (margin / item.hargaJualUnit * 100) : 0.0;
@@ -385,7 +377,7 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                 const Spacer(),
                 GestureDetector(
                   onTap: () async {
-                    await PdfService.shareHpp(item);
+                    await PdfService.shareHpp(item, isPremium: isPremium);
                   },
                   child: Container(
                     padding: const EdgeInsets.all(8),
@@ -399,7 +391,7 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                 const SizedBox(width: 10),
                 GestureDetector(
                   onTap: () async {
-                    await PdfService.downloadHpp(item);
+                    await PdfService.downloadHpp(item, isPremium: isPremium);
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -571,100 +563,6 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildBottomNav() {
-    const navIcons = [
-      Icons.calculate_outlined,
-      Icons.account_balance_wallet_outlined,
-      Icons.home,
-      Icons.show_chart,
-      Icons.history,
-    ];
-    final int activeIndex = _localNavIndex;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20, left: 20, right: 20),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final itemWidth = constraints.maxWidth / 5;
-          final circleLeft = itemWidth * activeIndex + (itemWidth / 2) - 24;
-
-          return SizedBox(
-            height: 68,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF132018).withOpacity(0.95),
-                      borderRadius: BorderRadius.circular(32),
-                      border: Border.all(color: const Color(0xFF2C4334), width: 1.5),
-                    ),
-                  ),
-                ),
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 320),
-                  curve: Curves.easeInOutCubic,
-                  left: circleLeft,
-                  top: 8,
-                  child: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF6CF688),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF6CF688).withOpacity(0.45),
-                          blurRadius: 16,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      navIcons[activeIndex],
-                      color: const Color(0xFF0C1B13),
-                      size: 24,
-                    ),
-                  ),
-                ),
-                Row(
-                  children: List.generate(5, (i) {
-                    return Expanded(
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.translucent,
-                        onTap: () async {
-                          if (i == _localNavIndex) return;
-                          setState(() => _localNavIndex = i);
-                          await Future.delayed(const Duration(milliseconds: 320));
-                          if (!mounted) return;
-                          Navigator.pop(context, i);
-                        },
-                        child: SizedBox(
-                          height: 64,
-                          child: Center(
-                            child: AnimatedOpacity(
-                              duration: const Duration(milliseconds: 200),
-                              opacity: i == activeIndex ? 0.0 : 1.0,
-                              child: Icon(
-                                navIcons[i],
-                                color: const Color(0xFF6B7E72),
-                                size: 24,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
 }
 
 // Dummy constants to avoid undefined errors (if any colors were left)

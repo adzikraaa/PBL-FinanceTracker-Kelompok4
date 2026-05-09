@@ -12,15 +12,15 @@ class PdfService {
     decimalDigits: 0
   );
 
-  static Future<pw.Document> _generatePdf(HppModel data) async {
+  static Future<pw.Document> _generatePdf(HppModel data, {bool isPremium = false}) async {
     final pdf = pw.Document();
 
     final font = await PdfGoogleFonts.robotoRegular();
     final fontBold = await PdfGoogleFonts.robotoBold();
 
-    final margin = data.hargaJualUnit - (data.jumlahUnit > 0 ? data.totalHpp / data.jumlahUnit : 0.0);
-    final marginPct = data.hargaJualUnit > 0 ? (margin / data.hargaJualUnit * 100) : 0.0;
     final hppPerUnit = data.jumlahUnit > 0 ? data.totalHpp / data.jumlahUnit : 0.0;
+    final margin = data.hargaJualUnit - hppPerUnit;
+    final marginPct = data.hargaJualUnit > 0 ? (margin / data.hargaJualUnit * 100) : 0.0;
 
     pdf.addPage(
       pw.Page(
@@ -30,100 +30,123 @@ class PdfService {
           bold: fontBold,
         ),
         build: (pw.Context context) {
-          return pw.Padding(
-            padding: const pw.EdgeInsets.all(32),
-            child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                // Header
+          return pw.Stack(
+            children: [
+              // Watermark (hanya jika bukan premium)
+              if (!isPremium)
                 pw.Center(
-                  child: pw.Text(
-                    'LAPORAN PERHITUNGAN HPP & BEP',
-                    style: pw.TextStyle(
-                      fontSize: 20,
-                      fontWeight: pw.FontWeight.bold,
-                      color: PdfColor.fromHex('#163520'),
+                  child: pw.Transform.rotate(
+                    angle: -0.5,
+                    child: pw.Text(
+                      'BIZPRICE - UMKM PINTAR\nWATERMARK',
+                      textAlign: pw.TextAlign.center,
+                      style: pw.TextStyle(
+                        fontSize: 40,
+                        color: PdfColor(0.88, 0.88, 0.88, 0.3), // Light grey with 30% opacity
+                        fontWeight: pw.FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
-                pw.SizedBox(height: 8),
-                pw.Center(
-                  child: pw.Text(
-                    'BizPrice App',
-                    style: pw.TextStyle(
-                      fontSize: 12,
-                      color: PdfColor.fromHex('#6B7280'),
-                    ),
-                  ),
-                ),
-                pw.Divider(thickness: 2, height: 40, color: PdfColor.fromHex('#4ADE80')),
-
-                // Detail Produk
-                pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              
+              pw.Padding(
+                padding: const pw.EdgeInsets.all(32),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    // Header
+                    pw.Center(
+                      child: pw.Text(
+                        'LAPORAN PERHITUNGAN HPP & BEP',
+                        style: pw.TextStyle(
+                          fontSize: 20,
+                          fontWeight: pw.FontWeight.bold,
+                          color: PdfColor.fromHex('#163520'),
+                        ),
+                      ),
+                    ),
+                    pw.SizedBox(height: 8),
+                    pw.Center(
+                      child: pw.Text(
+                        'BizPrice App',
+                        style: pw.TextStyle(
+                          fontSize: 12,
+                          color: PdfColor.fromHex('#6B7280'),
+                        ),
+                      ),
+                    ),
+                    pw.Divider(thickness: 2, height: 40, color: PdfColor.fromHex('#4ADE80')),
+
+                    // Detail Produk
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
-                        pw.Text('Nama Produk:', style: const pw.TextStyle(fontSize: 10)),
-                        pw.Text(
-                          data.namaProduk,
-                          style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+                        pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: [
+                            pw.Text('Nama Produk:', style: const pw.TextStyle(fontSize: 10)),
+                            pw.Text(
+                              data.namaProduk,
+                              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.end,
+                          children: [
+                            pw.Text('Tanggal Perhitungan:', style: const pw.TextStyle(fontSize: 10)),
+                            pw.Text(
+                              DateFormat('dd MMMM yyyy, HH:mm', 'id_ID').format(data.createdAt),
+                              style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.end,
-                      children: [
-                        pw.Text('Tanggal Perhitungan:', style: const pw.TextStyle(fontSize: 10)),
-                        pw.Text(
-                          DateFormat('dd MMMM yyyy, HH:mm', 'id_ID').format(data.createdAt),
-                          style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
-                        ),
-                      ],
+                    pw.SizedBox(height: 30),
+
+                    // Table 1: Rincian Biaya
+                    pw.Text('1. Rincian Biaya Produksi', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                    pw.SizedBox(height: 10),
+                    _buildTable([
+                      ['Biaya Produksi', _currencyFmt.format(data.biayaProduksi)],
+                      ['Upah Tenaga Kerja', _currencyFmt.format(data.biayaTenagaKerja)],
+                      ['Biaya Overhead', _currencyFmt.format(data.biayaOverhead)],
+                      ['Target Produksi', '${data.jumlahUnit.toStringAsFixed(0)} Unit'],
+                      ['TOTAL HPP', _currencyFmt.format(data.totalHpp), true],
+                      ['HPP PER UNIT', _currencyFmt.format(hppPerUnit), true],
+                    ]),
+
+                    pw.SizedBox(height: 30),
+
+                    // Table 2: Analisis Keuntungan & BEP
+                    pw.Text('2. Analisis Keuntungan & BEP', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                    pw.SizedBox(height: 10),
+                    _buildTable([
+                      ['Biaya Tetap', _currencyFmt.format(data.biayaTetap)],
+                      ['Harga Jual Per Unit', _currencyFmt.format(data.hargaJualUnit)],
+                      ['Profit Margin', '${marginPct.toStringAsFixed(1)}%'],
+                      ['BEP (Titik Impas) Unit', '${data.bepUnit.toStringAsFixed(0)} Unit', true],
+                      ['BEP (Titik Impas) Rupiah', _currencyFmt.format(data.bepRupiah), true],
+                    ]),
+
+                    pw.Spacer(),
+
+                    // Footer
+                    pw.Divider(color: PdfColors.grey400),
+                    pw.SizedBox(height: 10),
+                    pw.Center(
+                      child: pw.Text(
+                        isPremium 
+                            ? 'Laporan Resmi BizPrice Premium'
+                            : 'Dibuat oleh BizPrice - Solusi UMKM Pintar',
+                        style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+                      ),
                     ),
                   ],
                 ),
-                pw.SizedBox(height: 30),
-
-                // Table 1: Rincian Biaya
-                pw.Text('1. Rincian Biaya Produksi', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
-                pw.SizedBox(height: 10),
-                _buildTable([
-                  ['Biaya Produksi', _currencyFmt.format(data.biayaProduksi)],
-                  ['Upah Tenaga Kerja', _currencyFmt.format(data.biayaTenagaKerja)],
-                  ['Biaya Overhead', _currencyFmt.format(data.biayaOverhead)],
-                  ['Target Produksi', '${data.jumlahUnit.toStringAsFixed(0)} Unit'],
-                  ['TOTAL HPP', _currencyFmt.format(data.totalHpp), true],
-                  ['HPP PER UNIT', _currencyFmt.format(hppPerUnit), true],
-                ]),
-
-                pw.SizedBox(height: 30),
-
-                // Table 2: Analisis Keuntungan & BEP
-                pw.Text('2. Analisis Keuntungan & BEP', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
-                pw.SizedBox(height: 10),
-                _buildTable([
-                  ['Biaya Tetap', _currencyFmt.format(data.biayaTetap)],
-                  ['Harga Jual Per Unit', _currencyFmt.format(data.hargaJualUnit)],
-                  ['Profit Margin', '${marginPct.toStringAsFixed(1)}%'],
-                  ['BEP (Titik Impas) Unit', '${data.bepUnit.toStringAsFixed(0)} Unit', true],
-                  ['BEP (Titik Impas) Rupiah', _currencyFmt.format(data.bepRupiah), true],
-                ]),
-
-                pw.Spacer(),
-
-                // Footer
-                pw.Divider(color: PdfColors.grey400),
-                pw.SizedBox(height: 10),
-                pw.Center(
-                  child: pw.Text(
-                    'Dibuat oleh BizPrice - Solusi UMKM Pintar',
-                    style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           );
         },
       ),
@@ -132,11 +155,10 @@ class PdfService {
     return pdf;
   }
 
-  static Future<void> shareHpp(HppModel data) async {
-    final pdf = await _generatePdf(data);
+  static Future<void> shareHpp(HppModel data, {bool isPremium = false}) async {
+    final pdf = await _generatePdf(data, isPremium: isPremium);
     final bytes = await pdf.save();
     
-    // Gunakan share_plus untuk membagikan file PDF ke WA, IG, dll.
     final filename = 'Laporan_HPP_${data.namaProduk.replaceAll(' ', '_')}.pdf';
     await Share.shareXFiles(
       [XFile.fromData(bytes, mimeType: 'application/pdf', name: filename)],
@@ -144,12 +166,10 @@ class PdfService {
     );
   }
 
-  static Future<void> downloadHpp(HppModel data) async {
-    final pdf = await _generatePdf(data);
+  static Future<void> downloadHpp(HppModel data, {bool isPremium = false}) async {
+    final pdf = await _generatePdf(data, isPremium: isPremium);
     final bytes = await pdf.save();
     
-    // Pada platform Web, sharePdf akan otomatis men-download file.
-    // Pada mobile, ini akan memunculkan opsi "Save to Files".
     await Printing.sharePdf(
       bytes: bytes,
       filename: 'Laporan_HPP_${data.namaProduk.replaceAll(' ', '_')}.pdf',

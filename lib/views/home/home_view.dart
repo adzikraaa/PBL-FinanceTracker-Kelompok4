@@ -143,12 +143,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                   ),
                 ),
               ),
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: _buildBottomNav(),
-              ),
             ],
           ),
         );
@@ -318,15 +312,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     final currFmt = NumberFormat.currency(
         locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
-    void goToRiwayat() async {
+    void goToRiwayat() {
       _vm.onNavTapManual(4);
-      await Future.delayed(const Duration(milliseconds: 320));
-      if (!mounted) return;
-      await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const RiwayatView()),
-      );
-      if (mounted) _vm.onNavTapManual(2);
     }
 
     return GestureDetector(
@@ -496,15 +483,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
         if (!hasData) {
           return GestureDetector(
-            onTap: () async {
+            onTap: () {
               _vm.onNavTapManual(1);
-              await Future.delayed(const Duration(milliseconds: 320));
-              if (!mounted) return;
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => SavingListPage(userId: FirebaseAuth.instance.currentUser?.uid ?? '')),
-              );
-              if (mounted) _vm.onNavTapManual(2);
             },
             child: Container(
               width: double.infinity,
@@ -587,15 +567,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         final double progress = (current / target).clamp(0.0, 1.0);
 
         return GestureDetector(
-          onTap: () async {
+          onTap: () {
             _vm.onNavTapManual(1);
-            await Future.delayed(const Duration(milliseconds: 320));
-            if (!mounted) return;
-            await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => SavingListPage(userId: FirebaseAuth.instance.currentUser?.uid ?? '')),
-            );
-            if (mounted) _vm.onNavTapManual(2);
           },
           child: Container(
             decoration: BoxDecoration(
@@ -731,7 +704,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                             border: Border.all(color: kWhite.withOpacity(0.1), width: 1),
                             image: latestSaving.imageUrl != null
                                 ? DecorationImage(
-                                    image: _getImageProvider(latestSaving.imageUrl!),
+                                    image: (savingVm.getCachedImage(latestSaving.imageUrl!) as ImageProvider?) ?? const AssetImage('assets/images/logo.png'),
                                     fit: BoxFit.cover,
                                   )
                                 : null,
@@ -763,17 +736,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   }
   Widget _buildHppBepCard() {
     return GestureDetector(
-      onTap: () async {
-        // Pindahkan active navbar ke HPP (index 0) saat card diklik
+      onTap: () {
         _vm.onNavTapManual(0);
-        await Future.delayed(const Duration(milliseconds: 380));
-        if (!mounted) return;
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const HitungHppPage()),
-        );
-        // Saat user balik ke Home, kembalikan active navbar ke Home (index 2)
-        if (mounted) _vm.onNavTapManual(2);
       },
       child: Container(
         decoration: BoxDecoration(
@@ -1025,142 +989,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     );
   }
 
-  // ─── Bottom Navbar ────────────────────────────────────────────────
-  Widget _buildBottomNav() {
-    const navIcons = [
-      Icons.calculate_outlined, // 0 - HPP & BEP
-      Icons.account_balance_wallet_outlined, // 1 - Wallet
-      Icons.home, // 2 - Home (default aktif)
-      Icons.show_chart, // 3 - Chart
-      Icons.history, // 4 - History
-    ];
-    const int navCount = 5;
-    const double navHeight = 68.0;
-    const double circleSize = 48.0;
-    // circle selalu tepat di tengah vertikal navbar
-    const double circleTop = (navHeight - circleSize) / 2;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20, left: 20, right: 20),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final navWidth = constraints.maxWidth;
-          final itemWidth = navWidth / navCount;
-          // posisi horizontal circle mengikuti tab aktif, tepat di tengah item
-          final circleLeft =
-              itemWidth * _vm.selectedIndex + (itemWidth / 2) - circleSize / 2;
-
-          return SizedBox(
-            height: navHeight,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                // ── Background pill ──────────────────────────────────────
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: kNavBg.withOpacity(0.95),
-                      borderRadius: BorderRadius.circular(34),
-                      border: Border.all(color: kNavBorder, width: 1.5),
-                    ),
-                  ),
-                ),
-
-                // ── Animated active circle ──────────
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 320),
-                  curve: Curves.easeInOutCubic,
-                  left: circleLeft,
-                  top: circleTop,
-                  child: Container(
-                    width: circleSize,
-                    height: circleSize,
-                    decoration: BoxDecoration(
-                      color: kNavActive,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: kNavActive.withOpacity(0.45),
-                          blurRadius: 16,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      navIcons[_vm.selectedIndex],
-                      color: const Color(0xFF0C1B13),
-                      size: 24,
-                    ),
-                  ),
-                ),
-
-                // ── Tap areas + inactive icons ───────────────────────────
-                Row(
-                  children: List.generate(navCount, (i) {
-                    final isActive = i == _vm.selectedIndex;
-                    return Expanded(
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.translucent,
-                        onTap: () async {
-                          int? targetIndex = i;
-                          while (targetIndex != null && targetIndex != 2) {
-                            // Update index segera agar lingkaran bergerak halus
-                            _vm.onNavTapManual(targetIndex);
-                            
-                            // Tunggu animasi lingkaran selesai
-                            await Future.delayed(const Duration(milliseconds: 320));
-                            if (!mounted) break;
-
-                            Widget targetPage;
-                            switch (targetIndex) {
-                              case 0: targetPage = const HitungHppPage(); break;
-                              case 1: targetPage = SavingListPage(userId: FirebaseAuth.instance.currentUser?.uid ?? ''); break;
-                              case 3: targetPage = const InsightView(); break;
-                              case 4: targetPage = const RiwayatView(); break;
-                              default: targetIndex = null; continue;
-                            }
-
-                            final result = await Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => targetPage),
-                            );
-
-                            if (mounted && result is int) {
-                              targetIndex = result;
-                            } else {
-                              targetIndex = null;
-                            }
-                          }
-
-                          if (mounted) {
-                            _vm.onNavTapManual(2);
-                          }
-                        },
-                        child: SizedBox(
-                          height: navHeight,
-                          child: Center(
-                            child: AnimatedOpacity(
-                              duration: const Duration(milliseconds: 200),
-                              opacity: isActive ? 0.0 : 1.0,
-                              child: Icon(
-                                navIcons[i],
-                                color: kNavIcon,
-                                size: 24,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
 }
 
 // ── Sparkle Painter ───────────────────────────────────────────────────────────

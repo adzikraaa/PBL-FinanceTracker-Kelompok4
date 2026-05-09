@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:convert';
-import 'dart:typed_data';
-import 'dart:ui';
-import 'dart:math' as math;
 import '../../data/models/saving_model.dart';
 import '../../viewmodels/saving_viewmodel.dart';
-import '../../main.dart';
 import 'saving_form_page.dart';
+import 'dart:math' as math;
 
 // ─── Sparkle Model ────────────────────────────────────────────────────────────
 class _Sparkle {
@@ -32,8 +29,7 @@ class SavingDetailPage extends StatefulWidget {
   State<SavingDetailPage> createState() => _SavingDetailPageState();
 }
 
-class _SavingDetailPageState extends State<SavingDetailPage>
-    with TickerProviderStateMixin {
+class _SavingDetailPageState extends State<SavingDetailPage> with TickerProviderStateMixin {
   late AnimationController _sparkleController;
   late List<_Sparkle> _sparkles;
   final math.Random _rng = math.Random();
@@ -43,7 +39,7 @@ class _SavingDetailPageState extends State<SavingDetailPage>
     super.initState();
     _sparkleController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 4),
+      duration: const Duration(seconds: 3),
     )..repeat();
 
     _sparkles = List.generate(
@@ -51,10 +47,10 @@ class _SavingDetailPageState extends State<SavingDetailPage>
       (_) => _Sparkle(
         x: _rng.nextDouble(),
         y: _rng.nextDouble(),
-        size: _rng.nextDouble() * 10 + 4,
+        size: _rng.nextDouble() * 8 + 4,
         opacity: _rng.nextDouble() * 0.4 + 0.1,
         phase: _rng.nextDouble() * 2 * math.pi,
-        speed: _rng.nextDouble() * 1.0 + 0.5,
+        speed: _rng.nextDouble() * 1.5 + 0.5,
       ),
     );
   }
@@ -68,7 +64,7 @@ class _SavingDetailPageState extends State<SavingDetailPage>
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<SavingViewModel>();
-
+    
     // Cari data terbaru dari list di ViewModel berdasarkan ID
     final currentSaving = vm.savings.firstWhere(
       (s) => s.id == widget.saving.id,
@@ -81,169 +77,92 @@ class _SavingDetailPageState extends State<SavingDetailPage>
     return Scaffold(
       backgroundColor: const Color(0xFF0D2818),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D2818),
-        leading: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: const Icon(Icons.arrow_back, color: Color(0xFFFFD700)),
-        ),
-        title:
-            const Text('Kembali', style: TextStyle(color: Color(0xFFFFD700))),
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFFFFD700)),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text('DETAIL TABUNGAN',
+            style: TextStyle(color: Color(0xFFFFD700), fontSize: 16, fontWeight: FontWeight.bold)),
       ),
+      extendBodyBehindAppBar: true,
       body: Stack(
         children: [
-          // Background Animation
-          Positioned.fill(
-            child: AnimatedBuilder(
-              animation: _sparkleController,
-              builder: (context, _) {
-                return Stack(
-                  children: _sparkles.map((s) {
-                    final t = _sparkleController.value;
-                    final move =
-                        math.sin(t * 2 * math.pi * s.speed + s.phase) * 20;
-                    return Positioned(
-                      left: MediaQuery.of(context).size.width * s.x,
-                      top: MediaQuery.of(context).size.height * s.y + move,
-                      child: Opacity(
-                        opacity: s.opacity *
-                            (0.5 + 0.5 * math.sin(t * 2 * math.pi + s.phase)),
-                        child: Icon(
-                          Icons.auto_awesome,
-                          color: const Color(0xFF4AFF91).withOpacity(0.2),
-                          size: s.size,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                );
-              },
+          _buildGradientBg(),
+          _buildSparkleLayer(),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+            // Gambar utama atau placeholder
+            Container(
+              width: double.infinity,
+              height: 200,
+              decoration: BoxDecoration(
+                color: const Color(0xFF163520),
+                borderRadius: BorderRadius.circular(16),
+                image: currentSaving.imageUrl != null
+                    ? DecorationImage(
+                        image: (vm.getCachedImage(currentSaving.imageUrl!) as ImageProvider?) ?? const AssetImage('assets/images/logo.png'),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+              ),
+              child: currentSaving.imageUrl == null
+                  ? const Icon(Icons.savings, color: Colors.white24, size: 80)
+                  : null,
             ),
-          ),
+            const SizedBox(height: 16),
 
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Gambar utama atau placeholder
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(28),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: Container(
-                      width: double.infinity,
-                      height: 220,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
-                        borderRadius: BorderRadius.circular(28),
-                        border: Border.all(color: Colors.white10),
-                        image: currentSaving.imageUrl != null
-                            ? DecorationImage(
-                                image: _getImageProvider(
-                                    vm, currentSaving.imageUrl!),
-                                fit: BoxFit.cover,
-                              )
-                            : null,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          )
-                        ],
-                      ),
-                      child: currentSaving.imageUrl == null
-                          ? const Icon(Icons.savings_outlined,
-                              color: Colors.white24, size: 80)
-                          : null,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
+            const Text('SAVINGS GOAL',
+                style: TextStyle(
+                    color: Color(0xFFFFD700),
+                    fontSize: 12,
+                    letterSpacing: 1.2)),
+            const SizedBox(height: 4),
+            Text(currentSaving.title,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
 
-                const Text('SAVINGS GOAL',
-                    style: TextStyle(
-                        color: Color(0xFFFFD700),
-                        fontSize: 12,
-                        letterSpacing: 1.2)),
-                const SizedBox(height: 4),
-                Text(currentSaving.title,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold)),
-                const SizedBox(height: 20),
-
-                // Progress card
-                _buildCard(
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('PROGRESS',
-                                  style: TextStyle(
-                                      color: Colors.white54, fontSize: 11)),
-                              Text(
-                                '${(progress * 100).toInt()}%',
-                                style: const TextStyle(
-                                    color: Color(0xFFFFD700),
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              const Text('Complete',
-                                  style: TextStyle(color: Colors.white70)),
-                            ],
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              const Text('REMAINING',
-                                  style: TextStyle(
-                                      color: Colors.white54, fontSize: 11)),
-                              Text(
-                                'Rp ${_formatRupiah(sisa)}',
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: LinearProgressIndicator(
-                          value: progress,
-                          backgroundColor: Colors.white12,
-                          color: const Color(0xFFFFD700),
-                          minHeight: 8,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // Monthly Goal card
-                _buildCard(
-                  child: Row(
+            // Progress card
+            _buildCard(
+              child: Column(
+                children: [
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('MONTHLY GOAL',
+                          const Text('PROGRESS',
                               style: TextStyle(
                                   color: Colors.white54, fontSize: 11)),
                           Text(
-                            'Rp ${_formatRupiah(vm.getMonthlyGoal(currentSaving))}',
+                            '${(progress * 100).toInt()}%',
+                            style: const TextStyle(
+                                color: Color(0xFFFFD700),
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          const Text('Complete',
+                              style:
+                                  TextStyle(color: Colors.white70)),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          const Text('REMAINING',
+                              style: TextStyle(
+                                  color: Colors.white54, fontSize: 11)),
+                          Text(
+                            'Rp ${_formatRupiah(sisa)}',
                             style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 20,
@@ -251,113 +170,151 @@ class _SavingDetailPageState extends State<SavingDetailPage>
                           ),
                         ],
                       ),
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0D2818),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(Icons.trending_up,
-                            color: Color(0xFF4AFF91)),
-                      ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 12),
+                  const SizedBox(height: 12),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      backgroundColor: Colors.white12,
+                      color: const Color(0xFFFFD700),
+                      minHeight: 8,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
 
-                // Expected Completion card
-                _buildCard(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // Monthly Goal card
+            _buildCard(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('EXPECTED COMPLETION',
-                              style: TextStyle(
-                                  color: Colors.white54, fontSize: 11)),
-                          Text(
-                            vm.getExpectedCompletion(currentSaving),
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0D2818),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(Icons.calendar_today,
-                            color: Colors.white54),
+                      const Text('MONTHLY GOAL',
+                          style: TextStyle(
+                              color: Colors.white54, fontSize: 11)),
+                      Text(
+                        'Rp ${_formatRupiah(vm.getMonthlyGoal(currentSaving))}',
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0D2818),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.trending_up,
+                        color: Color(0xFF4AFF91)),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
 
-                // Tombol Edit
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: progress >= 1.0
-                          ? Colors.white10
-                          : const Color(0xFF4AFF91),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
+            // Expected Completion card
+            _buildCard(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('EXPECTED COMPLETION',
+                          style: TextStyle(
+                              color: Colors.white54, fontSize: 11)),
+                      Text(
+                        vm.getExpectedCompletion(currentSaving),
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold),
                       ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0D2818),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    icon: Icon(
-                      progress >= 1.0 ? Icons.check_circle : Icons.edit,
-                      color: progress >= 1.0 ? Colors.white38 : Colors.black,
-                    ),
-                    label: Text(
-                      progress >= 1.0 ? 'Goal Tercapai' : 'Edit Goal',
-                      style: TextStyle(
-                        color: progress >= 1.0 ? Colors.white38 : Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    onPressed: progress >= 1.0
-                        ? null
-                        : () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => SavingFormPage(
-                                  userId: widget.userId,
-                                  existingSaving: currentSaving,
-                                ),
-                              ),
-                            );
-                          },
+                    child: const Icon(Icons.calendar_today,
+                        color: Colors.white54),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Tombol Edit
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: progress >= 1.0 
+                      ? Colors.white10 
+                      : const Color(0xFF4AFF91),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
                   ),
                 ),
-                const SizedBox(height: 12),
-
-                // Tombol Hapus
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF163520),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    label: const Text('Delete Goal',
-                        style: TextStyle(color: Colors.white)),
-                    onPressed: () => _showDeleteDialog(context, vm),
+                icon: Icon(
+                  progress >= 1.0 ? Icons.check_circle : Icons.edit,
+                  color: progress >= 1.0 ? Colors.white38 : Colors.black,
+                ),
+                label: Text(
+                  progress >= 1.0 ? 'Goal Tercapai' : 'Edit Goal',
+                  style: TextStyle(
+                    color: progress >= 1.0 ? Colors.white38 : Colors.black,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ],
+                onPressed: progress >= 1.0
+                    ? null
+                    : () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => SavingFormPage(
+                              userId: widget.userId,
+                              existingSaving: currentSaving,
+                            ),
+                          ),
+                        );
+                      },
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Tombol Hapus
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF163520),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+                icon: const Icon(Icons.delete, color: Colors.red),
+                label: const Text('Delete Goal',
+                    style: TextStyle(color: Colors.white)),
+                onPressed: () => _showDeleteDialog(context, vm),
+              ),
+            ),
+                ],
+              ),
             ),
           ),
         ],
@@ -370,7 +327,8 @@ class _SavingDetailPageState extends State<SavingDetailPage>
       context: context,
       builder: (_) => Dialog(
         backgroundColor: const Color(0xFF1A1A2E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -423,18 +381,27 @@ class _SavingDetailPageState extends State<SavingDetailPage>
                   onPressed: () async {
                     Navigator.pop(context);
                     final success = await vm.deleteSaving(widget.saving.id!);
-                    if (context.mounted && success) {
-                      final messenger = MyApp.scaffoldMessengerKey.currentState;
-                      messenger?.hideCurrentSnackBar();
-                      messenger?.showSnackBar(
+                    if (!context.mounted) return;
+
+                    if (success) {
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                      ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Data tabungan berhasil dihapus'),
+                          content: Row(
+                            children: [
+                              Icon(Icons.check_circle,
+                                  color: Color(0xFF4AFF91)),
+                              SizedBox(width: 12),
+                              Text('Tabungan berhasil dihapus',
+                                  style: TextStyle(color: Colors.white)),
+                            ],
+                          ),
                           backgroundColor: Color(0xFF163520),
                           behavior: SnackBarBehavior.floating,
                         ),
                       );
                       Navigator.pop(context);
-                    } else if (context.mounted) {
+                    } else {
                       ScaffoldMessenger.of(context).hideCurrentSnackBar();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -456,8 +423,8 @@ class _SavingDetailPageState extends State<SavingDetailPage>
                       );
                     }
                   },
-                  child:
-                      const Text('Iya', style: TextStyle(color: Colors.white)),
+                  child: const Text('Iya',
+                      style: TextStyle(color: Colors.white)),
                 ),
               ),
             ],
@@ -468,38 +435,98 @@ class _SavingDetailPageState extends State<SavingDetailPage>
   }
 
   Widget _buildCard({required Widget child}) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white10),
-          ),
-          child: child,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF163520),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildGradientBg() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFF0A1F12),
+            Color(0xFF0D2818),
+            Color(0xFF0F2E1A),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSparkleLayer() {
+    return AnimatedBuilder(
+      animation: _sparkleController,
+      builder: (context, _) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            return CustomPaint(
+              size: Size(constraints.maxWidth, constraints.maxHeight),
+              painter: _SparklePainter(
+                sparkles: _sparkles,
+                time: _sparkleController.value,
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
   String _formatRupiah(double value) {
     return value
         .toStringAsFixed(0)
-        .replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]}.');
+        .replaceAllMapped(
+            RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]}.');
   }
 
-  ImageProvider _getImageProvider(SavingViewModel vm, String url) {
-    if (url.startsWith('data:image') && vm.cachedImageData != null) {
-      return MemoryImage(vm.cachedImageData!);
-    }
+  ImageProvider _getImageProvider(String url) {
     if (url.startsWith('data:image')) {
       final base64String = url.split(',').last;
       return MemoryImage(base64Decode(base64String));
     }
     return NetworkImage(url);
   }
+}
+
+class _SparklePainter extends CustomPainter {
+  final List<_Sparkle> sparkles;
+  final double time;
+
+  _SparklePainter({required this.sparkles, required this.time});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (var s in sparkles) {
+      final t = time;
+      final move = math.sin(t * 2 * math.pi * s.speed + s.phase) * 20;
+      final opacity = s.opacity * (0.5 + 0.5 * math.sin(t * 2 * math.pi + s.phase));
+      
+      final paint = Paint()
+        ..color = const Color(0xFF4AFF91).withOpacity(opacity.clamp(0.0, 1.0))
+        ..style = PaintingStyle.fill;
+
+      final center = Offset(size.width * s.x, (size.height * s.y + move) % size.height);
+      
+      final path = Path();
+      path.moveTo(center.dx, center.dy - s.size / 2);
+      path.lineTo(center.dx + s.size / 4, center.dy);
+      path.lineTo(center.dx, center.dy + s.size / 2);
+      path.lineTo(center.dx - s.size / 4, center.dy);
+      path.close();
+      
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_SparklePainter oldDelegate) => true;
 }
