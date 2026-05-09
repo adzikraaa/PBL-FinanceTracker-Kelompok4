@@ -26,8 +26,25 @@ class _HitungBepPageState extends State<HitungBepPage> {
     // Pre-fill Biaya Per Unit with modalPerUnit from ViewModel
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final vm = Provider.of<FinanceViewModel>(context, listen: false);
-      _biayaPerUnitController.text = vm.modalPerUnit.toInt().toString();
+      _biayaPerUnitController.text = _formatCurrency(vm.modalPerUnit);
+      
+      if (vm.hargaJualUnit > 0) {
+        _hargaJualController.text = _formatCurrency(vm.hargaJualUnit);
+      }
+      if (vm.biayaTetap > 0) {
+        _biayaTetapController.text = _formatCurrency(vm.biayaTetap);
+      }
+      if (vm.jumlahUnitTerjual != null && vm.jumlahUnitTerjual! > 0) {
+        _jumlahTerjualController.text = _formatCurrency(vm.jumlahUnitTerjual!.toDouble());
+      }
     });
+  }
+
+  String _formatCurrency(double value) {
+    if (value <= 0) return '0';
+    String result = value.toInt().toString();
+    result = result.replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.');
+    return result;
   }
 
   @override

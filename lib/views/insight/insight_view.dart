@@ -34,6 +34,7 @@ class _InsightViewState extends State<InsightView>
   ];
   String _selectedPeriod = 'Mei';
   int _selectedBarIndex = 2;
+  int _localNavIndex = 3; // Insight
 
   @override
   void initState() {
@@ -90,7 +91,7 @@ class _InsightViewState extends State<InsightView>
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.only(bottom: 30, top: 16),
+                  padding: const EdgeInsets.only(bottom: 120, top: 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -109,6 +110,12 @@ class _InsightViewState extends State<InsightView>
               ),
             ),
           ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: _buildBottomNav(),
+          ),
         ],
       ),
     );
@@ -116,8 +123,20 @@ class _InsightViewState extends State<InsightView>
 
   Widget _buildHeader() {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: Container(
+            width: 40, height: 40,
+            margin: const EdgeInsets.only(right: 14),
+            decoration: BoxDecoration(
+              color: const Color(0xFF163520),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white24),
+            ),
+            child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 16),
+          ),
+        ),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -313,7 +332,7 @@ class _InsightViewState extends State<InsightView>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      finance.totalBepAchievedPercent,
+                      finance.totalBepAchievedPercent as String,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 15,
@@ -620,7 +639,7 @@ class _InsightViewState extends State<InsightView>
       {
         'title': 'Margin Tertekan',
         'subtitle': savings.savings.isNotEmpty
-            ? 'Produk ${savings.savings.first.title} mengalami kenaikan HPP sebesar 15%.'
+            ? 'Produk ${savings.savings.first.title} perlu evaluasi biaya HPP.'
             : 'Produk Kopi Susu mengalami kenaikan HPP sebesar 15%.',
         'icon': Icons.show_chart,
       },
@@ -704,6 +723,101 @@ class _InsightViewState extends State<InsightView>
           );
         }),
       ],
+    );
+  }
+
+  Widget _buildBottomNav() {
+    const navIcons = [
+      Icons.calculate_outlined,
+      Icons.account_balance_wallet_outlined,
+      Icons.home,
+      Icons.show_chart,
+      Icons.history,
+    ];
+    final int activeIndex = _localNavIndex;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20, left: 20, right: 20),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final itemWidth = constraints.maxWidth / 5;
+          final circleLeft = itemWidth * activeIndex + (itemWidth / 2) - 24;
+
+          return SizedBox(
+            height: 68,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF132018).withOpacity(0.95),
+                      borderRadius: BorderRadius.circular(32),
+                      border: Border.all(color: const Color(0xFF2C4334), width: 1.5),
+                    ),
+                  ),
+                ),
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 320),
+                  curve: Curves.easeInOutCubic,
+                  left: circleLeft,
+                  top: 8,
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6CF688),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF6CF688).withOpacity(0.45),
+                          blurRadius: 16,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      navIcons[activeIndex],
+                      color: const Color(0xFF0C1B13),
+                      size: 24,
+                    ),
+                  ),
+                ),
+                Row(
+                  children: List.generate(5, (i) {
+                    return Expanded(
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onTap: () async {
+                          if (i == _localNavIndex) return;
+                          setState(() => _localNavIndex = i);
+                          await Future.delayed(const Duration(milliseconds: 320));
+                          if (!mounted) return;
+                          Navigator.pop(context, i);
+                        },
+                        child: SizedBox(
+                          height: 64,
+                          child: Center(
+                            child: AnimatedOpacity(
+                              duration: const Duration(milliseconds: 200),
+                              opacity: i == activeIndex ? 0.0 : 1.0,
+                              child: Icon(
+                                navIcons[i],
+                                color: const Color(0xFF6B7E72),
+                                size: 24,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }

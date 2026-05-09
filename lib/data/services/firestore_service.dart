@@ -75,4 +75,8 @@ class FirestoreService {
             .map((doc) => HppModel.fromJson(doc.data(), doc.id))
             .toList());
   }
+
+  Future<void> deleteHistory(String id) async {
+    await _db.collection('history').doc(id).delete();
+  }
 } // <--- KURUNG TUTUP CLASS HARUS DI PALING BAWAH

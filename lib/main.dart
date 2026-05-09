@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'data/config/firebase_options.dart';
 import 'shared/colors.dart';
 import 'viewmodels/auth_viewmodel.dart';
-import 'views/auth/welcome_view.dart';
-import 'views/home/main_navigation.dart';
-import 'viewmodels/finance_viewmodel.dart';
-import 'viewmodels/savings_viewmodel.dart';
-import 'viewmodels/loadingscreen.dart';
 import 'viewmodels/saving_viewmodel.dart';
+import 'viewmodels/finance_viewmodel.dart';
+import 'viewmodels/note_viewmodel.dart';
+import 'viewmodels/loadingscreen.dart';
+import 'viewmodels/riwayat_viewmodel.dart';
+import 'viewmodels/home_viewmodel.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,12 +18,14 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await initializeDateFormatting('id_ID', null);
   //await FirebaseAuth.instance.signOut();
 
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  static final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
   const MyApp({super.key});
 
   @override
@@ -31,15 +33,18 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
+        ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(create: (_) => FinanceViewModel()),
-        ChangeNotifierProvider(create: (_) => SavingsViewModel()),
+        ChangeNotifierProvider(create: (_) => NoteViewModel()),
+        ChangeNotifierProvider(create: (_) => RiwayatViewModel()),
         ChangeNotifierProvider(create: (_) => SavingViewModel()),
       ],
       child: MaterialApp(
+        scaffoldMessengerKey: MyApp.scaffoldMessengerKey,
         debugShowCheckedModeBanner: false,
         title: 'BizPrice Tracker',
         theme: ThemeData(
-          colorScheme: ColorScheme.dark(
+          colorScheme: const ColorScheme.dark(
             primary: AppColors.primaryPurple,
             secondary: AppColors.accentYellow,
             surface: AppColors.darkCard,

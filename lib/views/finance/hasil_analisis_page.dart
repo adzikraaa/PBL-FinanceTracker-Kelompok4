@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/finance_viewmodel.dart';
 import '../home/home_view.dart'; // Navigate back to home on save
+import '../notes/note_form_view.dart';
 
 class HasilAnalisisPage extends StatefulWidget {
   const HasilAnalisisPage({super.key});
@@ -71,13 +72,27 @@ class _HasilAnalisisPageState extends State<HasilAnalisisPage> {
                               child: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
                             ),
                             const SizedBox(width: 16),
-                            const Text(
-                              "Hasil Analisis",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "Hasil Analisis",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  vm.namaProduk,
+                                  style: const TextStyle(
+                                    color: Color(0xFF8BCA6E),
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -398,6 +413,7 @@ class _HasilAnalisisPageState extends State<HasilAnalisisPage> {
                                       onChanged: (value) {
                                         setState(() {
                                           _sliderValue = value;
+                                          vm.hargaJualUnit = value; // Update viewmodel to trigger reactive analysis
                                         });
                                       },
                                     ),
@@ -418,13 +434,29 @@ class _HasilAnalisisPageState extends State<HasilAnalisisPage> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                 decoration: BoxDecoration(
-                                  border: Border.all(color: const Color(0xFF2C4334)),
+                                  border: Border.all(
+                                    color: vm.marginPercentage < 0
+                                        ? const Color(0xFFE57373)
+                                        : vm.marginPercentage < 20
+                                            ? const Color(0xFFE2E385)
+                                            : const Color(0xFF2C4334),
+                                  ),
                                   borderRadius: BorderRadius.circular(16),
                                 ),
-                                child: const Text(
-                                  "KEUNTUNGAN SEDANG",
+                                child: Text(
+                                  vm.marginPercentage < 0
+                                      ? "RUGI"
+                                      : vm.marginPercentage < 20
+                                          ? "KEUNTUNGAN RENDAH"
+                                          : vm.marginPercentage > 50
+                                              ? "KEUNTUNGAN TINGGI"
+                                              : "KEUNTUNGAN SEDANG",
                                   style: TextStyle(
-                                    color: Color(0xFF8BCA6E),
+                                    color: vm.marginPercentage < 0
+                                        ? const Color(0xFFE57373)
+                                        : vm.marginPercentage < 20
+                                            ? const Color(0xFFE2E385)
+                                            : const Color(0xFF8BCA6E),
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 1.0,
@@ -439,7 +471,12 @@ class _HasilAnalisisPageState extends State<HasilAnalisisPage> {
                         
                         // Buttons
                         OutlinedButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const NoteFormView()),
+                            );
+                          },
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(color: Color(0xFF2C4334)),
                             shape: RoundedRectangleBorder(

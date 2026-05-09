@@ -1,9 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
+import 'dart:typed_data';
+import 'dart:ui';
+import 'dart:math' as math;
 import 'package:provider/provider.dart';
 import '../../viewmodels/saving_viewmodel.dart';
 import '../../data/models/saving_model.dart';
+import '../../main.dart';
+
+// ─── Sparkle Model ────────────────────────────────────────────────────────────
+class _Sparkle {
+  double x, y, size, opacity, phase, speed;
+  _Sparkle({
+    required this.x,
+    required this.y,
+    required this.size,
+    required this.opacity,
+    required this.phase,
+    required this.speed,
+  });
+}
 
 class SavingFormPage extends StatefulWidget {
   final String userId;
@@ -14,7 +31,10 @@ class SavingFormPage extends StatefulWidget {
   State<SavingFormPage> createState() => _SavingFormPageState();
 }
 
-class _SavingFormPageState extends State<SavingFormPage> {
+class _SavingFormPageState extends State<SavingFormPage> with TickerProviderStateMixin {
+  late AnimationController _sparkleController;
+  late List<_Sparkle> _sparkles;
+  final math.Random _rng = math.Random();
   final _titleController = TextEditingController();
   final _currentController = TextEditingController();
   final _targetController = TextEditingController();
@@ -27,17 +47,39 @@ class _SavingFormPageState extends State<SavingFormPage> {
   @override
   void initState() {
     super.initState();
-    final vm = context.read<SavingViewModel>();
-    if (widget.existingSaving != null) {
-      vm.loadForEdit(widget.existingSaving!);
-      _titleController.text = widget.existingSaving!.title;
-      _currentController.text = _formatNumber(widget.existingSaving!.currentAmount.toStringAsFixed(0));
-      _targetController.text = _formatNumber(widget.existingSaving!.targetAmount.toStringAsFixed(0));
-    }
+    _sparkleController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat();
+
+    _sparkles = List.generate(
+      15,
+      (_) => _Sparkle(
+        x: _rng.nextDouble(),
+        y: _rng.nextDouble(),
+        size: _rng.nextDouble() * 10 + 4,
+        opacity: _rng.nextDouble() * 0.4 + 0.1,
+        phase: _rng.nextDouble() * 2 * math.pi,
+        speed: _rng.nextDouble() * 1.0 + 0.5,
+      ),
+    );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final vm = context.read<SavingViewModel>();
+      if (widget.existingSaving != null) {
+        vm.loadForEdit(widget.existingSaving!);
+        _titleController.text = widget.existingSaving!.title;
+        _currentController.text = _formatNumber(widget.existingSaving!.currentAmount.toStringAsFixed(0));
+        _targetController.text = _formatNumber(widget.existingSaving!.targetAmount.toStringAsFixed(0));
+      } else {
+        vm.resetForm();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _sparkleController.dispose();
     _titleController.dispose();
     _currentController.dispose();
     _targetController.dispose();
@@ -62,49 +104,95 @@ class _SavingFormPageState extends State<SavingFormPage> {
         ),
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Upload gambar placeholder atau pratinjau
-            GestureDetector(
-              onTap: () => vm.pickImage(),
-              child: Container(
-                width: double.infinity,
-                height: 160,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF163520),
-                  borderRadius: BorderRadius.circular(16),
-                  image: vm.imageUrl != null
-                      ? DecorationImage(
-                          image: _getImageProvider(vm.imageUrl!),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                ),
-                child: vm.imageUrl == null
-                    ? const Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.image, color: Colors.white54, size: 40),
-                          SizedBox(height: 8),
-                          Text('Unggah gambar',
-                              style: TextStyle(color: Colors.white70)),
-                          Text('JPG, JPEG, PNG (MAX 5MB)',
-                              style: TextStyle(
-                                  color: Colors.white38, fontSize: 12)),
-                        ],
-                      )
-                    : Container(
-                        decoration: BoxDecoration(
-                          color: Colors.black26,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Center(
-                          child: Icon(Icons.edit, color: Colors.white, size: 30),
+      body: Stack(
+        children: [
+          // Background Animation
+          Positioned.fill(
+            child: AnimatedBuilder(
+              animation: _sparkleController,
+              builder: (context, _) {
+                return Stack(
+                  children: _sparkles.map((s) {
+                    final t = _sparkleController.value;
+                    final move = math.sin(t * 2 * math.pi * s.speed + s.phase) * 20;
+                    return Positioned(
+                      left: MediaQuery.of(context).size.width * s.x,
+                      top: MediaQuery.of(context).size.height * s.y + move,
+                      child: Opacity(
+                        opacity: s.opacity * (0.5 + 0.5 * math.sin(t * 2 * math.pi + s.phase)),
+                        child: Icon(
+                          Icons.auto_awesome,
+                          color: const Color(0xFF4AFF91).withOpacity(0.2),
+                          size: s.size,
                         ),
                       ),
+                    );
+                  }).toList(),
+                );
+              },
+            ),
+          ),
+
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+            // Upload gambar placeholder atau pratinjau
+            ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: GestureDetector(
+                  onTap: () => vm.pickImage(),
+                  child: Container(
+                    width: double.infinity,
+                    height: 180,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.white10),
+                    ),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: vm.imageUrl != null
+                          ? Container(
+                              key: ValueKey(vm.imageUrl),
+                              width: double.infinity,
+                              height: double.infinity,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(24),
+                                image: DecorationImage(
+                                  image: _getImageProvider(vm, vm.imageUrl!),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.black26,
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                                child: const Center(
+                                  child: Icon(Icons.edit, color: Colors.white, size: 32),
+                                ),
+                              ),
+                            )
+                          : const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.add_a_photo_outlined, color: Color(0xFF4AFF91), size: 40),
+                                SizedBox(height: 12),
+                                Text('Unggah Gambar Tabungan',
+                                    style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold)),
+                                SizedBox(height: 4),
+                                Text('JPG, JPEG, PNG (MAX 5MB)',
+                                    style: TextStyle(
+                                        color: Colors.white38, fontSize: 10, letterSpacing: 1)),
+                              ],
+                            ),
+                    ),
+                  ),
+                ),
               ),
             ),
             if (vm.errorMessage != null)
@@ -139,7 +227,7 @@ class _SavingFormPageState extends State<SavingFormPage> {
               hint: 'e.g., European Summer Tour',
               onChanged: (val) => vm.title = val,
               errorText: vm.errorMessage != null &&
-                      vm.errorMessage!.contains('kosong')
+                      (vm.errorMessage!.contains('Nama') || vm.errorMessage!.contains('kosong'))
                   ? vm.errorMessage
                   : null,
             ),
@@ -204,11 +292,10 @@ class _SavingFormPageState extends State<SavingFormPage> {
                         final success =
                             await vm.saveSaving(widget.userId);
                         
-                        if (!context.mounted) return;
-
                         if (success) {
-                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          final messenger = MyApp.scaffoldMessengerKey.currentState;
+                          messenger?.hideCurrentSnackBar();
+                          messenger?.showSnackBar(
                             SnackBar(
                               content: Row(
                                 children: [
@@ -238,10 +325,18 @@ class _SavingFormPageState extends State<SavingFormPage> {
                               duration: const Duration(seconds: 2),
                             ),
                           );
-                          Navigator.pop(context);
+                          
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            // Jika mode edit, pop lagi untuk balik ke list
+                            if (widget.existingSaving != null) {
+                              Navigator.pop(context);
+                            }
+                          }
                         } else {
-                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          final messenger = MyApp.scaffoldMessengerKey.currentState;
+                          messenger?.hideCurrentSnackBar();
+                          messenger?.showSnackBar(
                             SnackBar(
                               content: Row(
                                 children: [
@@ -258,7 +353,7 @@ class _SavingFormPageState extends State<SavingFormPage> {
                                   ),
                                 ],
                               ),
-                              backgroundColor: const Color(0xFF163520),
+                              backgroundColor: Colors.red.shade900,
                               behavior: SnackBarBehavior.floating,
                             ),
                           );
@@ -294,11 +389,13 @@ class _SavingFormPageState extends State<SavingFormPage> {
                 ),
               ),
             ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
-  }
+      ],
+    ),
+  );
+}
 
   Widget _buildLabel(String text) {
     return Padding(
@@ -401,7 +498,10 @@ class _SavingFormPageState extends State<SavingFormPage> {
     );
   }
 
-  ImageProvider _getImageProvider(String url) {
+  ImageProvider _getImageProvider(SavingViewModel vm, String url) {
+    if (url.startsWith('data:image') && vm.cachedImageData != null) {
+      return MemoryImage(vm.cachedImageData!);
+    }
     try {
       if (url.startsWith('data:image')) {
         final parts = url.split(',');
@@ -411,7 +511,6 @@ class _SavingFormPageState extends State<SavingFormPage> {
       }
       return NetworkImage(url);
     } catch (e) {
-      // Jika gagal decode, tampilkan placeholder agar tidak crash
       return const AssetImage('assets/images/logo.png');
     }
   }
