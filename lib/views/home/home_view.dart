@@ -68,8 +68,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     super.initState();
 
     _vm = context.read<HomeViewModel>();
-    // Pastikan saat buka Home, navbar aktif di index 2 (Home)
-    _vm.selectedIndex = 2;
 
     _sparkleController = AnimationController(
       vsync: this,
@@ -106,9 +104,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _vm,
-      builder: (context, _) {
+    // Use Consumer instead of AnimatedBuilder to avoid first-frame
+    // rendering issues with ChangeNotifier-as-animation pattern.
+    return Consumer<HomeViewModel>(
+      builder: (context, vm, _) {
         return Scaffold(
           backgroundColor: kBg,
           body: Stack(
@@ -791,47 +790,47 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         children: [
           // ── Insight ──
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: kCard,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: kWhite20, width: 0.8),
-              ),
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'INSIGHT',
-                    style: TextStyle(
-                      color: kWhite40,
-                      fontSize: 10,
-                      letterSpacing: 1.2,
-                      fontWeight: FontWeight.w600,
+            child: GestureDetector(
+              onTap: () => _vm.onNavTapManual(3),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: kCard,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: kWhite20, width: 0.8),
+                ),
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'INSIGHT',
+                      style: TextStyle(
+                        color: kWhite40,
+                        fontSize: 10,
+                        letterSpacing: 1.2,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 14),
-                  Center(
-                    child: SizedBox(
-                      width: 68,
-                      height: 68,
-                      child: CustomPaint(
-                        painter: _DonutPainter(
-                          slices: const [0.4, 0.6],
-                          colors: [kGreen, kCardLight],
+                    const SizedBox(height: 14),
+                    Center(
+                      child: SizedBox(
+                        width: 68,
+                        height: 68,
+                        child: CustomPaint(
+                          painter: _DonutPainter(
+                            slices: const [0.4, 0.6],
+                            colors: [kGreen, kCardLight],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  _insightLegend(kGreen, 'Cat A: 40%'),
-                  const SizedBox(height: 4),
-                  _insightLegend(kWhite40, 'Cat B: 60%'),
-                  const Spacer(),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: GestureDetector(
-                      onTap: _vm.onInsightTap,
+                    const SizedBox(height: 12),
+                    _insightLegend(kGreen, 'Cat A: 40%'),
+                    const SizedBox(height: 4),
+                    _insightLegend(kWhite40, 'Cat B: 60%'),
+                    const Spacer(),
+                    Align(
+                      alignment: Alignment.centerRight,
                       child: Container(
                         width: 30,
                         height: 30,
@@ -843,8 +842,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                             color: kWhite, size: 15),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
