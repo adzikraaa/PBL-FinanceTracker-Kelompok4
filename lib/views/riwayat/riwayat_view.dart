@@ -7,6 +7,11 @@ import '../../data/models/hpp_model.dart';
 import '../../data/services/pdf_service.dart';
 import '../finance/hitung_hpp_page.dart';
 
+import '../../viewmodels/auth_viewmodel.dart';
+
+String _fmtTime(DateTime d) => DateFormat('HH:mm', 'id_ID').format(d);
+String _fmtDateFull(DateTime d) => DateFormat('dd MMM yyyy', 'id_ID').format(d);
+
 // ─── Colors ──────────────────────────────────────────────────────────────────
 const Color _kBg       = Color(0xFF0B2114);
 const Color _kGlow     = Color(0xFF1E472A);
@@ -28,6 +33,7 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
   late AnimationController _fadeCtrl;
   late Animation<double> _fadeAnim;
   late AnimationController _sparkleCtrl;
+  int _localNavIndex = 4; // Riwayat
 
   final _currencyFmt = NumberFormat.currency(
     locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
@@ -52,9 +58,6 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
     _sparkleCtrl.dispose();
     super.dispose();
   }
-
-  String _fmtTime(DateTime d) => DateFormat('HH:mm', 'id_ID').format(d);
-  String _fmtDateFull(DateTime d) => DateFormat('dd MMM yyyy', 'id_ID').format(d);
 
   void _showDeleteDialog(BuildContext ctx, RiwayatViewModel vm, HppModel item) {
     showDialog(
@@ -152,11 +155,12 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                             itemBuilder: (_, i) {
                               final key = groupKeys[i];
                               final items = groupedHistory[key]!;
+                              final isPremium = context.read<AuthViewModel>().isPremium;
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   _buildDateHeader(key),
-                                  ...items.map((item) => _buildRiwayatCard(item, vm, context)),
+                                  ...items.map((item) => _buildRiwayatCard(item, vm, context, isPremium)),
                                 ],
                               );
                             },
@@ -207,11 +211,6 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: const Icon(Icons.arrow_back, color: _kWhite, size: 24),
-          ),
-          const SizedBox(width: 16),
           const Text(
             'Riwayat Kalkulasi',
             style: TextStyle(
@@ -253,7 +252,7 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
   }
 
   // ─── Riwayat Card ──────────────────────────────────────────────────────────
-  Widget _buildRiwayatCard(HppModel item, RiwayatViewModel vm, BuildContext ctx) {
+  Widget _buildRiwayatCard(HppModel item, RiwayatViewModel vm, BuildContext ctx, bool isPremium) {
     final hppPerUnit = item.jumlahUnit > 0 ? item.totalHpp / item.jumlahUnit : 0.0;
     final margin = item.hargaJualUnit - hppPerUnit;
     final marginPct = item.hargaJualUnit > 0 ? (margin / item.hargaJualUnit * 100) : 0.0;
@@ -378,7 +377,7 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                 const Spacer(),
                 GestureDetector(
                   onTap: () async {
-                    await PdfService.shareHpp(item);
+                    await PdfService.shareHpp(item, isPremium: isPremium);
                   },
                   child: Container(
                     padding: const EdgeInsets.all(8),
@@ -392,7 +391,7 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                 const SizedBox(width: 10),
                 GestureDetector(
                   onTap: () async {
-                    await PdfService.downloadHpp(item);
+                    await PdfService.downloadHpp(item, isPremium: isPremium);
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -563,6 +562,7 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
       ),
     );
   }
+
 }
 
 // Dummy constants to avoid undefined errors (if any colors were left)

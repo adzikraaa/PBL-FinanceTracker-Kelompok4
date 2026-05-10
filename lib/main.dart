@@ -4,12 +4,12 @@ import 'package:provider/provider.dart';
 import 'data/config/firebase_options.dart';
 import 'shared/colors.dart';
 import 'viewmodels/auth_viewmodel.dart';
-
+import 'viewmodels/saving_viewmodel.dart';
 import 'viewmodels/finance_viewmodel.dart';
-import 'viewmodels/savings_viewmodel.dart';
 import 'viewmodels/note_viewmodel.dart';
 import 'viewmodels/loadingscreen.dart';
 import 'viewmodels/riwayat_viewmodel.dart';
+import 'viewmodels/home_viewmodel.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
@@ -25,6 +25,7 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
+  static final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
   const MyApp({super.key});
 
   @override
@@ -32,12 +33,14 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
+        ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(create: (_) => FinanceViewModel()),
-        ChangeNotifierProvider(create: (_) => SavingsViewModel()),
         ChangeNotifierProvider(create: (_) => NoteViewModel()),
         ChangeNotifierProvider(create: (_) => RiwayatViewModel()),
+        ChangeNotifierProvider(create: (_) => SavingViewModel()),
       ],
       child: MaterialApp(
+        scaffoldMessengerKey: MyApp.scaffoldMessengerKey,
         debugShowCheckedModeBanner: false,
         title: 'BizPrice Tracker',
         theme: ThemeData(

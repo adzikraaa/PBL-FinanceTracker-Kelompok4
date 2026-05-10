@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:BizPrice/views/notes/notes_list_view.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
@@ -7,10 +7,13 @@ import 'package:intl/intl.dart';
 import '../../viewmodels/home_viewmodel.dart';
 import '../../viewmodels/note_viewmodel.dart';
 import '../../viewmodels/riwayat_viewmodel.dart';
+import '../../viewmodels/saving_viewmodel.dart';
 import '../finance/hitung_hpp_page.dart';
 import '../insight/insight_view.dart';
 import '../riwayat/riwayat_view.dart';
+import '../notes/notes_list_view.dart';
 import 'profile_view.dart';
+import '../savings/saving_list_page.dart';
 
 // ─── Color Palette (Dark Green Theme) ────────────────────────────────────────
 const Color kBg = Color(0xFF0D2818);
@@ -52,7 +55,7 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
-  final HomeViewModel _vm = HomeViewModel();
+  late HomeViewModel _vm;
 
   late AnimationController _sparkleController;
   late AnimationController _progressAnimController;
@@ -64,8 +67,9 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   void initState() {
     super.initState();
 
+    _vm = context.read<HomeViewModel>();
     // Pastikan saat buka Home, navbar aktif di index 2 (Home)
-    _vm.onNavTap(2);
+    _vm.selectedIndex = 2;
 
     _sparkleController = AnimationController(
       vsync: this,
@@ -138,12 +142,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     ],
                   ),
                 ),
-              ),
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: _buildBottomNav(),
               ),
             ],
           ),
@@ -314,15 +312,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     final currFmt = NumberFormat.currency(
         locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
-    void goToRiwayat() async {
-      _vm.onNavTap(4);
-      await Future.delayed(const Duration(milliseconds: 320));
-      if (!mounted) return;
-      await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const RiwayatView()),
-      );
-      if (mounted) _vm.onNavTap(2);
+    void goToRiwayat() {
+      _vm.onNavTapManual(4);
     }
 
     return GestureDetector(
@@ -486,134 +477,267 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   }
 
   Widget _buildTabunganCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: kCard,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: kWhite20, width: 0.8),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'TABUNGAN',
-            style: TextStyle(
-              color: kWhite40,
-              fontSize: 10,
-              letterSpacing: 1.5,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            _vm.tabunganNama,
-            style: const TextStyle(
-              color: kWhite,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              AnimatedBuilder(
-                animation: _progressAnim,
-                builder: (context, _) {
-                  return SizedBox(
-                    width: 86,
-                    height: 86,
-                    child: Stack(
-                      alignment: Alignment.center,
+    return Consumer<SavingViewModel>(
+      builder: (context, savingVm, child) {
+        final bool hasData = savingVm.savings.isNotEmpty;
+
+        if (!hasData) {
+          return GestureDetector(
+            onTap: () {
+              _vm.onNavTapManual(1);
+            },
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: kCard,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: kWhite20, width: 0.8),
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: kWhite.withOpacity(0.05),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.account_balance_wallet_outlined,
+                      color: kGreen,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(
-                          width: 86,
-                          height: 86,
-                          child: CircularProgressIndicator(
-                            value: _progressAnim.value,
-                            strokeWidth: 8,
-                            backgroundColor: kWhite20,
-                            valueColor:
-                                const AlwaysStoppedAnimation<Color>(kGreen),
-                            strokeCap: StrokeCap.round,
+                        const Text(
+                          'BELUM ADA TABUNGAN',
+                          style: TextStyle(
+                            color: kWhite40,
+                            fontSize: 10,
+                            letterSpacing: 1.2,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        Text(
-                          '${(_progressAnim.value * 100).toInt()}%',
-                          style: const TextStyle(
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Yuk, mulai menabung!',
+                          style: TextStyle(
                             color: kWhite,
+                            fontSize: 15,
                             fontWeight: FontWeight.bold,
-                            fontSize: 16,
                           ),
                         ),
                       ],
                     ),
-                  );
-                },
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF22C55E), Color(0xFF4ADE80)],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      'TAMBAH',
+                      style: TextStyle(
+                        color: Color(0xFF0D2818),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: Column(
+            ),
+          );
+        }
+
+        // Ambil data terbaru (pertama di list)
+        final latestSaving = savingVm.savings.first;
+
+        final String nama = latestSaving.title;
+        final double current = latestSaving.currentAmount;
+        final double target = latestSaving.targetAmount;
+        final double progress = (current / target).clamp(0.0, 1.0);
+
+        return GestureDetector(
+          onTap: () {
+            _vm.onNavTapManual(1);
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  kCard,
+                  kCard.withOpacity(0.85),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: kWhite.withOpacity(0.08), width: 0.8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 12,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(18),
+            child: Stack(
+              children: [
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'TERKUMPUL',
+                      'TABUNGAN TERBARU',
                       style: TextStyle(
                         color: kWhite40,
                         fontSize: 10,
-                        letterSpacing: 1,
+                        letterSpacing: 1.5,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 6),
                     Text(
-                      _vm.tabunganSaatIni,
+                      nama,
                       style: const TextStyle(
                         color: kWhite,
-                        fontWeight: FontWeight.bold,
                         fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.2,
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'TARGET',
-                      style: TextStyle(
-                        color: kWhite40,
-                        fontSize: 10,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _vm.tabunganTarget,
-                      style: const TextStyle(
-                        color: kWhite70,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    const SizedBox(height: 18),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Progress Circle
+                        SizedBox(
+                          width: 68,
+                          height: 68,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              SizedBox(
+                                width: 64, // Sedikit lebih kecil agar tidak kepotong
+                                height: 64,
+                                child: CircularProgressIndicator(
+                                  value: progress,
+                                  strokeWidth: 5,
+                                  backgroundColor: kWhite20,
+                                  valueColor:
+                                      const AlwaysStoppedAnimation<Color>(kGreen),
+                                  strokeCap: StrokeCap.round,
+                                ),
+                              ),
+                              Text(
+                                '${(progress * 100).toInt()}%',
+                                style: const TextStyle(
+                                  color: kWhite,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        // Detail Teks
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'TERKUMPUL',
+                                style: TextStyle(
+                                  color: kWhite40,
+                                  fontSize: 9,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                              const SizedBox(height: 1),
+                              Text(
+                                'Rp ${current.toInt().toString().replaceAllMapped(RegExp(r"(\d)(?=(\d{3})+$)"), (m) => "${m[1]}.")}',
+                                style: const TextStyle(
+                                  color: kWhite,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              const Text(
+                                'TARGET',
+                                style: TextStyle(
+                                  color: kWhite40,
+                                  fontSize: 9,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                              const SizedBox(height: 1),
+                              Text(
+                                'Rp ${target.toInt().toString().replaceAllMapped(RegExp(r"(\d)(?=(\d{3})+$)"), (m) => "${m[1]}.")}',
+                                style: TextStyle(
+                                  color: kWhite.withOpacity(0.55),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8), // Gap lebih kecil antara teks dan foto
+                        // Gambar Goal
+                        Container(
+                          width: 68,
+                          height: 68,
+                          decoration: BoxDecoration(
+                            color: kWhite.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: kWhite.withOpacity(0.1), width: 1),
+                            image: latestSaving.imageUrl != null
+                                ? DecorationImage(
+                                    image: (savingVm.getCachedImage(latestSaving.imageUrl!) as ImageProvider?) ?? const AssetImage('assets/images/logo.png'),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
+                          ),
+                          child: latestSaving.imageUrl == null
+                              ? Icon(Icons.savings_outlined, color: kWhite.withOpacity(0.2), size: 28)
+                              : null,
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ),
-            ],
+                // Panah di pojok kanan bawah
+                Positioned(
+                  bottom: -4,
+                  right: -4,
+                  child: Icon(
+                    Icons.arrow_forward_ios_rounded, 
+                    color: kWhite.withOpacity(0.15), 
+                    size: 14
+                  ),
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
-
   Widget _buildHppBepCard() {
     return GestureDetector(
-      onTap: () async {
-        // Pindahkan active navbar ke HPP (index 0) saat card diklik
-        _vm.onNavTap(0);
-        await Future.delayed(const Duration(milliseconds: 380));
-        if (!mounted) return;
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const HitungHppPage()),
-        );
-        // Saat user balik ke Home, kembalikan active navbar ke Home (index 2)
-        if (mounted) _vm.onNavTap(2);
+      onTap: () {
+        _vm.onNavTapManual(0);
       },
       child: Container(
         decoration: BoxDecoration(
@@ -865,145 +989,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     );
   }
 
-  // ─── Bottom Navbar ────────────────────────────────────────────────
-  Widget _buildBottomNav() {
-    const navIcons = [
-      Icons.calculate_outlined, // 0 - HPP & BEP
-      Icons.account_balance_wallet_outlined, // 1 - Wallet
-      Icons.home, // 2 - Home (default aktif)
-      Icons.show_chart, // 3 - Chart
-      Icons.history, // 4 - History
-    ];
-    const int navCount = 5;
-    const double navHeight = 68.0;
-    const double circleSize = 48.0;
-    // circle selalu tepat di tengah vertikal navbar
-    const double circleTop = (navHeight - circleSize) / 2;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20, left: 20, right: 20),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final navWidth = constraints.maxWidth;
-          final itemWidth = navWidth / navCount;
-          // posisi horizontal circle mengikuti tab aktif, tepat di tengah item
-          final circleLeft =
-              itemWidth * _vm.selectedIndex + (itemWidth / 2) - circleSize / 2;
-
-          return SizedBox(
-            height: navHeight,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                // ── Background pill ──────────────────────────────────────
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: kNavBg.withOpacity(0.95),
-                      borderRadius: BorderRadius.circular(34),
-                      border: Border.all(color: kNavBorder, width: 1.5),
-                    ),
-                  ),
-                ),
-
-                // ── Animated active circle ──────────
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 320),
-                  curve: Curves.easeInOutCubic,
-                  left: circleLeft,
-                  top: circleTop,
-                  child: Container(
-                    width: circleSize,
-                    height: circleSize,
-                    decoration: BoxDecoration(
-                      color: kNavActive,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: kNavActive.withOpacity(0.45),
-                          blurRadius: 16,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      navIcons[_vm.selectedIndex],
-                      color: const Color(0xFF0C1B13),
-                      size: 24,
-                    ),
-                  ),
-                ),
-
-                // ── Tap areas + inactive icons ───────────────────────────
-                Row(
-                  children: List.generate(navCount, (i) {
-                    final isActive = i == _vm.selectedIndex;
-                    return Expanded(
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.translucent,
-                        onTap: () async {
-                          if (i == 0) {
-                            _vm.onNavTap(0);
-                            await Future.delayed(
-                                const Duration(milliseconds: 340));
-                            if (!mounted) return;
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const HitungHppPage()),
-                            );
-                            if (mounted) _vm.onNavTap(2);
-                          } else if (i == 3) {
-                            _vm.onNavTap(3);
-                            await Future.delayed(
-                                const Duration(milliseconds: 340));
-                            if (!mounted) return;
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const InsightView()),
-                            );
-                            if (mounted) _vm.onNavTap(2);
-                          } else if (i == 4) {
-                            _vm.onNavTap(4);
-                            await Future.delayed(
-                                const Duration(milliseconds: 340));
-                            if (!mounted) return;
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const RiwayatView()),
-                            );
-                            if (mounted) _vm.onNavTap(2);
-                          } else {
-                            _vm.onNavTap(i);
-                          }
-                        },
-                        child: SizedBox(
-                          height: navHeight,
-                          child: Center(
-                            child: AnimatedOpacity(
-                              duration: const Duration(milliseconds: 200),
-                              opacity: isActive ? 0.0 : 1.0,
-                              child: Icon(
-                                navIcons[i],
-                                color: kNavIcon,
-                                size: 24,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
 }
 
 // ── Sparkle Painter ───────────────────────────────────────────────────────────
@@ -1055,6 +1040,15 @@ class _SparklePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_SparklePainter old) => old.time != time;
+}
+
+// Helper untuk image provider (ditambahkan untuk support gambar tabungan)
+ImageProvider _getImageProvider(String url) {
+  if (url.startsWith('data:image')) {
+    final base64String = url.split(',').last;
+    return MemoryImage(base64Decode(base64String));
+  }
+  return NetworkImage(url);
 }
 
 // ── Donut Painter ─────────────────────────────────────────────────────────────

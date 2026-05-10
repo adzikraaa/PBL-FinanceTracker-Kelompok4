@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/savings_model.dart';
+import '../models/saving_model.dart';
 import '../models/user_model.dart'; // Wajib di-import
 import '../models/hpp_model.dart';  // Wajib di-import
 
@@ -33,6 +33,7 @@ class FirestoreService {
     return _db
         .collection('savings')
         .where('userId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => SavingModel.fromJson(doc.data(), doc.id))

@@ -23,6 +23,14 @@ class FinanceViewModel extends ChangeNotifier {
   double persediaanAkhir = 0.0;
 
   String namaProduk = "Produk Baru";
+  
+  // Navigation step (0: HPP, 1: BEP, 2: Analysis)
+  int currentStep = 0;
+  
+  void setStep(int step) {
+    currentStep = step;
+    notifyListeners();
+  }
 
   List<HppModel> history = [];
 
@@ -80,7 +88,8 @@ class FinanceViewModel extends ChangeNotifier {
   }
 
   bool isBepValid() {
-    return hargaJualUnit > modalPerUnit;
+    // Validasi: Harga jual harus lebih tinggi dari modal per unit agar BEP bisa dicapai
+    return hargaJualUnit > 0 && modalPerUnit >= 0 && hargaJualUnit > modalPerUnit;
   }
 
   // ================================

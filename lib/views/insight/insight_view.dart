@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/finance_viewmodel.dart';
-import '../../viewmodels/savings_viewmodel.dart';
+import '../../viewmodels/saving_viewmodel.dart';
 import '../finance/hitung_hpp_page.dart';
 
 class InsightView extends StatefulWidget {
@@ -19,11 +19,22 @@ class _InsightViewState extends State<InsightView>
   late final AnimationController _pulseController;
   late final AnimationController _fadeController;
   final List<String> _periods = [
-    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+    'Januari',
+    'Februari',
+    'Maret',
+    'April',
+    'Mei',
+    'Juni',
+    'Juli',
+    'Agustus',
+    'September',
+    'Oktober',
+    'November',
+    'Desember',
   ];
   String _selectedPeriod = 'Mei';
   int _selectedBarIndex = 2;
+  int _localNavIndex = 3; // Insight
 
   @override
   void initState() {
@@ -53,7 +64,7 @@ class _InsightViewState extends State<InsightView>
   @override
   Widget build(BuildContext context) {
     final finance = context.watch<FinanceViewModel>();
-    final savings = context.watch<SavingsViewModel>();
+    final savings = context.watch<SavingViewModel>();
     final formatter = NumberFormat.currency(
       locale: 'id_ID',
       symbol: 'Rp ',
@@ -80,7 +91,7 @@ class _InsightViewState extends State<InsightView>
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.only(bottom: 30, top: 16),
+                  padding: const EdgeInsets.only(bottom: 120, top: 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -107,19 +118,6 @@ class _InsightViewState extends State<InsightView>
   Widget _buildHeader() {
     return Row(
       children: [
-        GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Container(
-            width: 40, height: 40,
-            margin: const EdgeInsets.only(right: 14),
-            decoration: BoxDecoration(
-              color: const Color(0xFF163520),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white24),
-            ),
-            child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 16),
-          ),
-        ),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,7 +159,8 @@ class _InsightViewState extends State<InsightView>
           style: const TextStyle(color: Colors.white, fontSize: 13),
           icon: const Padding(
             padding: EdgeInsets.only(right: 8.0),
-            child: Icon(Icons.keyboard_arrow_down, color: Colors.white70, size: 18),
+            child: Icon(Icons.keyboard_arrow_down,
+                color: Colors.white70, size: 18),
           ),
           items: _periods
               .map((v) => DropdownMenuItem(
@@ -243,7 +242,8 @@ class _InsightViewState extends State<InsightView>
                   return Transform.scale(
                     scale: scale,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(20),
@@ -251,7 +251,8 @@ class _InsightViewState extends State<InsightView>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: const [
-                          Icon(Icons.arrow_upward, color: Colors.white, size: 13),
+                          Icon(Icons.arrow_upward,
+                              color: Colors.white, size: 13),
                           SizedBox(width: 3),
                           Text(
                             '+8%',
@@ -280,7 +281,10 @@ class _InsightViewState extends State<InsightView>
                   children: [
                     const Text(
                       'RATA-RATA HPP',
-                      style: TextStyle(color: Colors.white60, fontSize: 10, letterSpacing: 0.8),
+                      style: TextStyle(
+                          color: Colors.white60,
+                          fontSize: 10,
+                          letterSpacing: 0.8),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -294,18 +298,22 @@ class _InsightViewState extends State<InsightView>
                   ],
                 ),
               ),
-              Container(width: 1, height: 32, color: Colors.white.withOpacity(0.2)),
+              Container(
+                  width: 1, height: 32, color: Colors.white.withOpacity(0.2)),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     const Text(
                       'TOTAL BEP TERCAPAI',
-                      style: TextStyle(color: Colors.white60, fontSize: 10, letterSpacing: 0.8),
+                      style: TextStyle(
+                          color: Colors.white60,
+                          fontSize: 10,
+                          letterSpacing: 0.8),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      finance.totalBepAchievedPercent as String,
+                      finance.totalBepAchievedPercent.toString(),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 15,
@@ -377,7 +385,8 @@ class _InsightViewState extends State<InsightView>
                       value: value,
                       strokeWidth: 8,
                       backgroundColor: const Color(0xFFEAF7D8),
-                      valueColor: const AlwaysStoppedAnimation<Color>(ringColor),
+                      valueColor:
+                          const AlwaysStoppedAnimation<Color>(ringColor),
                       strokeCap: StrokeCap.round,
                     ),
                     Column(
@@ -451,7 +460,8 @@ class _InsightViewState extends State<InsightView>
         children: [
           const Text(
             'TERPOPULER',
-            style: TextStyle(color: Colors.white54, fontSize: 10, letterSpacing: 0.8),
+            style: TextStyle(
+                color: Colors.white54, fontSize: 10, letterSpacing: 0.8),
           ),
           const SizedBox(height: 8),
           Text(
@@ -480,7 +490,8 @@ class _InsightViewState extends State<InsightView>
         children: [
           const Text(
             'EFISIENSI',
-            style: TextStyle(color: Colors.white70, fontSize: 10, letterSpacing: 0.8),
+            style: TextStyle(
+                color: Colors.white70, fontSize: 10, letterSpacing: 0.8),
           ),
           const SizedBox(height: 8),
           Text(
@@ -566,7 +577,8 @@ class _InsightViewState extends State<InsightView>
                             boxShadow: isActive
                                 ? [
                                     BoxShadow(
-                                      color: const Color(0xFF6EE89A).withOpacity(0.4),
+                                      color: const Color(0xFF6EE89A)
+                                          .withOpacity(0.4),
                                       blurRadius: 14,
                                       offset: const Offset(0, 6),
                                     ),
@@ -580,9 +592,11 @@ class _InsightViewState extends State<InsightView>
                     Text(
                       labels[i],
                       style: TextStyle(
-                        color: isActive ? const Color(0xFF6EE89A) : Colors.white38,
+                        color:
+                            isActive ? const Color(0xFF6EE89A) : Colors.white38,
                         fontSize: 11,
-                        fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                        fontWeight:
+                            isActive ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
                   ],
@@ -595,17 +609,18 @@ class _InsightViewState extends State<InsightView>
     );
   }
 
-  Widget _buildInsightStrategies(SavingsViewModel savings) {
+  Widget _buildInsightStrategies(SavingViewModel savings) {
     final items = [
       {
         'title': 'Restok Bahan Baku',
-        'subtitle': 'Harga pasar Nasi Goreng menurun 5%, pertimbangkan beli borongan.',
+        'subtitle':
+            'Harga pasar Nasi Goreng menurun 5%, pertimbangkan beli borongan.',
         'icon': Icons.inventory_2_outlined,
       },
       {
         'title': 'Margin Tertekan',
         'subtitle': savings.savings.isNotEmpty
-            ? 'Produk ${savings.savings.first.title} mengalami kenaikan HPP sebesar 15%.'
+            ? 'Produk ${savings.savings.first.title} perlu evaluasi biaya HPP.'
             : 'Produk Kopi Susu mengalami kenaikan HPP sebesar 15%.',
         'icon': Icons.show_chart,
       },
@@ -677,7 +692,8 @@ class _InsightViewState extends State<InsightView>
                         const SizedBox(height: 4),
                         Text(
                           item['subtitle'] as String,
-                          style: const TextStyle(color: Colors.white54, fontSize: 12, height: 1.4),
+                          style: const TextStyle(
+                              color: Colors.white54, fontSize: 12, height: 1.4),
                         ),
                       ],
                     ),
@@ -695,10 +711,12 @@ class _InsightViewState extends State<InsightView>
 class _InsightBackgroundPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 50);
+    final paint = Paint()
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 50);
 
     paint.color = const Color(0xFF0D5C30).withOpacity(0.4);
-    canvas.drawCircle(Offset(size.width * 0.15, size.height * 0.12), 120, paint);
+    canvas.drawCircle(
+        Offset(size.width * 0.15, size.height * 0.12), 120, paint);
 
     paint.color = const Color(0xFF3CAE7A).withOpacity(0.2);
     canvas.drawCircle(Offset(size.width * 0.9, size.height * 0.2), 90, paint);

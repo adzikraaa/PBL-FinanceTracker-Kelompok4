@@ -7,6 +7,7 @@ class AuthViewModel extends ChangeNotifier {
   String? _errorMessage;
   bool _isLoggedIn = false;
   User? _currentUser;
+  bool _isPremium = false; // Default: User Biasa
 
   // Firebase & Google Sign-In instances
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -16,6 +17,7 @@ class AuthViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   bool get isLoggedIn => _isLoggedIn;
   User? get currentUser => _currentUser;
+  bool get isPremium => _isPremium;
 
   // Constructor: Check current auth state
   AuthViewModel() {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/finance_viewmodel.dart';
-import '../../viewmodels/savings_viewmodel.dart';
+import '../../viewmodels/saving_viewmodel.dart';
 
 class InsightView extends StatefulWidget {
   const InsightView({super.key});
@@ -37,7 +37,7 @@ class _InsightViewState extends State<InsightView>
   @override
   Widget build(BuildContext context) {
     final finance = context.watch<FinanceViewModel>();
-    final savings = context.watch<SavingsViewModel>();
+    final savings = context.watch<SavingViewModel>();
     final formatter = NumberFormat.currency(
       locale: 'id_ID',
       symbol: 'Rp ',
@@ -444,7 +444,7 @@ class _InsightViewState extends State<InsightView>
     );
   }
 
-  Widget _buildInsightStrategies(SavingsViewModel savings) {
+  Widget _buildInsightStrategies(SavingViewModel savings) {
     final messages = [
       {
         'title': 'Restok Bahan Baku',
@@ -454,7 +454,7 @@ class _InsightViewState extends State<InsightView>
       {
         'title': 'Margin Tertekan',
         'subtitle': savings.savings.isNotEmpty
-            ? 'Produk ${savings.savings.first.name} perlu evaluasi biaya HPP.'
+            ? 'Produk ${savings.savings.first.title} perlu evaluasi biaya HPP.'
             : 'Produk kopi susu mengalami kenaikan HPP sebesar 15%.',
         'icon': Icons.show_chart,
       },
