@@ -19,15 +19,11 @@ class _RegisterViewState extends State<RegisterView>
   final _passwordController = TextEditingController();
   bool _agreeToTerms = false;
   bool _obscurePassword = true;
-  
   late AnimationController _animController;
   late AnimationController _sparkleCtrl;
   late AnimationController _floatCtrl;
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
-
-  // Variabel warna yang sebelumnya hilang
-  final Color _green = const Color(0xFF4CAF50);
 
   @override
   void initState() {
@@ -36,14 +32,10 @@ class _RegisterViewState extends State<RegisterView>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    _fadeAnim = CurvedAnimation(
-      parent: _animController,
-      curve: Curves.easeOut,
-    );
-    _slideAnim = Tween<Offset>(
-      begin: const Offset(0, 0.15),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
+    _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
+    _slideAnim = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero)
+        .animate(
+            CurvedAnimation(parent: _animController, curve: Curves.easeOut));
     _animController.forward();
 
     _sparkleCtrl = AnimationController(
@@ -73,10 +65,10 @@ class _RegisterViewState extends State<RegisterView>
     return Scaffold(
       body: Stack(
         children: [
-          // 1. Background Gradient + Blobs
+          // 1. Background
           _buildBackground(),
 
-          // 2. Main Content
+          // 2. Content
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 60, 20, 24),
@@ -86,7 +78,7 @@ class _RegisterViewState extends State<RegisterView>
                   position: _slideAnim,
                   child: Column(
                     children: [
-                      // Logo
+                      // Logo (tanpa background putih)
                       Align(
                         alignment: Alignment.center,
                         child: Container(
@@ -99,10 +91,328 @@ class _RegisterViewState extends State<RegisterView>
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      
-                      // Glass Card Form
-                      _buildGlassCard(),
+
+                      // Main card (glassmorphism)
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: AppColors.white.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: AppColors.white.withValues(alpha: 0.2),
+                            width: 1,
+                          ),
+                        ),
+                        padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Title
+                            const Center(
+                              child: Text(
+                                'Get Started',
+                                style: TextStyle(
+                                  fontFamily: 'Lexend',
+                                  color: Colors.white,
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Center(
+                              child: Text(
+                                'Create your account',
+                                style: TextStyle(
+                                  fontFamily: 'Lexend',
+                                  color: Color(0xFF6DFC9A),
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 28),
+
+                            // Usrname
+                            _buildLabel('Username'),
+                            const SizedBox(height: 8),
+                            _buildTextField(
+                              controller: _fullNameController,
+                              hint: 'Enter Username',
+                              keyboardType: TextInputType.name,
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Email
+                            _buildLabel('Email'),
+                            const SizedBox(height: 8),
+                            _buildTextField(
+                              controller: _emailController,
+                              hint: 'Enter Email',
+                              keyboardType: TextInputType.emailAddress,
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Password
+                            _buildLabel('Password'),
+                            const SizedBox(height: 8),
+                            _buildPasswordField(),
+                            const SizedBox(height: 14),
+
+                            // Checkbox terms
+                            Row(
+                              children: [
+                                GestureDetector(
+                                  onTap: () => setState(
+                                      () => _agreeToTerms = !_agreeToTerms),
+                                  child: Container(
+                                    width: 18,
+                                    height: 18,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                          color: AppColors.white
+                                              .withValues(alpha: 0.4),
+                                          width: 1.5),
+                                      borderRadius: BorderRadius.circular(4),
+                                      color: _agreeToTerms
+                                          ? AppColors.accentYellow
+                                          : Colors.transparent,
+                                    ),
+                                    child: _agreeToTerms
+                                        ? const Icon(Icons.check,
+                                            size: 13, color: Color(0xFF1a0a00))
+                                        : null,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                RichText(
+                                  text: TextSpan(
+                                    text: 'I agree to the processing of ',
+                                    style: TextStyle(
+                                      fontFamily: 'Lexend',
+                                      color: AppColors.white
+                                          .withValues(alpha: 0.6),
+                                      fontSize: 12,
+                                    ),
+                                    children: const [
+                                      TextSpan(
+                                        text: 'Personal data',
+                                        style: TextStyle(
+                                          color: AppColors.accentYellow,
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Sign Up button
+                            Consumer<AuthViewModel>(
+                              builder: (context, vm, _) => GestureDetector(
+                                onTap: vm.isLoading
+                                    ? null
+                                    : () async {
+                                        if (!_agreeToTerms) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(const SnackBar(
+                                                  content: Text(
+                                                      'Harap setujui syarat dan ketentuan.')));
+                                          return;
+                                        }
+                                        final success =
+                                            await vm.registerWithEmail(
+                                          fullName:
+                                              _fullNameController.text.trim(),
+                                          email: _emailController.text.trim(),
+                                          password: _passwordController.text,
+                                        );
+                                        if (!mounted) return;
+                                        if (success) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(const SnackBar(
+                                                  content: Text(
+                                                      'Registrasi berhasil! 🎉')));
+                                          Navigator.of(context).pop();
+                                        } else if (vm.errorMessage != null) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(SnackBar(
+                                                  content:
+                                                      Text(vm.errorMessage!)));
+                                        }
+                                      },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  width: double.infinity,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.accentYellow,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.accentYellow
+                                            .withValues(alpha: 0.4),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 6),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Center(
+                                    child: vm.isLoading
+                                        ? const SizedBox(
+                                            width: 22,
+                                            height: 22,
+                                            child: CircularProgressIndicator(
+                                                color: AppColors.textDark,
+                                                strokeWidth: 2.5),
+                                          )
+                                        : const Text(
+                                            'Sign Up',
+                                            style: TextStyle(
+                                              fontFamily: 'Lexend',
+                                              color: AppColors.textDark,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+
+                            // Divider
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Divider(
+                                    color:
+                                        AppColors.white.withValues(alpha: 0.2),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12),
+                                  child: Text(
+                                    'or sign up with',
+                                    style: TextStyle(
+                                      fontFamily: 'Lexend',
+                                      color: AppColors.white
+                                          .withValues(alpha: 0.5),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Divider(
+                                    color:
+                                        AppColors.white.withValues(alpha: 0.2),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Social buttons
+                            Consumer<AuthViewModel>(
+                              builder: (context, vm, _) => Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _buildSocialButton(
+                                    icon: Icons.facebook,
+                                    iconColor: const Color(0xFF4267B2),
+                                    onTap: () {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(const SnackBar(
+                                              content: Text(
+                                                  'Login Facebook belum tersedia.')));
+                                    },
+                                  ),
+                                  const SizedBox(width: 12),
+                                  _buildSocialButton(
+                                    label: 'X',
+                                    labelColor: Colors.white,
+                                    onTap: () {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(const SnackBar(
+                                              content: Text(
+                                                  'Login X belum tersedia.')));
+                                    },
+                                  ),
+                                  const SizedBox(width: 12),
+                                  _buildSocialButton(
+                                    label: 'G',
+                                    labelColor: const Color(0xFFEA4335),
+                                    onTap: () async {
+                                      final success =
+                                          await vm.loginWithGoogle();
+                                      if (!mounted) return;
+                                      if (success) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(const SnackBar(
+                                                content: Text(
+                                                    'Login Google berhasil! 🎉')));
+                                        Navigator.of(context).pop();
+                                      } else if (vm.errorMessage != null) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(SnackBar(
+                                                content:
+                                                    Text(vm.errorMessage!)));
+                                      }
+                                    },
+                                  ),
+                                  const SizedBox(width: 12),
+                                  _buildSocialButton(
+                                    icon: Icons.apple,
+                                    iconColor: Colors.white,
+                                    onTap: () {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(const SnackBar(
+                                              content: Text(
+                                                  'Login Apple belum tersedia.')));
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Already have account
+                            Center(
+                              child: GestureDetector(
+                                onTap: () => Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => const LoginView()),
+                                ),
+                                child: RichText(
+                                  text: const TextSpan(
+                                    text: 'Already have an account? ',
+                                    style: TextStyle(
+                                      fontFamily: 'Lexend',
+                                      color: Color(0xFF6DFC9A),
+                                      fontSize: 13,
+                                    ),
+                                    children: [
+                                      TextSpan(
+                                        text: 'Sign in',
+                                        style: TextStyle(
+                                          color: AppColors.accentYellow,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 32),
                     ],
                   ),
                 ),
@@ -120,8 +430,8 @@ class _RegisterViewState extends State<RegisterView>
                   onTap: () => Navigator.of(context).pop(),
                   borderRadius: BorderRadius.circular(8),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: const [
@@ -146,315 +456,12 @@ class _RegisterViewState extends State<RegisterView>
     );
   }
 
-  // ── Glass Card (Form Content) ──────────────────────────────────────────────
-  Widget _buildGlassCard() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppColors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: AppColors.white.withValues(alpha: 0.2),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.black.withValues(alpha: 0.15),
-            blurRadius: 30,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title
-          const Center(
-            child: Text(
-              'Get Started',
-              style: TextStyle(
-                fontFamily: 'Lexend',
-                color: Colors.white,
-                fontSize: 26,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Center(
-            child: Text(
-              'Create your account',
-              style: TextStyle(
-                fontFamily: 'Lexend',
-                color: Color(0xFFCCBBFF),
-                fontSize: 14,
-              ),
-            ),
-          ),
-          const SizedBox(height: 28),
-
-          // Username / Full Name
-          _buildLabel('Full Name'),
-          const SizedBox(height: 8),
-          _buildTextField(
-            controller: _fullNameController,
-            hint: 'Enter Full Name',
-            keyboardType: TextInputType.name,
-            prefixIcon: Icons.person_outline,
-          ),
-          const SizedBox(height: 16),
-
-          // Email
-          _buildLabel('Email'),
-          const SizedBox(height: 8),
-          _buildTextField(
-            controller: _emailController,
-            hint: 'Enter Email',
-            keyboardType: TextInputType.emailAddress,
-            prefixIcon: Icons.email_outlined,
-          ),
-          const SizedBox(height: 16),
-
-          // Password
-          _buildLabel('Password'),
-          const SizedBox(height: 8),
-          _buildPasswordField(),
-          const SizedBox(height: 16),
-
-          // Checkbox terms
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Transform.scale(
-                scale: 0.9,
-                child: Checkbox(
-                  value: _agreeToTerms,
-                  activeColor: AppColors.accentYellow,
-                  checkColor: const Color(0xFF1a0a00),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4)),
-                  onChanged: (v) => setState(() => _agreeToTerms = v!),
-                ),
-              ),
-              Expanded(
-                child: RichText(
-                  text: TextSpan(
-                    text: 'I agree to the processing of ',
-                    style: TextStyle(
-                      fontFamily: 'Lexend',
-                      color: AppColors.white.withValues(alpha: 0.6),
-                      fontSize: 12,
-                    ),
-                    children: const [
-                      TextSpan(
-                        text: 'Personal data',
-                        style: TextStyle(
-                          color: AppColors.accentYellow,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // Sign Up button
-          Consumer<AuthViewModel>(
-            builder: (context, vm, _) => _buildPrimaryButton(
-              label: 'Sign up',
-              isLoading: vm.isLoading,
-              onTap: () async {
-                if (!_agreeToTerms) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Harap setujui syarat dan ketentuan.')),
-                  );
-                  return;
-                }
-                final success = await vm.registerWithEmail(
-                  fullName: _fullNameController.text.trim(),
-                  email: _emailController.text.trim(),
-                  password: _passwordController.text,
-                );
-                if (!mounted) return;
-                if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Registrasi berhasil! 🎉')),
-                  );
-                  Navigator.of(context).pop();
-                } else if (vm.errorMessage != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(vm.errorMessage!)),
-                  );
-                }
-              },
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Divider
-          Row(
-            children: [
-              Expanded(
-                child: Divider(
-                  color: AppColors.white.withValues(alpha: 0.2),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Text(
-                  'or sign up with',
-                  style: TextStyle(
-                    fontFamily: 'Lexend',
-                    color: AppColors.white.withValues(alpha: 0.5),
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Divider(
-                  color: AppColors.white.withValues(alpha: 0.2),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Social buttons
-          Consumer<AuthViewModel>(
-            builder: (context, vm, _) => Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildSocialButton(
-                  icon: Icons.facebook,
-                  iconColor: const Color(0xFF4267B2),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text('Login Facebook belum tersedia.')));
-                  },
-                ),
-                const SizedBox(width: 12),
-                _buildSocialButton(
-                  label: 'X',
-                  labelColor: Colors.white,
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text('Login X belum tersedia.')));
-                  },
-                ),
-                const SizedBox(width: 12),
-                _buildSocialButton(
-                  label: 'G',
-                  labelColor: const Color(0xFFEA4335),
-                  onTap: () async {
-                    final success = await vm.loginWithGoogle();
-                    if (!mounted) return;
-                    if (success) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text('Login Google berhasil! 🎉')));
-                      Navigator.of(context).pop();
-                    } else if (vm.errorMessage != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(vm.errorMessage!)));
-                    }
-                  },
-                ),
-                const SizedBox(width: 12),
-                _buildSocialButton(
-                  icon: Icons.apple,
-                  iconColor: Colors.white,
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text('Login Apple belum tersedia.')));
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Already have account
-          Center(
-            child: GestureDetector(
-              onTap: () => Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginView()),
-              ),
-              child: RichText(
-                text: const TextSpan(
-                  text: 'Already have an account? ',
-                  style: TextStyle(
-                    fontFamily: 'Lexend',
-                    color: Color(0xFFCCBBFF),
-                    fontSize: 13,
-                  ),
-                  children: [
-                    TextSpan(
-                      text: 'Sign in',
-                      style: TextStyle(
-                        color: AppColors.accentYellow,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Background & Helpers ───────────────────────────────────────────────────
-  Widget _buildBackground() {
-    return Container(
-      decoration: BoxDecoration(gradient: AppColors.backgroundGradient),
-      child: Stack(
-        children: [
-          Positioned(
-              top: -60, left: -40, child: _blob(200, AppColors.primaryLight)),
-          Positioned(
-              top: 120,
-              right: -30,
-              child: _blob(140, AppColors.white.withValues(alpha: 0.15))),
-          Positioned(
-              top: 220,
-              left: 30,
-              child: _blob(90, AppColors.primaryDeep.withValues(alpha: 0.6))),
-          Positioned(
-              bottom: -60,
-              right: -60,
-              child: _blob(240, AppColors.gradientBlueEnd)),
-          Positioned(
-              bottom: 150,
-              left: -20,
-              child:
-                  _blob(100, AppColors.primaryPurple.withValues(alpha: 0.5))),
-        ],
-      ),
-    );
-  }
-
-  Widget _blob(double size, Color color) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-    );
-  }
-
   Widget _buildLabel(String text) {
     return Text(
       text,
       style: const TextStyle(
         fontFamily: 'Lexend',
-        color: Color(0xFFCCBBFF),
+        color: Color(0xFF6DFC9A),
         fontSize: 13,
         fontWeight: FontWeight.w500,
       ),
@@ -465,36 +472,40 @@ class _RegisterViewState extends State<RegisterView>
     required TextEditingController controller,
     required String hint,
     TextInputType keyboardType = TextInputType.text,
-    IconData? prefixIcon,
   }) {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
-      style: const TextStyle(fontFamily: 'Lexend', fontSize: 14),
+      style: const TextStyle(
+        fontFamily: 'Lexend',
+        color: Colors.white,
+        fontSize: 14,
+      ),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(
-            fontFamily: 'Lexend', color: AppColors.textTertiary, fontSize: 14),
-        prefixIcon: prefixIcon != null
-            ? Icon(prefixIcon, color: AppColors.textTertiary, size: 18)
-            : null,
+        hintStyle: TextStyle(
+          color: AppColors.white.withValues(alpha: 0.4),
+          fontSize: 14,
+        ),
         filled: true,
-        fillColor: AppColors.inputBg,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        fillColor: AppColors.white.withValues(alpha: 0.08),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(12),
+          borderSide:
+              BorderSide(color: AppColors.white.withValues(alpha: 0.15)),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(12),
+          borderSide:
+              BorderSide(color: AppColors.white.withValues(alpha: 0.15)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           borderSide:
-              const BorderSide(color: AppColors.primaryPurple, width: 1.5),
+              const BorderSide(color: AppColors.accentYellow, width: 1.5),
         ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
     );
   }
@@ -503,85 +514,43 @@ class _RegisterViewState extends State<RegisterView>
     return TextField(
       controller: _passwordController,
       obscureText: _obscurePassword,
-      style: const TextStyle(fontFamily: 'Lexend', fontSize: 14),
+      style: const TextStyle(
+        fontFamily: 'Lexend',
+        color: Colors.white,
+        fontSize: 14,
+      ),
       decoration: InputDecoration(
         hintText: 'Enter Password',
-        hintStyle: const TextStyle(
-            fontFamily: 'Lexend', color: AppColors.textTertiary, fontSize: 14),
-        prefixIcon: const Icon(Icons.lock_outline,
-            color: AppColors.textTertiary, size: 18),
-        suffixIcon: GestureDetector(
-          onTap: () => setState(() => _obscurePassword = !_obscurePassword),
-          child: Icon(
-            _obscurePassword
-                ? Icons.visibility_off_outlined
-                : Icons.visibility_outlined,
-            color: AppColors.textTertiary,
-            size: 18,
-          ),
+        hintStyle: TextStyle(
+          color: AppColors.white.withValues(alpha: 0.4),
+          fontSize: 14,
         ),
         filled: true,
-        fillColor: AppColors.inputBg,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        fillColor: AppColors.white.withValues(alpha: 0.08),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(12),
+          borderSide:
+              BorderSide(color: AppColors.white.withValues(alpha: 0.15)),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(12),
+          borderSide:
+              BorderSide(color: AppColors.white.withValues(alpha: 0.15)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide:
-              const BorderSide(color: AppColors.primaryPurple, width: 1.5),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPrimaryButton({
-    required String label,
-    required VoidCallback onTap,
-    bool isLoading = false,
-  }) {
-    return GestureDetector(
-      onTap: isLoading ? null : onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: double.infinity,
-        height: 50,
-        decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          gradient: AppColors.primaryGradient ?? 
-              const LinearGradient(colors: [AppColors.accentYellow, AppColors.accentYellow]),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primaryPurple.withValues(alpha: 0.4),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            ),
-          ],
+          borderSide:
+              const BorderSide(color: AppColors.accentYellow, width: 1.5),
         ),
-        child: Center(
-          child: isLoading
-              ? const SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(
-                      color: AppColors.textPrimary, strokeWidth: 2.5),
-                )
-              : Text(
-                  label,
-                  style: const TextStyle(
-                    fontFamily: 'Lexend',
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                    letterSpacing: 0.4,
-                  ),
-                ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        suffixIcon: IconButton(
+          icon: Icon(
+            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+            color: AppColors.white.withValues(alpha: 0.4),
+            size: 18,
+          ),
+          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
         ),
       ),
     );
@@ -589,35 +558,157 @@ class _RegisterViewState extends State<RegisterView>
 
   Widget _buildSocialButton({
     IconData? icon,
-    String? label,
     Color? iconColor,
+    String? label,
     Color? labelColor,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         width: 48,
         height: 48,
         decoration: BoxDecoration(
-          color: AppColors.white.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.white.withValues(alpha: 0.2)),
+          shape: BoxShape.circle,
+          color: AppColors.white.withValues(alpha: 0.08),
+          border: Border.all(
+            color: AppColors.white.withValues(alpha: 0.2),
+            width: 1.5,
+          ),
         ),
         child: Center(
           child: icon != null
-              ? Icon(icon, color: iconColor, size: 22)
+              ? Icon(icon, color: iconColor, size: 20)
               : Text(
-                  label ?? '',
+                  label!,
                   style: TextStyle(
-                    color: labelColor,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
                     fontFamily: 'Lexend',
+                    color: labelColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
                   ),
                 ),
         ),
+      ),
+    );
+  }
+
+  static const Color _bg1 = Color(0xFF061D12);
+  static const Color _bg2 = Color(0xFF0D2E1E);
+  static const Color _bg3 = Color(0xFF08351F);
+  static const Color _green = Color(0xFF6DFC9A);
+
+  Widget _buildBackground() {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [_bg1, _bg2, _bg3],
+          stops: [0.0, 0.5, 1.0],
+        ),
+      ),
+      child: Stack(
+        children: [
+          // Radial glow bottom left
+          Positioned(
+            bottom: -100,
+            left: -100,
+            child: _glowOrb(300, const Color(0xFF0E3D22), 0.6),
+          ),
+          // Radial glow top right
+          Positioned(
+            top: -100,
+            right: -100,
+            child: _glowOrb(300, const Color(0xFF0E3D22), 0.4),
+          ),
+          
+          // Top left rings
+          Positioned(
+            top: -80,
+            left: -80,
+            child: CustomPaint(
+              size: const Size(200, 200),
+              painter: _ThinRingPainter(color: _green),
+            ),
+          ),
+          Positioned(
+            top: -20,
+            left: -100,
+            child: CustomPaint(
+              size: const Size(280, 280),
+              painter: _ThinRingPainter(color: _green),
+            ),
+          ),
+
+          // Bottom right rings
+          Positioned(
+            bottom: -50,
+            right: -80,
+            child: CustomPaint(
+              size: const Size(300, 300),
+              painter: _ThinRingPainter(color: _green),
+            ),
+          ),
+          Positioned(
+            bottom: -120,
+            right: -20,
+            child: CustomPaint(
+              size: const Size(250, 250),
+              painter: _ThinRingPainter(color: _green),
+            ),
+          ),
+
+          // Left star
+          _animatedSparkle(
+            top: 250,
+            left: 30,
+            size: 14,
+            delay: 0.5,
+          ),
+
+          // Bottom right star
+          _animatedSparkle(
+            bottom: 200,
+            right: 40,
+            size: 32,
+            delay: 1.0,
+          ),
+
+          // Top right cluster
+          _animatedSparkle(
+            top: 100,
+            right: 100,
+            size: 55,
+            delay: 0.0,
+          ),
+          _animatedSparkle(
+            top: 130,
+            right: 40,
+            size: 30,
+            delay: 0.3,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _glowOrb(double size, Color color, double opacity) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: color.withOpacity(opacity),
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: _green.withOpacity(0.06),
+            blurRadius: size * 0.5,
+            spreadRadius: size * 0.04,
+          ),
+        ],
       ),
     );
   }
@@ -633,9 +724,8 @@ class _RegisterViewState extends State<RegisterView>
     return AnimatedBuilder(
       animation: _floatCtrl,
       builder: (context, child) {
-        final floatOffset =
-            sin((_floatCtrl.value * 2 * pi) + delay * 2 * pi) * 10;
-
+        final floatOffset = sin((_floatCtrl.value * 2 * pi) + delay * 2 * pi) * 10;
+        
         return Positioned(
           top: top != null ? top + floatOffset : null,
           bottom: bottom != null ? bottom - floatOffset : null,
@@ -644,11 +734,9 @@ class _RegisterViewState extends State<RegisterView>
           child: AnimatedBuilder(
             animation: _sparkleCtrl,
             builder: (context, child) {
-              final scale =
-                  0.8 + 0.2 * sin((_sparkleCtrl.value * 2 * pi) + delay * pi);
-              final opacity =
-                  0.5 + 0.5 * sin((_sparkleCtrl.value * 2 * pi) + delay * pi);
-
+              final scale = 0.8 + 0.2 * sin((_sparkleCtrl.value * 2 * pi) + delay * pi);
+              final opacity = 0.5 + 0.5 * sin((_sparkleCtrl.value * 2 * pi) + delay * pi);
+              
               return Opacity(
                 opacity: opacity.clamp(0.0, 1.0),
                 child: Transform.scale(
