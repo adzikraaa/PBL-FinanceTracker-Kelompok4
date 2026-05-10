@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../../shared/colors.dart';
 import 'register_view.dart';
-import '../home/home_view.dart';
+import '../home/main_navigation.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -182,7 +182,7 @@ class _LoginViewState extends State<LoginView>
                                               context,
                                               MaterialPageRoute(
                                                 builder: (_) =>
-                                                    const HomeView(),
+                                                    const MainNavigation(),
                                               ),
                                               (route) => false,
                                             );
@@ -298,7 +298,7 @@ class _LoginViewState extends State<LoginView>
                                           Navigator.pushAndRemoveUntil(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (_) => const HomeView(),
+                                              builder: (_) => const MainNavigation(),
                                             ),
                                             (route) => false,
                                           );
