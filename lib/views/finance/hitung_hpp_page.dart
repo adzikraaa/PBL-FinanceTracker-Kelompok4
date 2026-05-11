@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/finance_viewmodel.dart';
+import '../../viewmodels/home_viewmodel.dart';
 import '../widgets/custom_input_widget.dart';
 import 'hitung_bep_page.dart';
 import 'hasil_analisis_page.dart';
@@ -21,29 +22,50 @@ class _HitungHppPageState extends State<HitungHppPage> {
   final TextEditingController _biayaTenagaKerjaController = TextEditingController();
   final TextEditingController _biayaOverheadController = TextEditingController();
   final TextEditingController _jumlahUnitController = TextEditingController();
+  late FinanceViewModel _vm;
 
   @override
   void initState() {
     super.initState();
+    _vm = Provider.of<FinanceViewModel>(context, listen: false);
+    _vm.addListener(_onViewModelChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final vm = Provider.of<FinanceViewModel>(context, listen: false);
-      if (vm.namaProduk != 'Produk Baru' && vm.namaProduk.isNotEmpty) {
-        _namaProdukController.text = vm.namaProduk;
+      if (_vm.namaProduk != 'Produk Baru' && _vm.namaProduk.isNotEmpty) {
+        _namaProdukController.text = _vm.namaProduk;
       }
-      if (vm.biayaProduksi > 0) {
-        _biayaProduksiController.text = _formatCurrency(vm.biayaProduksi);
+      if (_vm.biayaProduksi > 0) {
+        _biayaProduksiController.text = _formatCurrency(_vm.biayaProduksi);
       }
-      if (vm.biayaTenagaKerja > 0) {
-        _biayaTenagaKerjaController.text = _formatCurrency(vm.biayaTenagaKerja);
+      if (_vm.biayaTenagaKerja > 0) {
+        _biayaTenagaKerjaController.text = _formatCurrency(_vm.biayaTenagaKerja);
       }
-      if (vm.biayaOverhead > 0) {
-        _biayaOverheadController.text = _formatCurrency(vm.biayaOverhead);
+      if (_vm.biayaOverhead > 0) {
+        _biayaOverheadController.text = _formatCurrency(_vm.biayaOverhead);
       }
-      if (vm.jumlahUnit > 0) {
-        _jumlahUnitController.text = _formatCurrency(vm.jumlahUnit.toDouble());
+      if (_vm.jumlahUnit > 0) {
+        _jumlahUnitController.text = _formatCurrency(_vm.jumlahUnit.toDouble());
       }
     });
   }
+
+  void _onViewModelChanged() {
+    if (!mounted) return;
+    // Kosongkan input saat data di-reset setelah simpan
+    if (_vm.namaProduk == 'Produk Baru' && _vm.biayaProduksi == 0 &&
+        _vm.jumlahUnit == 0 && _vm.currentStep == 0) {
+      if (_namaProdukController.text.isNotEmpty &&
+          _namaProdukController.text != 'Produk Baru') {
+        _namaProdukController.clear();
+      }
+      if (_biayaProduksiController.text.isNotEmpty) _biayaProduksiController.clear();
+      if (_biayaTenagaKerjaController.text.isNotEmpty) _biayaTenagaKerjaController.clear();
+      if (_biayaOverheadController.text.isNotEmpty) _biayaOverheadController.clear();
+      if (_jumlahUnitController.text.isNotEmpty) _jumlahUnitController.clear();
+    }
+  }
+
+
+
 
   String _formatCurrency(double value) {
     String result = value.toInt().toString();
@@ -53,6 +75,7 @@ class _HitungHppPageState extends State<HitungHppPage> {
 
   @override
   void dispose() {
+    _vm.removeListener(_onViewModelChanged);
     _namaProdukController.dispose();
     _biayaProduksiController.dispose();
     _biayaTenagaKerjaController.dispose();
@@ -73,6 +96,16 @@ class _HitungHppPageState extends State<HitungHppPage> {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<FinanceViewModel>();
+
+    // Deteksi lastSaveSuccess di sini (lebih reliable dari listener)
+    if (vm.lastSaveSuccess) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final homeVm = Provider.of<HomeViewModel>(context, listen: false);
+        homeVm.onNavTapManual(4); // Pindah ke Riwayat
+        vm.resetData();           // Reset form + step + flag
+      });
+    }
 
     return SafeArea(
       child: _buildCurrentStep(vm),

@@ -26,6 +26,7 @@ class HomeViewModel extends ChangeNotifier {
   int selectedIndex = 2;
 
   void onNavTapManual(int index) {
+    if (index < 0 || index >= 5) return;
     selectedIndex = index;
     notifyListeners();
   }

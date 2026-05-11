@@ -23,12 +23,19 @@ class FinanceViewModel extends ChangeNotifier {
   double persediaanAkhir = 0.0;
 
   String namaProduk = "Produk Baru";
+  String catatan = '';
+  bool lastSaveSuccess = false; // flag: true setelah simpan berhasil
   
   // Navigation step (0: HPP, 1: BEP, 2: Analysis)
   int currentStep = 0;
   
   void setStep(int step) {
     currentStep = step;
+    notifyListeners();
+  }
+
+  void updateCatatan(String nilai) {
+    catatan = nilai;
     notifyListeners();
   }
 
@@ -115,7 +122,7 @@ class FinanceViewModel extends ChangeNotifier {
       totalHpp: hitungHPP,
       bepUnit: hitungBEPUnit,
       bepRupiah: hitungBEPRupiah,
-      catatan: '',
+      catatan: catatan,
       createdAt: DateTime.now(),
       persediaanAwal: persediaanAwal,
       pembelianBersih: pembelianBersih,
@@ -124,7 +131,8 @@ class FinanceViewModel extends ChangeNotifier {
 
     await _firestoreService.addHistory(newHpp);
 
-    resetData();
+    lastSaveSuccess = true;
+    notifyListeners();
   }
 
   void resetData() {
@@ -136,9 +144,12 @@ class FinanceViewModel extends ChangeNotifier {
     biayaTetap = 0.0;
     jumlahUnitTerjual = null;
     namaProduk = "Produk Baru";
+    catatan = '';
     persediaanAwal = 0.0;
     pembelianBersih = 0.0;
     persediaanAkhir = 0.0;
+    currentStep = 0;
+    lastSaveSuccess = false;
     notifyListeners();
   }
 

@@ -71,7 +71,10 @@ class _InsightViewState extends State<InsightView>
       decimalDigits: 0,
     );
 
-    final values = List<double>.from(finance.weeklyBepSeries);
+    var values = List<double>.from(finance.weeklyBepSeries);
+    if (values.length > 6) {
+      values = values.sublist(values.length - 6);
+    }
     while (values.length < 6) {
       values.add(values.isNotEmpty ? values.last : 14);
     }
