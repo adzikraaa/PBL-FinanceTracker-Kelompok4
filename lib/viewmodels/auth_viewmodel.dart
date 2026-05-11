@@ -221,6 +221,39 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  // ─── Reset Password ───────────────────────────────────────────────────────
+  Future<bool> resetPassword(String email) async {
+    _setLoading(true);
+    _setError(null);
+
+    try {
+      if (email.isEmpty) {
+        _setError('Email tidak boleh kosong.');
+        return false;
+      }
+
+      await _firebaseAuth.sendPasswordResetEmail(email: email);
+      return true;
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'user-not-found':
+          _setError('Email tidak terdaftar.');
+          break;
+        case 'invalid-email':
+          _setError('Format email tidak valid.');
+          break;
+        default:
+          _setError('Gagal mengirim email reset: ${e.message}');
+      }
+      return false;
+    } catch (e) {
+      _setError('Error: ${e.toString()}');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   void clearError() {
     _errorMessage = null;
     notifyListeners();

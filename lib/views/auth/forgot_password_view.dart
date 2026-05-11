@@ -3,22 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../../shared/colors.dart';
-import 'register_view.dart';
-import 'forgot_password_view.dart';
-import '../home/main_navigation.dart';
 
-class LoginView extends StatefulWidget {
-  const LoginView({super.key});
+class ForgotPasswordView extends StatefulWidget {
+  const ForgotPasswordView({super.key});
 
   @override
-  State<LoginView> createState() => _LoginViewState();
+  State<ForgotPasswordView> createState() => _ForgotPasswordViewState();
 }
 
-class _LoginViewState extends State<LoginView>
+class _ForgotPasswordViewState extends State<ForgotPasswordView>
     with TickerProviderStateMixin {
   final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
   late AnimationController _animController;
   late AnimationController _sparkleCtrl;
   late AnimationController _floatCtrl;
@@ -52,7 +47,6 @@ class _LoginViewState extends State<LoginView>
   @override
   void dispose() {
     _emailController.dispose();
-    _passwordController.dispose();
     _animController.dispose();
     _sparkleCtrl.dispose();
     _floatCtrl.dispose();
@@ -109,7 +103,7 @@ class _LoginViewState extends State<LoginView>
                             // Title
                             const Center(
                               child: Text(
-                                'Sign In',
+                                'Forgot Password',
                                 style: TextStyle(
                                   fontFamily: 'Lexend',
                                   color: Colors.white,
@@ -121,7 +115,7 @@ class _LoginViewState extends State<LoginView>
                             const SizedBox(height: 8),
                             const Center(
                               child: Text(
-                                'Welcome back!',
+                                'Enter your email to reset password',
                                 style: TextStyle(
                                   fontFamily: 'Lexend',
                                   color: Color(0xFF6DFC9A),
@@ -139,38 +133,9 @@ class _LoginViewState extends State<LoginView>
                               hint: 'Enter Email',
                               keyboardType: TextInputType.emailAddress,
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 32),
 
-                            // Password
-                            _buildLabel('Password'),
-                            const SizedBox(height: 8),
-                            _buildPasswordField(),
-                            const SizedBox(height: 8),
-
-                            // Forgot password
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: GestureDetector(
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const ForgotPasswordView(),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'Forgot Password?',
-                                  style: TextStyle(
-                                    fontFamily: 'Lexend',
-                                    color: AppColors.accentYellow,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-
-                            // Sign In button
+                            // Reset Button
                             Consumer<AuthViewModel>(
                               builder: (context, vm, _) {
                                 return GestureDetector(
@@ -178,25 +143,26 @@ class _LoginViewState extends State<LoginView>
                                       ? null
                                       : () async {
                                           final success =
-                                              await vm.loginWithEmail(
-                                            email: _emailController.text.trim(),
-                                            password: _passwordController.text,
+                                              await vm.resetPassword(
+                                            _emailController.text.trim(),
                                           );
                                           if (!mounted) return;
                                           if (success) {
-                                            Navigator.pushAndRemoveUntil(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (_) =>
-                                                    const MainNavigation(),
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                    'Password reset link sent to your email.'),
+                                                backgroundColor: Colors.green,
                                               ),
-                                              (route) => false,
                                             );
+                                            Navigator.pop(context);
                                           } else if (vm.errorMessage != null) {
                                             ScaffoldMessenger.of(context)
                                                 .showSnackBar(
                                               SnackBar(
                                                 content: Text(vm.errorMessage!),
+                                                backgroundColor: Colors.red,
                                               ),
                                             );
                                           }
@@ -228,7 +194,7 @@ class _LoginViewState extends State<LoginView>
                                               ),
                                             )
                                           : const Text(
-                                              'Sign In',
+                                              'Send Reset Link',
                                               style: TextStyle(
                                                 fontFamily: 'Lexend',
                                                 color: AppColors.textDark,
@@ -241,107 +207,15 @@ class _LoginViewState extends State<LoginView>
                                 );
                               },
                             ),
-                            const SizedBox(height: 20),
-
-                            // Divider
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Divider(
-                                    color:
-                                        AppColors.white.withValues(alpha: 0.2),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12),
-                                  child: Text(
-                                    'or sign in with',
-                                    style: TextStyle(
-                                      fontFamily: 'Lexend',
-                                      color: AppColors.white
-                                          .withValues(alpha: 0.5),
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Divider(
-                                    color:
-                                        AppColors.white.withValues(alpha: 0.2),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-
-                            // Social buttons
-                            Consumer<AuthViewModel>(
-                              builder: (context, vm, _) {
-                                return Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    _buildSocialButton(
-                                      icon: Icons.facebook,
-                                      iconColor: const Color(0xFF4267B2),
-                                      onTap: () {},
-                                    ),
-                                    const SizedBox(width: 12),
-                                    _buildSocialButton(
-                                      label: 'X',
-                                      labelColor: Colors.white,
-                                      onTap: () {},
-                                    ),
-                                    const SizedBox(width: 12),
-                                    _buildSocialButton(
-                                      label: 'G',
-                                      labelColor: const Color(0xFFEA4335),
-                                      onTap: () async {
-                                        final success =
-                                            await vm.loginWithGoogle();
-                                        if (!mounted) return;
-                                        if (success) {
-                                          Navigator.pushAndRemoveUntil(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (_) => const MainNavigation(),
-                                            ),
-                                            (route) => false,
-                                          );
-                                        } else if (vm.errorMessage != null) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            SnackBar(
-                                              content: Text(vm.errorMessage!),
-                                            ),
-                                          );
-                                        }
-                                      },
-                                    ),
-                                    const SizedBox(width: 12),
-                                    _buildSocialButton(
-                                      icon: Icons.apple,
-                                      iconColor: Colors.white,
-                                      onTap: () {},
-                                    ),
-                                  ],
-                                );
-                              },
-                            ),
                             const SizedBox(height: 24),
 
-                            // Don't have account
+                            // Already have account
                             Center(
                               child: GestureDetector(
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const RegisterView(),
-                                  ),
-                                ),
+                                onTap: () => Navigator.pop(context),
                                 child: RichText(
                                   text: const TextSpan(
-                                    text: "Don't have an account? ",
+                                    text: "Already have another account? ",
                                     style: TextStyle(
                                       fontFamily: 'Lexend',
                                       color: Color(0xFF6DFC9A),
@@ -349,7 +223,7 @@ class _LoginViewState extends State<LoginView>
                                     ),
                                     children: [
                                       TextSpan(
-                                        text: 'Sign up',
+                                        text: 'Sign in',
                                         style: TextStyle(
                                           color: AppColors.accentYellow,
                                           fontWeight: FontWeight.w600,
@@ -461,89 +335,6 @@ class _LoginViewState extends State<LoginView>
         ),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      ),
-    );
-  }
-
-  Widget _buildPasswordField() {
-    return TextField(
-      controller: _passwordController,
-      obscureText: _obscurePassword,
-      style: const TextStyle(
-        fontFamily: 'Lexend',
-        color: Colors.white,
-        fontSize: 14,
-      ),
-      decoration: InputDecoration(
-        hintText: 'Enter Password',
-        hintStyle: TextStyle(
-          color: AppColors.white.withValues(alpha: 0.4),
-          fontSize: 14,
-        ),
-        filled: true,
-        fillColor: AppColors.white.withValues(alpha: 0.08),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              BorderSide(color: AppColors.white.withValues(alpha: 0.15)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              BorderSide(color: AppColors.white.withValues(alpha: 0.15)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              const BorderSide(color: AppColors.accentYellow, width: 1.5),
-        ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        suffixIcon: IconButton(
-          icon: Icon(
-            _obscurePassword ? Icons.visibility_off : Icons.visibility,
-            color: AppColors.white.withValues(alpha: 0.4),
-            size: 18,
-          ),
-          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSocialButton({
-    IconData? icon,
-    Color? iconColor,
-    String? label,
-    Color? labelColor,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: AppColors.white.withValues(alpha: 0.08),
-          border: Border.all(
-            color: AppColors.white.withValues(alpha: 0.2),
-            width: 1.5,
-          ),
-        ),
-        child: Center(
-          child: icon != null
-              ? Icon(icon, color: iconColor, size: 20)
-              : Text(
-                  label!,
-                  style: TextStyle(
-                    fontFamily: 'Lexend',
-                    color: labelColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
-        ),
       ),
     );
   }
@@ -707,9 +498,6 @@ class _LoginViewState extends State<LoginView>
   }
 }
 
-// ═══════════════════════════════════════════════
-//  Thin Ring Painter
-// ═══════════════════════════════════════════════
 class _ThinRingPainter extends CustomPainter {
   final Color color;
   _ThinRingPainter({required this.color});
@@ -734,9 +522,6 @@ class _ThinRingPainter extends CustomPainter {
   bool shouldRepaint(_ThinRingPainter o) => o.color != color;
 }
 
-// ═══════════════════════════════════════════════
-//  4-point sparkle
-// ═══════════════════════════════════════════════
 class _Sparkle extends StatelessWidget {
   final double size;
   final Color color;
