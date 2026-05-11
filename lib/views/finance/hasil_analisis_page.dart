@@ -3,8 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/home_viewmodel.dart';
 import '../../viewmodels/finance_viewmodel.dart';
-import '../home/home_view.dart'; // Navigate back to home on save
-import '../notes/note_form_view.dart';
 
 class HasilAnalisisPage extends StatefulWidget {
   const HasilAnalisisPage({super.key});
@@ -14,7 +12,7 @@ class HasilAnalisisPage extends StatefulWidget {
 }
 
 class _HasilAnalisisPageState extends State<HasilAnalisisPage> {
-  double _sliderValue = 25000; // Default simulasi
+  double _sliderValue = 25000;
 
   @override
   void initState() {
@@ -41,7 +39,6 @@ class _HasilAnalisisPageState extends State<HasilAnalisisPage> {
 
     return Stack(
       children: [
-        // Background patterns
         Positioned(
           top: -50,
           right: -50,
@@ -392,7 +389,7 @@ class _HasilAnalisisPageState extends State<HasilAnalisisPage> {
                               double minVal = vm.modalPerUnit > 0 ? vm.modalPerUnit : 0;
                               double maxVal = vm.modalPerUnit > 0 ? vm.modalPerUnit * 3 : 100000;
                               if (maxVal == minVal) {
-                                  maxVal = minVal + 100000;
+                                maxVal = minVal + 100000;
                               }
                               double safeValue = _sliderValue.clamp(minVal, maxVal);
 
@@ -411,12 +408,12 @@ class _HasilAnalisisPageState extends State<HasilAnalisisPage> {
                                   onChanged: (value) {
                                     setState(() {
                                       _sliderValue = value;
-                                      vm.hargaJualUnit = value; 
+                                      vm.hargaJualUnit = value;
                                     });
                                   },
                                 ),
                               );
-                            }
+                            },
                           ),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -467,13 +464,10 @@ class _HasilAnalisisPageState extends State<HasilAnalisisPage> {
                     
                     const SizedBox(height: 32),
                     
-                    // Buttons
+                    // Tombol Tambah/Edit Catatan
                     OutlinedButton(
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const NoteFormView()),
-                        );
+                        _showCatatanBottomSheet(context, vm);
                       },
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Color(0xFF2C4334)),
@@ -484,13 +478,17 @@ class _HasilAnalisisPageState extends State<HasilAnalisisPage> {
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(Icons.note_add_outlined, color: Colors.white, size: 20),
-                          SizedBox(width: 8),
+                        children: [
+                          Icon(
+                            vm.catatan.isNotEmpty ? Icons.edit_note : Icons.note_add_outlined,
+                            color: vm.catatan.isNotEmpty ? const Color(0xFF8BCA6E) : Colors.white,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
                           Text(
-                            "TAMBAH CATATAN",
+                            vm.catatan.isNotEmpty ? "EDIT CATATAN" : "TAMBAH CATATAN",
                             style: TextStyle(
-                              color: Colors.white,
+                              color: vm.catatan.isNotEmpty ? const Color(0xFF8BCA6E) : Colors.white,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               letterSpacing: 1.0,
@@ -502,6 +500,7 @@ class _HasilAnalisisPageState extends State<HasilAnalisisPage> {
                     
                     const SizedBox(height: 16),
                     
+                    // Tombol Simpan
                     Container(
                       width: double.infinity,
                       height: 56,
@@ -524,9 +523,30 @@ class _HasilAnalisisPageState extends State<HasilAnalisisPage> {
                         onPressed: () async {
                           final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
                           await vm.simpanPerhitungan(userId);
-                          vm.setStep(0);
-                          final homeVm = Provider.of<HomeViewModel>(context, listen: false);
-                          homeVm.onNavTapManual(2); // Back to home
+
+                          if (context.mounted) {
+                            // 1. Snackbar notifikasi
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Row(
+                                  children: [
+                                    Icon(Icons.check_circle, color: Colors.white),
+                                    SizedBox(width: 8),
+                                    Text('Perhitungan berhasil disimpan!'),
+                                  ],
+                                ),
+                                backgroundColor: Color(0xFF55C772),
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+
+                            // 2. Pindah ke tab Riwayat (index 4)
+                            final homeVm = Provider.of<HomeViewModel>(context, listen: false);
+                            homeVm.onNavTapManual(4);
+
+                            // 3. Reset step setelah navigasi selesai
+                            Future.microtask(() => vm.setStep(0));
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.transparent,
@@ -553,6 +573,116 @@ class _HasilAnalisisPageState extends State<HasilAnalisisPage> {
           ],
         ),
       ],
+    );
+  }
+
+  void _showCatatanBottomSheet(BuildContext context, FinanceViewModel vm) {
+    final controller = TextEditingController(text: vm.catatan);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Color(0xFF132A1D),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+                Row(
+                  children: [
+                    const Icon(Icons.note_alt_outlined, color: Color(0xFF8BCA6E), size: 22),
+                    const SizedBox(width: 10),
+                    const Text(
+                      'Catatan Perhitungan',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Spacer(),
+                    if (vm.catatan.isNotEmpty)
+                      GestureDetector(
+                        onTap: () {
+                          vm.updateCatatan('');
+                          controller.clear();
+                        },
+                        child: const Icon(Icons.delete_outline, color: Color(0xFFFF6B6B), size: 20),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Tambahkan catatan tambahan untuk perhitungan ini',
+                  style: TextStyle(color: Colors.white54, fontSize: 12),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1B3324),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFF2C4334)),
+                  ),
+                  child: TextField(
+                    controller: controller,
+                    maxLines: 5,
+                    minLines: 3,
+                    autofocus: true,
+                    style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.6),
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      hintText: 'Contoh: Produk musiman, perlu revisi harga di bulan depan...',
+                      hintStyle: TextStyle(color: Colors.white30, fontSize: 13),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      vm.updateCatatan(controller.text.trim());
+                      Navigator.pop(ctx);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF8BCA6E),
+                      foregroundColor: const Color(0xFF0C1B13),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'Simpan Catatan',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
