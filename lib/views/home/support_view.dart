@@ -1,4 +1,6 @@
+import 'package:BizPrice/data/services/email_service.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SupportView extends StatefulWidget {
   const SupportView({super.key});
@@ -69,7 +71,7 @@ class _SupportViewState extends State<SupportView> with SingleTickerProviderStat
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF4ADE80).withOpacity(0.05), width: 1),
+                border: Border.all(color: const Color(0xFF4ADE80).withValues(alpha: 0.05), width: 1),
               ),
             ),
           ),
@@ -81,7 +83,7 @@ class _SupportViewState extends State<SupportView> with SingleTickerProviderStat
               height: 250,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF4ADE80).withOpacity(0.03), width: 1),
+                border: Border.all(color: const Color(0xFF4ADE80).withValues(alpha: 0.03), width: 1),
               ),
             ),
           ),
@@ -103,7 +105,7 @@ class _SupportViewState extends State<SupportView> with SingleTickerProviderStat
                             color: const Color(0xFF163520),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: const Color(0xFF4ADE80).withOpacity(0.2),
+                              color: const Color(0xFF4ADE80).withValues(alpha: 0.2),
                               width: 1,
                             ),
                           ),
@@ -184,10 +186,10 @@ class _SupportViewState extends State<SupportView> with SingleTickerProviderStat
       decoration: BoxDecoration(
         color: const Color(0xFF163520),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFF4ADE80).withOpacity(0.1), width: 1),
+        border: Border.all(color: const Color(0xFF4ADE80).withValues(alpha: 0.1), width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -202,7 +204,7 @@ class _SupportViewState extends State<SupportView> with SingleTickerProviderStat
             child: Icon(
               Icons.account_balance_wallet,
               size: 160,
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
             ),
           ),
           Padding(
@@ -222,7 +224,7 @@ class _SupportViewState extends State<SupportView> with SingleTickerProviderStat
                 Text(
                   'Pelajari lebih lanjut mengenai visi dan misi kami dalam membantu pengelolaan keuangan Anda.',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                     fontSize: 14,
                     height: 1.5,
                   ),
@@ -243,11 +245,11 @@ class _SupportViewState extends State<SupportView> with SingleTickerProviderStat
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFF70B843), // Vivid light green matching image
+        color: const Color(0xFF70B843),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF70B843).withOpacity(0.3),
+            color: const Color(0xFF70B843).withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -264,7 +266,7 @@ class _SupportViewState extends State<SupportView> with SingleTickerProviderStat
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           const Text(
             'Kami sangat menghargai setiap saran, dukungan, dan kritik. Tim kami siap membantu memberikan solusi terbaik untuk setiap kendala yang Anda alami.',
             style: TextStyle(
@@ -315,7 +317,7 @@ class _ExpandableTileState extends State<_ExpandableTile> {
           color: const Color(0xFF163520),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: _isExpanded ? const Color(0xFF4ADE80).withOpacity(0.4) : const Color(0xFF4ADE80).withOpacity(0.15), 
+            color: _isExpanded ? const Color(0xFF4ADE80).withValues(alpha: 0.4) : const Color(0xFF4ADE80).withValues(alpha: 0.15), 
             width: 1,
           ),
         ),
@@ -338,7 +340,7 @@ class _ExpandableTileState extends State<_ExpandableTile> {
                 AnimatedRotation(
                   turns: _isExpanded ? 0.25 : 0.0,
                   duration: const Duration(milliseconds: 300),
-                  child: Icon(Icons.chevron_right, color: Colors.white.withOpacity(0.3), size: 20),
+                  child: Icon(Icons.chevron_right, color: Colors.white.withValues(alpha: 0.3), size: 20),
                 ),
               ],
             ),
@@ -349,7 +351,7 @@ class _ExpandableTileState extends State<_ExpandableTile> {
                 child: Text(
                   widget.content,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                     fontSize: 14,
                     height: 1.5,
                   ),
@@ -364,6 +366,8 @@ class _ExpandableTileState extends State<_ExpandableTile> {
     );
   }
 }
+
+// (url_launcher email chip removed - feedback goes directly to Firestore)
 
 class _AnimatedMessageButton extends StatefulWidget {
   @override
@@ -436,7 +440,7 @@ class _AnimatedMessageButtonState extends State<_AnimatedMessageButton> with Sin
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.white.withOpacity(0.4 + (_pulseController.value * 0.4)),
+                      color: Colors.white.withValues(alpha: 0.4 + (_pulseController.value * 0.4)),
                       blurRadius: 10 + (_pulseController.value * 15),
                       spreadRadius: _pulseController.value * 3,
                     ),
@@ -476,30 +480,84 @@ class _MessageDialog extends StatefulWidget {
 class _MessageDialogState extends State<_MessageDialog> {
   bool _isSending = false;
   bool _isSent = false;
+  bool _hasError = false;
+  final _nameController = TextEditingController();
   final _controller = TextEditingController();
 
-  void _sendMessage() async {
+  Future<void> _sendMessage() async {
     if (_controller.text.trim().isEmpty) return;
+
     setState(() {
       _isSending = true;
+      _hasError = false;
     });
-    // Simulasi proses pengiriman pesan
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted) {
-      setState(() {
-        _isSending = false;
-        _isSent = true;
-      });
-      // Otomatis menutup dialog setelah pesan sukses terkirim
-      await Future.delayed(const Duration(milliseconds: 1500));
+
+    final String nama = _nameController.text.trim().isEmpty
+        ? 'Pengguna BizPrice'
+        : _nameController.text.trim();
+    final String pesan = _controller.text.trim();
+
+    try {
+      // Jalankan Firestore dan EmailJS secara paralel tapi tangkap error masing-masing
+      // agar kegagalan Firestore (misal: belum login) tidak membuat UI error jika email berhasil terkirim.
+      final results = await Future.wait([
+        FirebaseFirestore.instance.collection('feedback').add({
+          'name': nama,
+          'message': pesan,
+          'timestamp': FieldValue.serverTimestamp(),
+          'status': 'unread',
+          'target': 'zizybaik@gmail.com',
+        }).timeout(const Duration(seconds: 10)).catchError((e) {
+          debugPrint('Firestore Error (Abaikan jika email masuk): $e');
+          // Mengembalikan DocumentReference dummy atau null agar tidak melempar error
+          return FirebaseFirestore.instance.collection('feedback').doc('dummy'); 
+        }),
+        
+        EmailService.kirimFeedback(nama: nama, pesan: pesan)
+            .timeout(const Duration(seconds: 10)).catchError((e) {
+          debugPrint('EmailJS Error: $e');
+          return false;
+        }),
+      ]);
+
+      final bool emailSuccess = results[1] == true;
+
+      if (emailSuccess) {
+        if (mounted) {
+          setState(() {
+            _isSending = false;
+            _isSent = true;
+          });
+          await Future.delayed(const Duration(milliseconds: 1800));
+          if (mounted) Navigator.pop(context);
+        }
+      } else {
+        throw Exception("Gagal mengirim ke email.");
+      }
+    } catch (e) {
+      debugPrint('Error sending feedback: $e');
       if (mounted) {
-        Navigator.pop(context);
+        setState(() {
+          _isSending = false;
+          _hasError = true;
+        });
+        
+        // Tampilkan pesan spesifik jika timeout
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().toLowerCase().contains('timeout') 
+                ? 'Koneksi lambat, silakan coba lagi.' 
+                : 'Gagal mengirim pesan: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
       }
     }
   }
 
   @override
   void dispose() {
+    _nameController.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -521,10 +579,10 @@ class _MessageDialogState extends State<_MessageDialog> {
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(32),
-            border: Border.all(color: const Color(0xFF4ADE80).withOpacity(0.5), width: 2),
+            border: Border.all(color: const Color(0xFF4ADE80).withValues(alpha: 0.5), width: 2),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF4ADE80).withOpacity(0.3),
+                color: const Color(0xFF4ADE80).withValues(alpha: 0.3),
                 blurRadius: 40,
                 spreadRadius: 5,
               )
@@ -553,7 +611,7 @@ class _MessageDialogState extends State<_MessageDialog> {
                     const SizedBox(height: 8),
                     Text(
                       'Terima kasih atas masukannya.',
-                      style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 14),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -561,41 +619,82 @@ class _MessageDialogState extends State<_MessageDialog> {
               : Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // Header
                     Row(
                       children: [
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF4ADE80).withOpacity(0.1),
+                            color: const Color(0xFF4ADE80).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(Icons.mail_outline, color: Color(0xFF4ADE80)),
                         ),
                         const SizedBox(width: 16),
-                        const Text(
-                          'Hubungi Kami',
-                          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                        const Expanded(
+                          child: Text(
+                            'Kirim Keluhan',
+                            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
+
+                    // error info
+                    if (_hasError)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error_outline, color: Colors.redAccent, size: 16),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Gagal mengirim. Coba lagi.',
+                              style: TextStyle(color: Colors.redAccent.withValues(alpha: 0.9), fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    // Name field
                     TextField(
-                      controller: _controller,
-                      maxLines: 5,
+                      controller: _nameController,
                       style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
-                        hintText: 'Tulis saran, kritik, atau pertanyaan Anda di sini...',
-                        hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                        hintText: 'Nama Anda (opsional)',
+                        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                        prefixIcon: Icon(Icons.person_outline, color: Colors.white.withValues(alpha: 0.4), size: 20),
                         filled: true,
                         fillColor: Colors.black26,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Message field
+                    TextField(
+                      controller: _controller,
+                      maxLines: 4,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: 'Tulis keluhan, saran, atau pertanyaan Anda...',
+                        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                        filled: true,
+                        fillColor: Colors.black26,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
                           borderSide: BorderSide.none,
                         ),
                         contentPadding: const EdgeInsets.all(16),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 18),
+
                     SizedBox(
                       width: double.infinity,
                       height: 52,
@@ -655,12 +754,12 @@ class _AnimatedKeamananCardState extends State<_AnimatedKeamananCard> {
           color: const Color(0xFF163520),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: _isExpanded ? const Color(0xFF4ADE80).withOpacity(0.4) : const Color(0xFF4ADE80).withOpacity(0.15), 
+            color: _isExpanded ? const Color(0xFF4ADE80).withValues(alpha: 0.4) : const Color(0xFF4ADE80).withValues(alpha: 0.15), 
             width: 1,
           ),
           boxShadow: _isExpanded ? [
             BoxShadow(
-              color: const Color(0xFF4ADE80).withOpacity(0.1),
+              color: const Color(0xFF4ADE80).withValues(alpha: 0.1),
               blurRadius: 15,
               offset: const Offset(0, 5),
             )
@@ -695,7 +794,7 @@ class _AnimatedKeamananCardState extends State<_AnimatedKeamananCard> {
                       Text(
                         'Pelajari perlindungan data Anda.',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withValues(alpha: 0.6),
                           fontSize: 12,
                           height: 1.4,
                         ),
@@ -706,7 +805,7 @@ class _AnimatedKeamananCardState extends State<_AnimatedKeamananCard> {
                 AnimatedRotation(
                   turns: _isExpanded ? 0.25 : 0.0,
                   duration: const Duration(milliseconds: 300),
-                  child: Icon(Icons.chevron_right, color: Colors.white.withOpacity(0.3), size: 20),
+                  child: Icon(Icons.chevron_right, color: Colors.white.withValues(alpha: 0.3), size: 20),
                 ),
               ],
             ),
@@ -723,7 +822,7 @@ class _AnimatedKeamananCardState extends State<_AnimatedKeamananCard> {
                   child: Text(
                     'Seluruh data Anda dienkripsi secara end-to-end. Kami tidak membagikan informasi finansial Anda kepada pihak ketiga manapun. Keamanan akun Anda selalu menjadi prioritas utama BizPrice.',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       fontSize: 13,
                       height: 1.5,
                     ),

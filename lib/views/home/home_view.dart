@@ -8,6 +8,7 @@ import '../../viewmodels/home_viewmodel.dart';
 import '../../viewmodels/note_viewmodel.dart';
 import '../../viewmodels/riwayat_viewmodel.dart';
 import '../../viewmodels/saving_viewmodel.dart';
+import '../../viewmodels/auth_viewmodel.dart';
 import '../finance/hitung_hpp_page.dart';
 import '../insight/insight_view.dart';
 import '../riwayat/riwayat_view.dart';
@@ -190,6 +191,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     final photoUrl = user?.photoURL;
     final displayName = user?.displayName ?? _vm.userName;
     final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
+    final isPremium = context.watch<AuthViewModel>().isPremium;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
@@ -223,6 +225,36 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             ),
           ),
           const SizedBox(width: 12),
+          // ── Premium Upgrade Cart (Visible if NOT premium) ──
+          if (!isPremium)
+            GestureDetector(
+              onTap: () => _showPremiumUpgradeSheet(context),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 10.0, right: 16.0),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(
+                      Icons.shopping_cart_outlined,
+                      color: Color(0xFFC49A45),
+                      size: 28,
+                    ),
+                    Positioned(
+                      top: -2,
+                      right: -2,
+                      child: Container(
+                        width: 12,
+                        height: 12,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFEF4444),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           // ── Profile avatar button ──
           GestureDetector(
             onTap: () {
@@ -232,7 +264,9 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               );
             },
             child: Stack(
+              clipBehavior: Clip.none,
               children: [
+                // Avatar
                 Container(
                   width: 52,
                   height: 52,
@@ -245,8 +279,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: kGreen.withOpacity(0.4),
-                        blurRadius: 14,
+                        color: const Color(0xFF22C55E).withValues(alpha: 0.35),
+                        blurRadius: 12,
                         spreadRadius: 1,
                       ),
                     ],
@@ -297,11 +331,31 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     ),
                   ),
                 ),
+
+                // Premium Crown Badge (Visible if premium)
+                if (isPremium)
+                  const Positioned(
+                    top: -8,
+                    right: -8,
+                    child: Text(
+                      '👑',
+                      style: TextStyle(fontSize: 22),
+                    ),
+                  ),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  void _showPremiumUpgradeSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _PremiumUpgradeSheet(),
     );
   }
 
@@ -988,6 +1042,376 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     );
   }
 
+}
+
+// ── Premium Upgrade Bottom Sheet ──────────────────────────────────────────────
+class _PremiumUpgradeSheet extends StatefulWidget {
+  const _PremiumUpgradeSheet();
+
+  @override
+  State<_PremiumUpgradeSheet> createState() => _PremiumUpgradeSheetState();
+}
+
+class _PremiumUpgradeSheetState extends State<_PremiumUpgradeSheet>
+    with TickerProviderStateMixin {
+  late AnimationController _shimmerCtrl;
+  late AnimationController _slideCtrl;
+  late Animation<Offset> _slideAnim;
+  late AnimationController _pulseCtrl;
+  late Animation<double> _pulseAnim;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _shimmerCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();
+
+    _pulseCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+    _pulseAnim = Tween<double>(begin: 1.0, end: 1.12).animate(
+      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
+    );
+
+    _slideCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.35),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _slideCtrl, curve: Curves.easeOutCubic));
+    _slideCtrl.forward();
+  }
+
+  @override
+  void dispose() {
+    _shimmerCtrl.dispose();
+    _slideCtrl.dispose();
+    _pulseCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
+    return SlideTransition(
+      position: _slideAnim,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: screenHeight * 0.88,
+        ),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF0C2215),
+                Color(0xFF0A1C12),
+                Color(0xFF081510),
+              ],
+            ),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ── Handle bar (pinned top) ──
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // ── Scrollable content ──
+              Flexible(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: bottomPadding),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Golden crown banner
+                        _buildTopBanner(),
+                        const SizedBox(height: 20),
+
+                        // Feature list
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Column(
+                            children: [
+                              _buildFeatureRow(
+                                Icons.picture_as_pdf_rounded,
+                                'Ekspor Laporan PDF',
+                                'Tanpa watermark, kualitas premium',
+                                const Color(0xFFFFD60A),
+                                delay: 0,
+                              ),
+                              const SizedBox(height: 12),
+                              _buildFeatureRow(
+                                Icons.bar_chart_rounded,
+                                'Analitik Bisnis Lengkap',
+                                'Grafik profit, margin & BEP otomatis',
+                                const Color(0xFF6CF688),
+                                delay: 80,
+                              ),
+                              const SizedBox(height: 12),
+                              _buildFeatureRow(
+                                Icons.cloud_sync_rounded,
+                                'Backup Cloud Unlimited',
+                                'Semua data aman tersimpan di cloud',
+                                const Color(0xFF60D0FF),
+                                delay: 160,
+                              ),
+                              const SizedBox(height: 12),
+                              _buildFeatureRow(
+                                Icons.lock_open_rounded,
+                                'Akses Semua Fitur',
+                                'Tanpa batasan, selamanya',
+                                const Color(0xFFFF8C60),
+                                delay: 240,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // CTA button
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: _buildCtaButton(context),
+                        ),
+
+                        // Price note
+                        const SizedBox(height: 12),
+                        Text(
+                          'Hanya Rp 100rb SEUMUR HIDUP 🎉',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.55),
+                            fontSize: 12,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopBanner() {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        // Shimmer glow behind crown
+        AnimatedBuilder(
+          animation: _shimmerCtrl,
+          builder: (_, __) {
+            return Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: SweepGradient(
+                  startAngle: _shimmerCtrl.value * 2 * 3.14159,
+                  colors: const [
+                    Color(0xFFFFD60A),
+                    Color(0xFFFFA500),
+                    Color(0xFF0C2215),
+                    Color(0xFF0C2215),
+                    Color(0xFFFFD60A),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+        // Crown container
+        ScaleTransition(
+          scale: _pulseAnim,
+          child: Container(
+            width: 90,
+            height: 90,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFFE347), Color(0xFFFF9500)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFFD60A).withValues(alpha: 0.5),
+                  blurRadius: 24,
+                  spreadRadius: 4,
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.workspace_premium_rounded,
+              color: Color(0xFF1A0F00),
+              size: 44,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFeatureRow(
+    IconData icon,
+    String title,
+    String subtitle,
+    Color iconColor, {
+    int delay = 0,
+  }) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: Duration(milliseconds: 500 + delay),
+      curve: Curves.easeOutCubic,
+      builder: (_, v, child) => Opacity(
+        opacity: v,
+        child: Transform.translate(offset: Offset(0, 20 * (1 - v)), child: child),
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: iconColor.withValues(alpha: 0.18),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: iconColor.withValues(alpha: 0.15),
+              ),
+              child: Icon(icon, color: iconColor, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.5),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.check_circle_rounded, color: iconColor, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCtaButton(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.pop(context);
+        // TODO: navigate to payment page
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Fitur pembayaran segera hadir! 🚀'),
+            backgroundColor: const Color(0xFF1A3A10),
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      },
+      child: AnimatedBuilder(
+        animation: _shimmerCtrl,
+        builder: (_, __) {
+          return Container(
+            width: double.infinity,
+            height: 56,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+              gradient: LinearGradient(
+                colors: const [Color(0xFFFFE347), Color(0xFFFFA500)],
+                begin: Alignment(-1 + _shimmerCtrl.value * 2, 0),
+                end: Alignment(1 + _shimmerCtrl.value * 2, 0),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFFD60A).withValues(alpha: 0.45),
+                  blurRadius: 18,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.bolt_rounded,
+                  color: Color(0xFF1A0F00),
+                  size: 22,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Langganan Sekarang',
+                  style: TextStyle(
+                    color: Color(0xFF1A0F00),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Icon(
+                  Icons.arrow_forward_rounded,
+                  color: Color(0xFF1A0F00),
+                  size: 20,
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
 }
 
 // ── Sparkle Painter ───────────────────────────────────────────────────────────
