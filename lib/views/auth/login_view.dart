@@ -278,53 +278,59 @@ class _LoginViewState extends State<LoginView>
                             // Social buttons
                             Consumer<AuthViewModel>(
                               builder: (context, vm, _) {
-                                return Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    _buildSocialButton(
-                                      icon: Icons.facebook,
-                                      iconColor: const Color(0xFF4267B2),
-                                      onTap: () {},
+                                return GestureDetector(
+                                  onTap: () async {
+                                    final success = await vm.loginWithGoogle();
+                                    if (!mounted) return;
+                                    if (success) {
+                                      Navigator.pushAndRemoveUntil(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const MainNavigation(),
+                                        ),
+                                        (route) => false,
+                                      );
+                                    } else if (vm.errorMessage != null) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(vm.errorMessage!),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  child: Container(
+                                    width: double.infinity,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(25),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.15),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 3),
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(width: 12),
-                                    _buildSocialButton(
-                                      label: 'X',
-                                      labelColor: Colors.white,
-                                      onTap: () {},
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const GoogleLogo(size: 22),
+                                        const SizedBox(width: 12),
+                                        const Text(
+                                          'Continue with Google',
+                                          style: TextStyle(
+                                            fontFamily: 'Lexend',
+                                            color: Color(0xFF3C4043),
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(width: 12),
-                                    _buildSocialButton(
-                                      label: 'G',
-                                      labelColor: const Color(0xFFEA4335),
-                                      onTap: () async {
-                                        final success =
-                                            await vm.loginWithGoogle();
-                                        if (!mounted) return;
-                                        if (success) {
-                                          Navigator.pushAndRemoveUntil(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (_) => const MainNavigation(),
-                                            ),
-                                            (route) => false,
-                                          );
-                                        } else if (vm.errorMessage != null) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            SnackBar(
-                                              content: Text(vm.errorMessage!),
-                                            ),
-                                          );
-                                        }
-                                      },
-                                    ),
-                                    const SizedBox(width: 12),
-                                    _buildSocialButton(
-                                      icon: Icons.apple,
-                                      iconColor: Colors.white,
-                                      onTap: () {},
-                                    ),
-                                  ],
+                                  ),
                                 );
                               },
                             ),
@@ -783,3 +789,71 @@ class _SparklePainter extends CustomPainter {
   @override
   bool shouldRepaint(_SparklePainter o) => o.color != color;
 }
+
+// ═══════════════════════════════════════════════
+//  Google Logo Native CustomPainter (No CORS issues)
+// ═══════════════════════════════════════════════
+class GoogleLogo extends StatelessWidget {
+  final double size;
+  const GoogleLogo({super.key, this.size = 24});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(
+        painter: _GoogleLogoPainter(),
+      ),
+    );
+  }
+}
+
+class _GoogleLogoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final strokeWidth = size.width * 0.22;
+    final radius = size.width / 2 - strokeWidth / 2;
+
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.butt;
+
+    final rect = Rect.fromCircle(center: center, radius: radius);
+
+    // Blue arc (bottom right)
+    paint.color = const Color(0xFF4285F4);
+    canvas.drawArc(rect, 0.0, 0.8, false, paint);
+
+    // Green arc (bottom to bottom left)
+    paint.color = const Color(0xFF34A853);
+    canvas.drawArc(rect, 0.8, 1.6, false, paint);
+
+    // Yellow arc (left)
+    paint.color = const Color(0xFFFBBC05);
+    canvas.drawArc(rect, 2.4, 1.5, false, paint);
+
+    // Red arc (top left to top right)
+    paint.color = const Color(0xFFEA4335);
+    canvas.drawArc(rect, -2.4, 1.8, false, paint);
+
+    // Blue horizontal bar
+    paint.color = const Color(0xFF4285F4);
+    paint.style = PaintingStyle.fill;
+    canvas.drawRect(
+      Rect.fromLTRB(
+        center.dx - strokeWidth * 0.05, 
+        center.dy - strokeWidth / 2, 
+        size.width, 
+        center.dy + strokeWidth / 2
+      ),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
