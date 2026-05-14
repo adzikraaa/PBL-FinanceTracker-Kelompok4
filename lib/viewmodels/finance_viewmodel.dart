@@ -19,18 +19,18 @@ class FinanceViewModel extends ChangeNotifier {
     HppModel(
       id: '1',
       userId: 'anon',
-      namaProduk: 'Nasi Goreng Spesial',
-      biayaProduksi: 18000,
-      biayaTenagaKerja: 8000,
-      biayaOverhead: 4000,
-      jumlahUnit: 150,
-      biayaTetap: 120000,
-      hargaJualUnit: 25000,
-      jumlahUnitTerjual: 120,
-      totalHpp: 30000,
-      bepUnit: 8,
-      bepRupiah: 200000,
-      catatan: 'Analisa penjualan bulan ini',
+      namaProduk: 'Kopi Susu',
+      biayaProduksi: 8000,
+      biayaTenagaKerja: 0,
+      biayaOverhead: 0,
+      jumlahUnit: 1,
+      biayaTetap: 0,
+      hargaJualUnit: 15000,
+      jumlahUnitTerjual: 200,
+      totalHpp: 8000,
+      bepUnit: 0,
+      bepRupiah: 0,
+      catatan: '',
       createdAt: DateTime.now().subtract(const Duration(days: 3)),
     ),
   ];
@@ -103,6 +103,44 @@ class FinanceViewModel extends ChangeNotifier {
 
     history.add(newHpp);
     notifyListeners();
+  }
+
+  // ================================
+  // INSIGHT: TARGET PROFIT & PENJUALAN
+  // ================================
+
+  double targetProfitBulanan = 2100000.0;
+
+  void setTargetProfit(double target) {
+    targetProfitBulanan = target;
+    notifyListeners();
+  }
+
+  void updatePenjualan(int index, int delta) {
+    if (index >= 0 && index < history.length) {
+      int current = history[index].jumlahUnitTerjual ?? 0;
+      int newValue = current + delta;
+      if (newValue < 0) newValue = 0;
+      history[index].jumlahUnitTerjual = newValue;
+      notifyListeners();
+    }
+  }
+
+  double get totalUntungBersih {
+    double total = 0.0;
+    for (var item in history) {
+      int laku = item.jumlahUnitTerjual ?? 0;
+      double hppPerUnit = item.jumlahUnit > 0 ? item.totalHpp / item.jumlahUnit : 0;
+      double untungPerUnit = item.hargaJualUnit - hppPerUnit;
+      total += (laku * untungPerUnit);
+    }
+    return total;
+  }
+
+  double get progressProfit {
+    if (targetProfitBulanan <= 0) return 0;
+    double prog = totalUntungBersih / targetProfitBulanan;
+    return prog.clamp(0.0, 1.0);
   }
 
   // ================================
