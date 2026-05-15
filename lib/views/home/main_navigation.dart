@@ -25,7 +25,6 @@ class _MainNavigationState extends State<MainNavigation> {
     super.initState();
     _userId = FirebaseAuth.instance.currentUser?.uid ?? '';
 
-    // Build pages once so they are NOT recreated on every build()
     _pages = [
       const HitungHppPage(),
       SavingListPage(userId: _userId),
@@ -34,8 +33,6 @@ class _MainNavigationState extends State<MainNavigation> {
       const RiwayatView(),
     ];
 
-    // Pre-initialise the SavingViewModel listener so data is available
-    // immediately (Home card, Insight, etc.).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<SavingViewModel>().listenSavings(_userId);
@@ -48,16 +45,11 @@ class _MainNavigationState extends State<MainNavigation> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D2818),
-      // extendBody allows the page content to extend BEHIND the navbar
-      // so we keep the floating-over-content visual effect.
       extendBody: true,
       body: IndexedStack(
-        index: vm.selectedIndex,
+        index: vm.selectedIndex.clamp(0, _pages.length - 1),
         children: _pages,
       ),
-      // Using bottomNavigationBar guarantees it renders on the very first
-      // frame, unlike Stack+Positioned+LayoutBuilder which can have
-      // first-frame timing issues on Flutter web.
       bottomNavigationBar: _buildBottomNav(context, vm),
     );
   }
@@ -80,16 +72,13 @@ class _MainNavigationState extends State<MainNavigation> {
     const kNavIcon = Color(0xFF6B7E72);
     const kNavActive = Color(0xFF6CF688);
 
-    // Use MediaQuery for width instead of LayoutBuilder to avoid
-    // first-frame constraint timing issues.
     final screenWidth = MediaQuery.of(context).size.width;
-    final navWidth = screenWidth - 40; // accounting for left+right padding
+    final navWidth = screenWidth - 40;
     final itemWidth = navWidth / navCount;
-    final circleLeft =
-        itemWidth * vm.selectedIndex + (itemWidth / 2) - circleSize / 2;
+    final safeIndex = vm.selectedIndex.clamp(0, navCount - 1);
+    final circleLeft = itemWidth * safeIndex + (itemWidth / 2) - circleSize / 2;
 
     return Container(
-      // Transparent background so extendBody works (content shows behind)
       color: Colors.transparent,
       padding: const EdgeInsets.only(bottom: 20, left: 20, right: 20),
       child: SizedBox(
@@ -129,7 +118,7 @@ class _MainNavigationState extends State<MainNavigation> {
                   ],
                 ),
                 child: Icon(
-                  navIcons[vm.selectedIndex],
+                  navIcons[safeIndex],
                   color: const Color(0xFF0C1B13),
                   size: 24,
                 ),
@@ -139,7 +128,7 @@ class _MainNavigationState extends State<MainNavigation> {
             // Tap areas + inactive icons
             Row(
               children: List.generate(navCount, (i) {
-                final isActive = i == vm.selectedIndex;
+                final isActive = i == safeIndex;
                 return Expanded(
                   child: GestureDetector(
                     behavior: HitTestBehavior.translucent,

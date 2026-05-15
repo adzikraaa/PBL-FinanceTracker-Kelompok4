@@ -23,32 +23,47 @@ class FinanceViewModel extends ChangeNotifier {
   double persediaanAkhir = 0.0;
 
   String namaProduk = "Produk Baru";
+  String catatan = '';
+  bool lastSaveSuccess = false; // flag: true setelah simpan berhasil
+  
+  // Navigation step (0: HPP, 1: BEP, 2: Analysis)
+  int currentStep = 0;
+  
+  void setStep(int step) {
+    currentStep = step;
+    notifyListeners();
+  }
 
-  // --- History (Dummy Data untuk testing) ---
-  final List<HppModel> history = [
-    HppModel(
-      id: '1',
-      userId: 'anon',
-      namaProduk: 'Kopi Susu',
-      biayaProduksi: 8000,
-      biayaTenagaKerja: 0,
-      biayaOverhead: 0,
-      jumlahUnit: 1,
-      biayaTetap: 0,
-      hargaJualUnit: 15000,
-      jumlahUnitTerjual: 200,
-      totalHpp: 8000,
-      bepUnit: 0,
-      bepRupiah: 0,
-      catatan: '',
-      createdAt: DateTime.now().subtract(const Duration(days: 3)),
-    ),
-  ];
+  void updateCatatan(String nilai) {
+    catatan = nilai;
+    notifyListeners();
+  }
 
-  // ================================
-  // PERHITUNGAN
-  // ================================
+  List<HppModel> history = [];
 
+  FinanceViewModel() {
+    _init();
+  }
+
+  void _init() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _sub = _firestoreService.streamHistory(user.uid).listen((data) {
+        history = data;
+        notifyListeners();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
+
+  // --- Getters untuk Kalkulasi Otomatis ---
+
+  // Rumus HPP
   double get hitungHPP =>
       (persediaanAwal + pembelianBersih + biayaTenagaKerja + biayaOverhead) -
       persediaanAkhir;
@@ -107,7 +122,7 @@ class FinanceViewModel extends ChangeNotifier {
       totalHpp: hitungHPP,
       bepUnit: hitungBEPUnit,
       bepRupiah: hitungBEPRupiah,
-      catatan: '',
+      catatan: catatan,
       createdAt: DateTime.now(),
       persediaanAwal: persediaanAwal,
       pembelianBersih: pembelianBersih,
@@ -116,21 +131,7 @@ class FinanceViewModel extends ChangeNotifier {
 
     await _firestoreService.addHistory(newHpp);
 
-    resetData();
-  }
-
-  void resetData() {
-    biayaProduksi = 0.0;
-    biayaTenagaKerja = 0.0;
-    biayaOverhead = 0.0;
-    jumlahUnit = 0;
-    hargaJualUnit = 0.0;
-    biayaTetap = 0.0;
-    jumlahUnitTerjual = null;
-    namaProduk = "Produk Baru";
-    persediaanAwal = 0.0;
-    pembelianBersih = 0.0;
-    persediaanAkhir = 0.0;
+    lastSaveSuccess = true;
     notifyListeners();
   }
 
@@ -172,112 +173,42 @@ class FinanceViewModel extends ChangeNotifier {
     return prog.clamp(0.0, 1.0);
   }
 
-  // ================================
-  // INSIGHT
-  // ================================
+  void resetData() {
+    biayaProduksi = 0.0;
+    biayaTenagaKerja = 0.0;
+    biayaOverhead = 0.0;
+    jumlahUnit = 0;
+    hargaJualUnit = 0.0;
+    biayaTetap = 0.0;
+    jumlahUnitTerjual = null;
+    namaProduk = "Produk Baru";
+    catatan = '';
+    persediaanAwal = 0.0;
+    pembelianBersih = 0.0;
+    persediaanAkhir = 0.0;
+    currentStep = 0;
+    lastSaveSuccess = false;
+    notifyListeners();
+  }
+
+  // Getters for insight view
+  List<double> get weeklyBepSeries =>
+      history.map((item) => item.bepUnit).toList();
 
   int get totalProducts => history.length;
 
-  double get averageHpp {
-    if (history.isEmpty) return 0;
+  double get averageHpp => history.isNotEmpty
+      ? history.map((item) => item.totalHpp).reduce((a, b) => a + b) /
+          history.length
+      : 0.0;
 
-    final sum = history.fold<double>(
-      0,
-      (sum, item) => sum + item.totalHpp,
-    );
+  double get totalBepAchievedPercent => 85.0; // dummy
 
-    return sum / history.length;
-  }
+  double get performanceScore => 75.0; // dummy
 
-  String get totalBepAchievedPercent {
-    if (history.isEmpty) return '0%';
+  String get trendLabel => 'Naik'; // dummy
 
-    int totalAchieved = history.where((item) =>
-        item.jumlahUnitTerjual != null &&
-        item.jumlahUnitTerjual! >= item.bepUnit).length;
+  String get popularProduct => 'Produk A'; // dummy
 
-    final percentage = (totalAchieved / history.length) * 100;
-    return '${percentage.toStringAsFixed(0)}%';
-  }
-
-  int get performanceScore {
-    if (history.isEmpty) return 0;
-
-    int score = 0;
-
-    int bepCount = history.where((item) =>
-        item.jumlahUnitTerjual != null &&
-        item.jumlahUnitTerjual! >= item.bepUnit).length;
-
-    score += ((bepCount / history.length) * 30).toInt();
-
-    double avgMargin = history.fold<double>(0, (sum, item) {
-      return sum +
-          ((item.hargaJualUnit -
-                      (item.totalHpp / item.jumlahUnit)) /
-                  item.hargaJualUnit) *
-              100;
-    }) / history.length;
-
-    score += ((avgMargin / 50) * 35).toInt();
-
-    score += ((history.length / 10) * 20).toInt();
-
-    if (history.length > 1) {
-      final newestItem = history.last;
-      final oldestItem = history.first;
-
-      if (newestItem.bepRupiah < oldestItem.bepRupiah) {
-        score += 15;
-      }
-    }
-
-    return score.clamp(0, 100);
-  }
-
-  String get trendLabel =>
-      performanceScore > 75 ? 'TRENDING' : 'STABIL';
-
-  String get popularProduct {
-    if (history.isEmpty) return 'Tidak ada produk';
-
-    HppModel popular = history.first;
-
-    for (var item in history) {
-      if ((item.jumlahUnitTerjual ?? 0) >
-          (popular.jumlahUnitTerjual ?? 0)) {
-        popular = item;
-      }
-    }
-
-    return popular.namaProduk;
-  }
-
-  // ================================
-  // FIX ERROR (AMAN)
-  // ================================
-
-  String get efficiencyHeadline {
-    if (history.isEmpty) return 'Tidak ada data';
-
-    final HppModel lowestBep = history.reduce(
-      (a, b) => a.bepUnit < b.bepUnit ? a : b,
-    );
-
-    return 'BEP Terendah:\n${lowestBep.namaProduk}';
-  }
-
-  // ================================
-  // CHART DATA (SUDAH BENAR)
-  // ================================
-
-  List<double> get weeklyBepSeries {
-    if (history.length < 6) {
-      return [14, 12, 16, 13, 15, 14];
-    }
-
-    return history
-        .map((item) => item.bepUnit.toDouble())
-        .toList();
-  }
+  String get efficiencyHeadline => 'Efisiensi Baik';
 }

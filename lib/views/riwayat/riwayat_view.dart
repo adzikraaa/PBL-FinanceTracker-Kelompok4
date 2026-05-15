@@ -19,6 +19,8 @@ const Color _kCard     = Color(0xFFFFFFFF);
 const Color _kGreen    = Color(0xFF4ADE80);
 const Color _kDarkGreen= Color(0xFF163520);
 const Color _kWhite    = Color(0xFFFFFFFF);
+const Color _kWhite70  = Color(0xB3FFFFFF);
+const Color _kWhite40  = Color(0x66FFFFFF);
 const Color _kGreyText = Color(0xFF6B7280);
 const Color _kLightGreenBtn = Color(0xFFA2E874);
 
@@ -189,8 +191,8 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
           center: const Alignment(0, -0.5),
           radius: 1.0,
           colors: [
-            _kGlow.withOpacity(0.5),
-            _kBg.withOpacity(0.0),
+            _kGlow.withValues(alpha: 0.5),
+            _kBg.withValues(alpha: 0.0),
           ],
         ),
       ),
@@ -359,7 +361,7 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
           // Divider
           Container(
             height: 1,
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             margin: const EdgeInsets.symmetric(horizontal: 20),
           ),
           
@@ -368,24 +370,19 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             child: Row(
               children: [
-                Icon(Icons.access_time, size: 14, color: _kGreyText.withOpacity(0.7)),
-                const SizedBox(width: 4),
-                Text(
-                  '${_fmtDateFull(item.createdAt)}, ${_fmtTime(item.createdAt)}',
-                  style: TextStyle(color: _kGreyText.withOpacity(0.8), fontSize: 10),
-                ),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () async {
-                    await PdfService.shareHpp(item, isPremium: isPremium);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF3F4F6), // Light grey
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.share_outlined, size: 16, color: _kDarkGreen),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Icon(Icons.access_time, size: 14, color: _kGreyText.withValues(alpha: 0.7)),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          '${_fmtDateFull(item.createdAt)}, ${_fmtTime(item.createdAt)}',
+                          style: TextStyle(color: _kGreyText.withValues(alpha: 0.8), fontSize: 10),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -394,7 +391,7 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                     await PdfService.downloadHpp(item, isPremium: isPremium);
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF3F4F6), // Light grey
                       borderRadius: BorderRadius.circular(12),
@@ -403,9 +400,9 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(Icons.download_outlined, size: 14, color: _kDarkGreen),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 4),
                         const Text(
-                          'Unduh PDF',
+                          'PDF',
                           style: TextStyle(
                             color: _kDarkGreen,
                             fontSize: 11,
@@ -419,10 +416,10 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                 const SizedBox(width: 8),
                 GestureDetector(
                   onTap: () {
-                    // Logic to open notes or details
+                    _showLihatCatatan(ctx, item.catatan, item.namaProduk);
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     decoration: BoxDecoration(
                       color: _kLightGreenBtn,
                       borderRadius: BorderRadius.circular(12),
@@ -431,9 +428,9 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(Icons.description_outlined, size: 14, color: _kDarkGreen),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 4),
                         const Text(
-                          'Lihat Catatan',
+                          'Catatan',
                           style: TextStyle(
                             color: _kDarkGreen,
                             fontSize: 11,
@@ -503,6 +500,146 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
     );
   }
 
+  void _showLihatCatatan(BuildContext ctx, String catatan, String namaProduk) {
+    final isEmpty = catatan.trim().isEmpty;
+    showModalBottomSheet(
+      context: ctx,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(ctx).size.height * 0.75,
+        ),
+        decoration: const BoxDecoration(
+          color: Color(0xFF132A1D),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 36),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle bar
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+            // Header
+            Row(
+              children: [
+                const Icon(Icons.description_outlined, color: Color(0xFF8BCA6E), size: 22),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Catatan Perhitungan',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        namaProduk,
+                        style: const TextStyle(
+                          color: Color(0xFF8BCA6E),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            // Content
+            if (isEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1B3324),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFF2C4334)),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(Icons.notes_outlined, color: Colors.white38, size: 40),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Tidak ada catatan',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Catatan akan muncul di sini jika kamu\nmenambahkannya saat proses perhitungan.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white38, fontSize: 12, height: 1.5),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1B3324),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFF2C4334)),
+                    ),
+                    child: Text(
+                      catatan,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        height: 1.7,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF8BCA6E),
+                  foregroundColor: const Color(0xFF0C1B13),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  'Tutup',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ─── Empty State ───────────────────────────────────────────────────────────
   Widget _buildEmptyState() {
     return Expanded(
@@ -513,7 +650,7 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
             Container(
               width: 100, height: 100,
               decoration: BoxDecoration(
-                color: const Color(0xFF1E472A).withOpacity(0.3),
+                color: const Color(0xFF1E472A).withValues(alpha: 0.3),
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white12),
               ),
@@ -565,9 +702,7 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
 
 }
 
-// Dummy constants to avoid undefined errors (if any colors were left)
-const Color _kWhite70 = Color(0xB3FFFFFF);
-const Color _kWhite40 = Color(0x66FFFFFF);
+
 
 // ── Sparkles Painter ─────────────────────────────────────────────────────────
 class _SparklesPainter extends CustomPainter {

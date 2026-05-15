@@ -3,9 +3,50 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../auth/welcome_view.dart';
+import 'edit_profile_view.dart';
+import 'support_view.dart';
+import '../../shared/creative_background.dart';
+import 'dart:math';
 
-class ProfileView extends StatelessWidget {
+class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
+
+  @override
+  State<ProfileView> createState() => _ProfileViewState();
+}
+
+class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStateMixin {
+  late AnimationController _animController;
+  bool _isPushNotificationEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  Widget _buildAnimatedChild(Widget child, int index) {
+    final animation = CurvedAnimation(
+      parent: _animController,
+      curve: Interval(index * 0.1, 1.0, curve: Curves.easeOutCubic),
+    );
+    return FadeTransition(
+      opacity: animation,
+      child: SlideTransition(
+        position: Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(animation),
+        child: child,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +106,11 @@ class ProfileView extends StatelessWidget {
             ),
           ),
 
+          // ── Sparkles ───────────────────────────────────────────────
+          const Positioned.fill(
+            child: StarSparkleBackground(),
+          ),
+
           SafeArea(
             child: Column(
               children: [
@@ -73,9 +119,47 @@ class ProfileView extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF163520),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: const Color(0xFF4ADE80).withOpacity(0.2),
+                                  width: 1,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.arrow_back_ios_new,
+                                color: Color(0xFF4ADE80),
+                                size: 16,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          const Text(
+                            'Profil Saya',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                        ],
+                      ),
                       GestureDetector(
-                        onTap: () => Navigator.pop(context),
+                        onTap: () async {
+                          await Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileView()));
+                          setState(() {});
+                        },
                         child: Container(
                           width: 40,
                           height: 40,
@@ -88,20 +172,10 @@ class ProfileView extends StatelessWidget {
                             ),
                           ),
                           child: const Icon(
-                            Icons.arrow_back_ios_new,
+                            Icons.edit,
                             color: Color(0xFF4ADE80),
-                            size: 16,
+                            size: 18,
                           ),
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      const Text(
-                        'Profil Saya',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: -0.3,
                         ),
                       ),
                     ],
@@ -117,23 +191,22 @@ class ProfileView extends StatelessWidget {
                         const SizedBox(height: 16),
 
                         // ── Avatar card ─────────────────────────────────
-                        Container(
+                        _buildAnimatedChild(Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(
-                              vertical: 32, horizontal: 20),
+                              vertical: 24, horizontal: 20),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF163520),
+                            color: const Color(0xFF163520).withOpacity(0.6),
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(
-                              color: const Color(0xFF4ADE80).withOpacity(0.15),
+                              color: const Color(0xFF4ADE80).withOpacity(0.1),
                               width: 1,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color:
-                                    const Color(0xFF4ADE80).withOpacity(0.05),
-                                blurRadius: 20,
-                                offset: const Offset(0, 8),
+                                color: Colors.white.withOpacity(0.03),
+                                blurRadius: 30,
+                                spreadRadius: 5,
                               ),
                             ],
                           ),
@@ -143,8 +216,8 @@ class ProfileView extends StatelessWidget {
                               Stack(
                                 children: [
                                   Container(
-                                    width: 90,
-                                    height: 90,
+                                    width: 100,
+                                    height: 100,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       gradient: const LinearGradient(
@@ -158,9 +231,9 @@ class ProfileView extends StatelessWidget {
                                       boxShadow: [
                                         BoxShadow(
                                           color: const Color(0xFF4ADE80)
-                                              .withOpacity(0.35),
-                                          blurRadius: 20,
-                                          spreadRadius: 2,
+                                              .withOpacity(0.2),
+                                          blurRadius: 15,
+                                          spreadRadius: 1,
                                         ),
                                       ],
                                     ),
@@ -177,25 +250,25 @@ class ProfileView extends StatelessWidget {
                                           )
                                         : _buildInitialAvatar(displayName),
                                   ),
-                                  // online indicator
+                                  // Online indicator dot
                                   Positioned(
                                     bottom: 4,
                                     right: 4,
                                     child: Container(
-                                      width: 16,
-                                      height: 16,
+                                      width: 22,
+                                      height: 22,
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF4ADE80),
+                                        color: const Color(0xFF22C55E),
                                         shape: BoxShape.circle,
                                         border: Border.all(
-                                            color: const Color(0xFF163520),
-                                            width: 2.5),
+                                            color: const Color(0xFF0D2818),
+                                            width: 4),
                                       ),
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 20),
                               Text(
                                 displayName,
                                 style: const TextStyle(
@@ -205,41 +278,40 @@ class ProfileView extends StatelessWidget {
                                   letterSpacing: -0.3,
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 6),
                               Text(
                                 email,
                                 style: TextStyle(
-                                  color:
-                                      Colors.white.withOpacity(0.55),
-                                  fontSize: 13,
+                                  color: Colors.white.withOpacity(0.6),
+                                  fontSize: 14,
+                                  letterSpacing: 0.2,
                                 ),
                               ),
-                              const SizedBox(height: 16),
-                              // Badge
+                              const SizedBox(height: 20),
                               Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 14, vertical: 6),
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                                 decoration: BoxDecoration(
-                                  color:
-                                      const Color(0xFF4ADE80).withOpacity(0.12),
-                                  borderRadius: BorderRadius.circular(20),
+                                  color: const Color(0xFF163520),
+                                  borderRadius: BorderRadius.circular(24),
                                   border: Border.all(
-                                    color:
-                                        const Color(0xFF4ADE80).withOpacity(0.3),
+                                    color: const Color(0xFF4ADE80).withOpacity(0.2),
                                     width: 1,
                                   ),
                                 ),
-                                child: const Row(
+                                child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.verified,
-                                        color: Color(0xFF4ADE80), size: 14),
-                                    SizedBox(width: 6),
-                                    Text(
+                                    const Icon(
+                                      Icons.verified,
+                                      color: Color(0xFF4ADE80),
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    const Text(
                                       'Pengguna Aktif',
                                       style: TextStyle(
                                         color: Color(0xFF4ADE80),
-                                        fontSize: 12,
+                                        fontSize: 13,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -248,67 +320,156 @@ class ProfileView extends StatelessWidget {
                               ),
                             ],
                           ),
-                        ),
+                        ), 0),
 
                         const SizedBox(height: 16),
 
-                        // ── Info detail card ────────────────────────────
-                        _InfoCard(
-                          items: [
-                            _InfoItem(
-                              icon: Icons.person_outline,
-                              label: 'Nama Lengkap',
-                              value: displayName,
+                        const SizedBox(height: 24),
+
+                        // ── Information Card ──────────────────────────────
+                        _buildAnimatedChild(Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF163520),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: const Color(0xFF4ADE80).withOpacity(0.15),
+                              width: 1,
                             ),
-                            _InfoItem(
-                              icon: Icons.email_outlined,
-                              label: 'Email',
-                              value: email,
-                            ),
-                            _InfoItem(
-                              icon: Icons.login_outlined,
-                              label: 'Login dengan',
-                              value: _getProviderName(user),
-                            ),
-                          ],
-                        ),
+                          ),
+                          child: Column(
+                            children: [
+                              _buildInfoTile(
+                                icon: Icons.person_outline,
+                                label: 'Nama Lengkap',
+                                value: displayName,
+                              ),
+                              Divider(
+                                color: const Color(0xFF4ADE80).withOpacity(0.1),
+                                height: 1,
+                                indent: 20,
+                                endIndent: 20,
+                              ),
+                              _buildInfoTile(
+                                icon: Icons.mail_outline,
+                                label: 'Email',
+                                value: email,
+                              ),
+                              Divider(
+                                color: const Color(0xFF4ADE80).withOpacity(0.1),
+                                height: 1,
+                                indent: 20,
+                                endIndent: 20,
+                              ),
+                              _buildInfoTile(
+                                icon: Icons.login,
+                                label: 'Login dengan',
+                                value: _getProviderName(user),
+                              ),
+                            ],
+                          ),
+                        ), 1),
 
                         const SizedBox(height: 16),
 
-                        // ── Menu card ───────────────────────────────────
-                        _MenuCard(
-                          items: [
-                            _MenuItem(
-                              icon: Icons.lock_outline,
-                              label: 'Ubah Password',
-                              onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Fitur segera hadir'),
-                                    backgroundColor: Color(0xFF163520),
+                        // ── Push Notifications ────────────────────────────
+                        _buildAnimatedChild(Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(32),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 48,
+                                height: 48,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF6FC83F),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.notifications_active_outlined, color: Color(0xFF0F2615), size: 24),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Push Notifications',
+                                      style: TextStyle(
+                                        color: Color(0xFF0F2615),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    const Text(
+                                      'Real-time alerts & news',
+                                      style: TextStyle(
+                                        color: Color(0xFF756784),
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Switch(
+                                value: _isPushNotificationEnabled,
+                                onChanged: (val) {
+                                  setState(() {
+                                    _isPushNotificationEnabled = val;
+                                  });
+                                },
+                                activeColor: Colors.white,
+                                activeTrackColor: const Color(0xFF6FC83F),
+                                inactiveThumbColor: Colors.white,
+                                inactiveTrackColor: Colors.grey.shade300,
+                              ),
+                            ],
+                          ),
+                        ), 2),
+
+                        const SizedBox(height: 16),
+
+                        // ── Support ───────────────────────────────────────
+                        _buildAnimatedChild(GestureDetector(
+                          onTap: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => const SupportView()));
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE9F800),
+                              borderRadius: BorderRadius.circular(32),
+                              boxShadow: [
+                                BoxShadow(color: const Color(0xFFE9F800).withOpacity(0.15), blurRadius: 20, spreadRadius: 2),
+                              ],
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.help_outline, color: Colors.black, size: 24),
+                                SizedBox(width: 20),
+                                Expanded(
+                                  child: Text(
+                                    'Support',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                );
-                              },
+                                ),
+                                Icon(Icons.chevron_right, color: Colors.black, size: 24),
+                              ],
                             ),
-                            _MenuItem(
-                              icon: Icons.help_outline,
-                              label: 'Bantuan',
-                              onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Fitur segera hadir'),
-                                    backgroundColor: Color(0xFF163520),
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
+                          ),
+                        ), 3),
 
                         const SizedBox(height: 16),
 
-                        // ── Logout button ───────────────────────────────
-                        GestureDetector(
+                        // ── Ganti Akun ────────────────────────────────────
+                        _buildAnimatedChild(GestureDetector(
                           onTap: () async {
                             final confirm = await showDialog<bool>(
                               context: context,
@@ -365,36 +526,75 @@ class ProfileView extends StatelessWidget {
                           },
                           child: Container(
                             width: double.infinity,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            padding: const EdgeInsets.symmetric(vertical: 20),
                             decoration: BoxDecoration(
-                              color: Colors.red.withOpacity(0.08),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                  color: Colors.red.withOpacity(0.3),
-                                  width: 1),
+                              color: const Color(0xFF8B0000),
+                              borderRadius: BorderRadius.circular(32),
                             ),
                             child: const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.logout,
-                                    color: Colors.redAccent, size: 20),
-                                SizedBox(width: 10),
+                                Icon(Icons.logout, color: Colors.white, size: 24),
+                                SizedBox(width: 12),
                                 Text(
-                                  'Keluar dari Akun',
+                                  'Ganti Akun',
                                   style: TextStyle(
-                                    color: Colors.redAccent,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 15,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                        ),
+                        ), 4),
 
                         const SizedBox(height: 32),
                       ],
                     ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoTile({required IconData icon, required String label, required String value}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: const Color(0xFF4ADE80).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: const Color(0xFF4ADE80), size: 20),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.45),
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
@@ -429,164 +629,4 @@ class ProfileView extends StatelessWidget {
   }
 }
 
-// ── Info Card ──────────────────────────────────────────────────────────────────
-class _InfoCard extends StatelessWidget {
-  final List<_InfoItem> items;
-  const _InfoCard({required this.items});
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF163520),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-            color: const Color(0xFF4ADE80).withOpacity(0.12), width: 1),
-      ),
-      child: Column(
-        children: List.generate(items.length, (i) {
-          final item = items[i];
-          final isLast = i == items.length - 1;
-          return Column(
-            children: [
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF4ADE80).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(item.icon,
-                          color: const Color(0xFF4ADE80), size: 18),
-                    ),
-                    const SizedBox(width: 14),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.label,
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.45),
-                            fontSize: 11,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          item.value,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              if (!isLast)
-                Divider(
-                  height: 1,
-                  color: const Color(0xFF4ADE80).withOpacity(0.08),
-                  indent: 16,
-                  endIndent: 16,
-                ),
-            ],
-          );
-        }),
-      ),
-    );
-  }
-}
-
-class _InfoItem {
-  final IconData icon;
-  final String label;
-  final String value;
-  const _InfoItem(
-      {required this.icon, required this.label, required this.value});
-}
-
-// ── Menu Card ──────────────────────────────────────────────────────────────────
-class _MenuCard extends StatelessWidget {
-  final List<_MenuItem> items;
-  const _MenuCard({required this.items});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF163520),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-            color: const Color(0xFF4ADE80).withOpacity(0.12), width: 1),
-      ),
-      child: Column(
-        children: List.generate(items.length, (i) {
-          final item = items[i];
-          final isLast = i == items.length - 1;
-          return Column(
-            children: [
-              InkWell(
-                onTap: item.onTap,
-                borderRadius: BorderRadius.circular(20),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 14),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4ADE80).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(item.icon,
-                            color: const Color(0xFF4ADE80), size: 18),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Text(
-                          item.label,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      Icon(Icons.arrow_forward_ios,
-                          color: Colors.white.withOpacity(0.3), size: 14),
-                    ],
-                  ),
-                ),
-              ),
-              if (!isLast)
-                Divider(
-                  height: 1,
-                  color: const Color(0xFF4ADE80).withOpacity(0.08),
-                  indent: 16,
-                  endIndent: 16,
-                ),
-            ],
-          );
-        }),
-      ),
-    );
-  }
-}
-
-class _MenuItem {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  const _MenuItem(
-      {required this.icon, required this.label, required this.onTap});
-}
