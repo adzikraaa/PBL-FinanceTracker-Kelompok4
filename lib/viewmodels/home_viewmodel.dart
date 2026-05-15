@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class HomeViewModel extends ChangeNotifier {
   // ─── Data User ────────────────────────────────────────────────────────────
@@ -24,7 +25,8 @@ class HomeViewModel extends ChangeNotifier {
   // ─── Bottom Nav ───────────────────────────────────────────────────────────
   int selectedIndex = 2;
 
-  void onNavTap(int index) {
+  void onNavTapManual(int index) {
+    if (index < 0 || index >= 5) return;
     selectedIndex = index;
     notifyListeners();
   }

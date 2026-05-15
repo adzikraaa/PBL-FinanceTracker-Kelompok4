@@ -21,7 +21,6 @@ class InsightView extends StatefulWidget {
 }
 
 class _InsightViewState extends State<InsightView> {
-  int _selectedIndex = 3;
 
   @override
   Widget build(BuildContext context) {
@@ -49,12 +48,6 @@ class _InsightViewState extends State<InsightView> {
                 ],
               ),
             ),
-          ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: _buildBottomNav(),
           ),
         ],
       ),
@@ -533,118 +526,6 @@ class _InsightViewState extends State<InsightView> {
     );
   }
 
-  Widget _buildBottomNav() {
-    const navIcons = [
-      Icons.calculate_outlined, // 0 - HPP & BEP
-      Icons.account_balance_wallet_outlined, // 1 - Wallet
-      Icons.home, // 2 - Home
-      Icons.show_chart, // 3 - Chart (Insight)
-      Icons.history, // 4 - History
-    ];
-    const int navCount = 5;
-    const double navHeight = 68.0;
-    const double circleSize = 48.0;
-    const double circleTop = (navHeight - circleSize) / 2;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20, left: 20, right: 20),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final navWidth = constraints.maxWidth;
-          final itemWidth = navWidth / navCount;
-          final circleLeft = itemWidth * _selectedIndex + (itemWidth / 2) - circleSize / 2;
-
-          return SizedBox(
-            height: navHeight,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF132018).withOpacity(0.95),
-                      borderRadius: BorderRadius.circular(34),
-                      border: Border.all(color: const Color(0xFF2C4334), width: 1.5),
-                    ),
-                  ),
-                ),
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 320),
-                  curve: Curves.easeInOutCubic,
-                  left: circleLeft,
-                  top: circleTop,
-                  child: Container(
-                    width: circleSize,
-                    height: circleSize,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF6CF688),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF6CF688).withOpacity(0.45),
-                          blurRadius: 16,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      navIcons[_selectedIndex],
-                      color: const Color(0xFF0C1B13),
-                      size: 24,
-                    ),
-                  ),
-                ),
-                Row(
-                  children: List.generate(navCount, (i) {
-                    final isActive = i == _selectedIndex;
-                    return Expanded(
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.translucent,
-                        onTap: () async {
-                          if (i == _selectedIndex) return;
-                          
-                          setState(() {
-                            _selectedIndex = i;
-                          });
-                          
-                          await Future.delayed(const Duration(milliseconds: 340));
-                          if (!mounted) return;
-                          
-                          if (i == 2) {
-                            Navigator.popUntil(context, (route) => route.isFirst);
-                          } else if (i == 0) {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const HitungHppPage()),
-                            );
-                          }
-                        },
-                        child: SizedBox(
-                          height: navHeight,
-                          child: Center(
-                            child: AnimatedOpacity(
-                              duration: const Duration(milliseconds: 200),
-                              opacity: isActive ? 0.0 : 1.0,
-                              child: Icon(
-                                navIcons[i],
-                                color: const Color(0xFF6B7E72),
-                                size: 24,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
 }
 
 class _DonutChartPainter extends CustomPainter {

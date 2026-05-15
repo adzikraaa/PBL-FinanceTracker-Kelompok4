@@ -210,13 +210,17 @@ class _LoadingScreenState extends State<LoadingScreen>
       TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.3), weight: 34),
     ]).animate(_dotsController);
     // Auto-redirect setelah loading selesai
-    Future.delayed(const Duration(milliseconds: 3000), () {
+    Future.delayed(const Duration(milliseconds: 3000), () async {
       if (!mounted) return;
-      final user = FirebaseAuth.instance.currentUser;
+      
+      // Tunggu hingga Firebase memuat session user (menghindari null karena delay internet)
+      final user = FirebaseAuth.instance.currentUser ?? await FirebaseAuth.instance.authStateChanges().first;
+      
+      if (!mounted) return;
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
           pageBuilder: (_, __, ___) =>
-              user != null ? MainNavigation() : const WelcomeView(),
+              user != null ? const MainNavigation() : const WelcomeView(),
           transitionsBuilder: (_, animation, __, child) {
             return FadeTransition(opacity: animation, child: child);
           },

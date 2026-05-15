@@ -33,6 +33,7 @@ class FirestoreService {
     return _db
         .collection('savings')
         .where('userId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => SavingModel.fromJson(doc.data(), doc.id))
@@ -43,6 +44,11 @@ class FirestoreService {
     await _db.collection('savings').doc(id).update({
       'currentAmount': newAmount,
     });
+  }
+
+  Future<void> updateSavingFull(SavingModel saving) async {
+    if (saving.id == null) return;
+    await _db.collection('savings').doc(saving.id).update(saving.toJson());
   }
 
   Future<void> deleteSaving(String id) async {
@@ -68,5 +74,9 @@ class FirestoreService {
         .map((snapshot) => snapshot.docs
             .map((doc) => HppModel.fromJson(doc.data(), doc.id))
             .toList());
+  }
+
+  Future<void> deleteHistory(String id) async {
+    await _db.collection('history').doc(id).delete();
   }
 } // <--- KURUNG TUTUP CLASS HARUS DI PALING BAWAH

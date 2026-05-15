@@ -7,6 +7,7 @@ class AuthViewModel extends ChangeNotifier {
   String? _errorMessage;
   bool _isLoggedIn = false;
   User? _currentUser;
+  bool _isPremium = false; // Default: User Biasa
 
   // Firebase & Google Sign-In instances
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -16,6 +17,7 @@ class AuthViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   bool get isLoggedIn => _isLoggedIn;
   User? get currentUser => _currentUser;
+  bool get isPremium => _isPremium;
 
   // Constructor: Check current auth state
   AuthViewModel() {
@@ -216,6 +218,39 @@ class AuthViewModel extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _setError('Logout gagal: ${e.toString()}');
+    }
+  }
+
+  // ─── Reset Password ───────────────────────────────────────────────────────
+  Future<bool> resetPassword(String email) async {
+    _setLoading(true);
+    _setError(null);
+
+    try {
+      if (email.isEmpty) {
+        _setError('Email tidak boleh kosong.');
+        return false;
+      }
+
+      await _firebaseAuth.sendPasswordResetEmail(email: email);
+      return true;
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'user-not-found':
+          _setError('Email tidak terdaftar.');
+          break;
+        case 'invalid-email':
+          _setError('Format email tidak valid.');
+          break;
+        default:
+          _setError('Gagal mengirim email reset: ${e.message}');
+      }
+      return false;
+    } catch (e) {
+      _setError('Error: ${e.toString()}');
+      return false;
+    } finally {
+      _setLoading(false);
     }
   }
 

@@ -3,22 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../../shared/colors.dart';
-import 'register_view.dart';
-import 'forgot_password_view.dart';
-import '../home/main_navigation.dart';
 
-class LoginView extends StatefulWidget {
-  const LoginView({super.key});
+class ForgotPasswordView extends StatefulWidget {
+  const ForgotPasswordView({super.key});
 
   @override
-  State<LoginView> createState() => _LoginViewState();
+  State<ForgotPasswordView> createState() => _ForgotPasswordViewState();
 }
 
-class _LoginViewState extends State<LoginView>
+class _ForgotPasswordViewState extends State<ForgotPasswordView>
     with TickerProviderStateMixin {
   final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
   late AnimationController _animController;
   late AnimationController _sparkleCtrl;
   late AnimationController _floatCtrl;
@@ -52,7 +47,6 @@ class _LoginViewState extends State<LoginView>
   @override
   void dispose() {
     _emailController.dispose();
-    _passwordController.dispose();
     _animController.dispose();
     _sparkleCtrl.dispose();
     _floatCtrl.dispose();
@@ -109,7 +103,7 @@ class _LoginViewState extends State<LoginView>
                             // Title
                             const Center(
                               child: Text(
-                                'Sign In',
+                                'Forgot Password',
                                 style: TextStyle(
                                   fontFamily: 'Lexend',
                                   color: Colors.white,
@@ -121,7 +115,7 @@ class _LoginViewState extends State<LoginView>
                             const SizedBox(height: 8),
                             const Center(
                               child: Text(
-                                'Welcome back!',
+                                'Enter your email to reset password',
                                 style: TextStyle(
                                   fontFamily: 'Lexend',
                                   color: Color(0xFF6DFC9A),
@@ -139,38 +133,9 @@ class _LoginViewState extends State<LoginView>
                               hint: 'Enter Email',
                               keyboardType: TextInputType.emailAddress,
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 32),
 
-                            // Password
-                            _buildLabel('Password'),
-                            const SizedBox(height: 8),
-                            _buildPasswordField(),
-                            const SizedBox(height: 8),
-
-                            // Forgot password
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: GestureDetector(
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const ForgotPasswordView(),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'Forgot Password?',
-                                  style: TextStyle(
-                                    fontFamily: 'Lexend',
-                                    color: AppColors.accentYellow,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-
-                            // Sign In button
+                            // Reset Button
                             Consumer<AuthViewModel>(
                               builder: (context, vm, _) {
                                 return GestureDetector(
@@ -178,25 +143,26 @@ class _LoginViewState extends State<LoginView>
                                       ? null
                                       : () async {
                                           final success =
-                                              await vm.loginWithEmail(
-                                            email: _emailController.text.trim(),
-                                            password: _passwordController.text,
+                                              await vm.resetPassword(
+                                            _emailController.text.trim(),
                                           );
                                           if (!mounted) return;
                                           if (success) {
-                                            Navigator.pushAndRemoveUntil(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (_) =>
-                                                    const MainNavigation(),
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                    'Password reset link sent to your email.'),
+                                                backgroundColor: Colors.green,
                                               ),
-                                              (route) => false,
                                             );
+                                            Navigator.pop(context);
                                           } else if (vm.errorMessage != null) {
                                             ScaffoldMessenger.of(context)
                                                 .showSnackBar(
                                               SnackBar(
                                                 content: Text(vm.errorMessage!),
+                                                backgroundColor: Colors.red,
                                               ),
                                             );
                                           }
@@ -228,7 +194,7 @@ class _LoginViewState extends State<LoginView>
                                               ),
                                             )
                                           : const Text(
-                                              'Sign In',
+                                              'Send Reset Link',
                                               style: TextStyle(
                                                 fontFamily: 'Lexend',
                                                 color: AppColors.textDark,
@@ -241,113 +207,15 @@ class _LoginViewState extends State<LoginView>
                                 );
                               },
                             ),
-                            const SizedBox(height: 20),
-
-                            // Divider
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Divider(
-                                    color:
-                                        AppColors.white.withValues(alpha: 0.2),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12),
-                                  child: Text(
-                                    'or sign in with',
-                                    style: TextStyle(
-                                      fontFamily: 'Lexend',
-                                      color: AppColors.white
-                                          .withValues(alpha: 0.5),
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Divider(
-                                    color:
-                                        AppColors.white.withValues(alpha: 0.2),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-
-                            // Social buttons
-                            Consumer<AuthViewModel>(
-                              builder: (context, vm, _) {
-                                return GestureDetector(
-                                  onTap: () async {
-                                    final success = await vm.loginWithGoogle();
-                                    if (!mounted) return;
-                                    if (success) {
-                                      Navigator.pushAndRemoveUntil(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) =>
-                                              const MainNavigation(),
-                                        ),
-                                        (route) => false,
-                                      );
-                                    } else if (vm.errorMessage != null) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content: Text(vm.errorMessage!),
-                                        ),
-                                      );
-                                    }
-                                  },
-                                  child: Container(
-                                    width: double.infinity,
-                                    height: 50,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(25),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.15),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 3),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        const GoogleLogo(size: 22),
-                                        const SizedBox(width: 12),
-                                        const Text(
-                                          'Continue with Google',
-                                          style: TextStyle(
-                                            fontFamily: 'Lexend',
-                                            color: Color(0xFF3C4043),
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
                             const SizedBox(height: 24),
 
-                            // Don't have account
+                            // Already have account
                             Center(
                               child: GestureDetector(
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const RegisterView(),
-                                  ),
-                                ),
+                                onTap: () => Navigator.pop(context),
                                 child: RichText(
                                   text: const TextSpan(
-                                    text: "Don't have an account? ",
+                                    text: "Already have another account? ",
                                     style: TextStyle(
                                       fontFamily: 'Lexend',
                                       color: Color(0xFF6DFC9A),
@@ -355,7 +223,7 @@ class _LoginViewState extends State<LoginView>
                                     ),
                                     children: [
                                       TextSpan(
-                                        text: 'Sign up',
+                                        text: 'Sign in',
                                         style: TextStyle(
                                           color: AppColors.accentYellow,
                                           fontWeight: FontWeight.w600,
@@ -467,89 +335,6 @@ class _LoginViewState extends State<LoginView>
         ),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      ),
-    );
-  }
-
-  Widget _buildPasswordField() {
-    return TextField(
-      controller: _passwordController,
-      obscureText: _obscurePassword,
-      style: const TextStyle(
-        fontFamily: 'Lexend',
-        color: Colors.white,
-        fontSize: 14,
-      ),
-      decoration: InputDecoration(
-        hintText: 'Enter Password',
-        hintStyle: TextStyle(
-          color: AppColors.white.withValues(alpha: 0.4),
-          fontSize: 14,
-        ),
-        filled: true,
-        fillColor: AppColors.white.withValues(alpha: 0.08),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              BorderSide(color: AppColors.white.withValues(alpha: 0.15)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              BorderSide(color: AppColors.white.withValues(alpha: 0.15)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              const BorderSide(color: AppColors.accentYellow, width: 1.5),
-        ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        suffixIcon: IconButton(
-          icon: Icon(
-            _obscurePassword ? Icons.visibility_off : Icons.visibility,
-            color: AppColors.white.withValues(alpha: 0.4),
-            size: 18,
-          ),
-          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSocialButton({
-    IconData? icon,
-    Color? iconColor,
-    String? label,
-    Color? labelColor,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: AppColors.white.withValues(alpha: 0.08),
-          border: Border.all(
-            color: AppColors.white.withValues(alpha: 0.2),
-            width: 1.5,
-          ),
-        ),
-        child: Center(
-          child: icon != null
-              ? Icon(icon, color: iconColor, size: 20)
-              : Text(
-                  label!,
-                  style: TextStyle(
-                    fontFamily: 'Lexend',
-                    color: labelColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
-        ),
       ),
     );
   }
@@ -713,9 +498,6 @@ class _LoginViewState extends State<LoginView>
   }
 }
 
-// ═══════════════════════════════════════════════
-//  Thin Ring Painter
-// ═══════════════════════════════════════════════
 class _ThinRingPainter extends CustomPainter {
   final Color color;
   _ThinRingPainter({required this.color});
@@ -740,9 +522,6 @@ class _ThinRingPainter extends CustomPainter {
   bool shouldRepaint(_ThinRingPainter o) => o.color != color;
 }
 
-// ═══════════════════════════════════════════════
-//  4-point sparkle
-// ═══════════════════════════════════════════════
 class _Sparkle extends StatelessWidget {
   final double size;
   final Color color;
@@ -789,71 +568,3 @@ class _SparklePainter extends CustomPainter {
   @override
   bool shouldRepaint(_SparklePainter o) => o.color != color;
 }
-
-// ═══════════════════════════════════════════════
-//  Google Logo Native CustomPainter (No CORS issues)
-// ═══════════════════════════════════════════════
-class GoogleLogo extends StatelessWidget {
-  final double size;
-  const GoogleLogo({super.key, this.size = 24});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: CustomPaint(
-        painter: _GoogleLogoPainter(),
-      ),
-    );
-  }
-}
-
-class _GoogleLogoPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final strokeWidth = size.width * 0.22;
-    final radius = size.width / 2 - strokeWidth / 2;
-
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.butt;
-
-    final rect = Rect.fromCircle(center: center, radius: radius);
-
-    // Blue arc (bottom right)
-    paint.color = const Color(0xFF4285F4);
-    canvas.drawArc(rect, 0.0, 0.8, false, paint);
-
-    // Green arc (bottom to bottom left)
-    paint.color = const Color(0xFF34A853);
-    canvas.drawArc(rect, 0.8, 1.6, false, paint);
-
-    // Yellow arc (left)
-    paint.color = const Color(0xFFFBBC05);
-    canvas.drawArc(rect, 2.4, 1.5, false, paint);
-
-    // Red arc (top left to top right)
-    paint.color = const Color(0xFFEA4335);
-    canvas.drawArc(rect, -2.4, 1.8, false, paint);
-
-    // Blue horizontal bar
-    paint.color = const Color(0xFF4285F4);
-    paint.style = PaintingStyle.fill;
-    canvas.drawRect(
-      Rect.fromLTRB(
-        center.dx - strokeWidth * 0.05, 
-        center.dy - strokeWidth / 2, 
-        size.width, 
-        center.dy + strokeWidth / 2
-      ),
-      paint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
