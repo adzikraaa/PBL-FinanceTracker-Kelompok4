@@ -11,6 +11,7 @@ import 'viewmodels/loadingscreen.dart';
 import 'viewmodels/riwayat_viewmodel.dart';
 import 'viewmodels/home_viewmodel.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'viewmodels/premium_viewmodel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +39,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => NoteViewModel()),
         ChangeNotifierProvider(create: (_) => RiwayatViewModel()),
         ChangeNotifierProvider(create: (_) => SavingViewModel()),
+        ChangeNotifierProvider(create: (_) => PremiumViewModel()),
       ],
       child: MaterialApp(
         scaffoldMessengerKey: MyApp.scaffoldMessengerKey,
