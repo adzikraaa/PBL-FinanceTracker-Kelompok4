@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/finance_viewmodel.dart';
 import '../widgets/custom_input_widget.dart';
+import '../insight/insight_view.dart';
 import 'hitung_bep_page.dart';
 
 // ─── Warna navbar sama persis dengan home_view.dart ───────────────────────────
@@ -319,12 +320,18 @@ class _HitungHppPageState extends State<HitungHppPage> {
                       child: GestureDetector(
                         behavior: HitTestBehavior.translucent,
                         onTap: () async {
+                          if (i == _navIndex) return;
+                          setState(() => _navIndex = i);
+                          await Future.delayed(const Duration(milliseconds: 340));
+                          if (!mounted) return;
+                          
                           if (i == 2) {
-                            setState(() => _navIndex = 2);
-                            await Future.delayed(
-                                const Duration(milliseconds: 340));
-                            if (!mounted) return;
-                            Navigator.pop(context);
+                            Navigator.popUntil(context, (r) => r.isFirst);
+                          } else if (i == 3) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (_) => const InsightView()),
+                            );
                           }
                         },
                         child: SizedBox(

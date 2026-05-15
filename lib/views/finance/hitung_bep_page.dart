@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/finance_viewmodel.dart';
 import '../widgets/custom_input_widget.dart';
+import '../insight/insight_view.dart';
 import 'hasil_analisis_page.dart';
 
 class HitungBepPage extends StatefulWidget {
@@ -321,12 +322,18 @@ class _HitungBepPageState extends State<HitungBepPage> {
                     child: GestureDetector(
                       behavior: HitTestBehavior.translucent,
                       onTap: () async {
+                        if (i == _navIndex) return;
+                        setState(() => _navIndex = i);
+                        await Future.delayed(const Duration(milliseconds: 340));
+                        if (!mounted) return;
+                        
                         if (i == 2) {
-                          // Geser lingkaran ke home dulu, baru navigate
-                          setState(() => _navIndex = 2);
-                          await Future.delayed(Duration.zero);
-                          if (!mounted) return;
                           Navigator.popUntil(context, (r) => r.isFirst);
+                        } else if (i == 3) {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (_) => const InsightView()),
+                          );
                         }
                       },
                       child: SizedBox(
