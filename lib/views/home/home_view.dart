@@ -3,11 +3,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
+import '../../viewmodels/finance_viewmodel.dart';
 import '../../viewmodels/home_viewmodel.dart';
-import '../../viewmodels/note_viewmodel.dart';
-import '../../viewmodels/riwayat_viewmodel.dart';
-import '../../viewmodels/saving_viewmodel.dart';
+import '../../utils/currency_formatter.dart';
 import '../finance/hitung_hpp_page.dart';
 import '../insight/insight_view.dart';
 import '../riwayat/riwayat_view.dart';
@@ -104,10 +102,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    // Use Consumer instead of AnimatedBuilder to avoid first-frame
-    // rendering issues with ChangeNotifier-as-animation pattern.
-    return Consumer<HomeViewModel>(
-      builder: (context, vm, _) {
+    return AnimatedBuilder(
+      animation: _vm,
+      builder: (context, _) {
+        final finance = context.watch<FinanceViewModel>();
         return Scaffold(
           backgroundColor: kBg,
           body: Stack(
@@ -134,7 +132,9 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                             const SizedBox(height: 14),
                             _buildHppBepCard(),
                             const SizedBox(height: 14),
-                            _buildBottomRow(),
+                            _buildBottomRow(finance),
+                            const SizedBox(height: 14),
+                            _buildCatatPenjualanCard(finance),
                           ],
                         ),
                       ),
@@ -783,54 +783,77 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildBottomRow() {
+  Widget _buildBottomRow(FinanceViewModel finance) {
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // ── Insight ──
           Expanded(
-            child: GestureDetector(
-              onTap: () => _vm.onNavTapManual(3),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: kCard,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: kWhite20, width: 0.8),
-                ),
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'INSIGHT',
-                      style: TextStyle(
-                        color: kWhite40,
-                        fontSize: 10,
-                        letterSpacing: 1.2,
-                        fontWeight: FontWeight.w600,
-                      ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: kCard,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: kWhite20, width: 0.8),
+              ),
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'PROFIT BULAN INI',
+                    style: TextStyle(
+                      color: kWhite40,
+                      fontSize: 10,
+                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.w600,
                     ),
-                    const SizedBox(height: 14),
-                    Center(
-                      child: SizedBox(
-                        width: 68,
-                        height: 68,
-                        child: CustomPaint(
-                          painter: _DonutPainter(
-                            slices: const [0.4, 0.6],
-                            colors: [kGreen, kCardLight],
+                  ),
+                  const SizedBox(height: 14),
+                  Center(
+                    child: SizedBox(
+                      width: 68,
+                      height: 68,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CustomPaint(
+                            size: const Size(68, 68),
+                            painter: _DonutPainter(
+                              slices: [
+                                finance.progressProfit,
+                                1.0 - finance.progressProfit
+                              ],
+                              colors: const [kGreen, kCardLight],
+                            ),
                           ),
-                        ),
+                          Text(
+                            '${(finance.progressProfit * 100).toInt()}%',
+                            style: const TextStyle(
+                              color: kWhite,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    _insightLegend(kGreen, 'Cat A: 40%'),
-                    const SizedBox(height: 4),
-                    _insightLegend(kWhite40, 'Cat B: 60%'),
-                    const Spacer(),
-                    Align(
-                      alignment: Alignment.centerRight,
+                  ),
+                  const SizedBox(height: 12),
+                  _insightLegend(kGreen, 'Untung: ${CurrencyFormatter.formatRupiah(finance.totalUntungBersih)}'),
+                  const SizedBox(height: 4),
+                  _insightLegend(kWhite40, 'Target: ${CurrencyFormatter.formatRupiah(finance.targetProfitBulanan)}'),
+                  const Spacer(),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const InsightView()),
+                        );
+                      },
                       child: Container(
                         width: 30,
                         height: 30,
@@ -988,6 +1011,317 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     );
   }
 
+  Widget _buildCatatPenjualanCard(FinanceViewModel finance) {
+    return Container(
+      decoration: BoxDecoration(
+        color: kCard,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: kWhite20, width: 0.8),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'CATAT PENJUALAN HARI INI',
+                style: TextStyle(
+                  color: kWhite40,
+                  fontSize: 10,
+                  letterSpacing: 1.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  _showSetTargetDialog(context, finance);
+                },
+                child: const Icon(Icons.settings, color: kWhite40, size: 16),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (finance.history.isEmpty)
+            const Text(
+              'Belum ada data produk.',
+              style: TextStyle(color: kWhite70, fontSize: 14),
+            )
+          else
+            ...List.generate(finance.history.length, (index) {
+              final item = finance.history[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        item.namaProduk,
+                        style: const TextStyle(
+                          color: kWhite,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: kBgMid,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              finance.updatePenjualan(index, -1);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                color: kWhite20,
+                                borderRadius: BorderRadius.horizontal(left: Radius.circular(8)),
+                              ),
+                              child: const Icon(Icons.remove, color: kWhite, size: 16),
+                            ),
+                          ),
+                          Container(
+                            width: 32,
+                            alignment: Alignment.center,
+                            child: Text(
+                              '${item.jumlahUnitTerjual ?? 0}',
+                              style: const TextStyle(
+                                color: kWhite,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              finance.updatePenjualan(index, 1);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                color: kGreenBtn,
+                                borderRadius: BorderRadius.horizontal(right: Radius.circular(8)),
+                              ),
+                              child: const Icon(Icons.add, color: kWhite, size: 16),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Penjualan berhasil disimpan!')),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kGreenBtn,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: const Text(
+                'SIMPAN',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSetTargetDialog(BuildContext context, FinanceViewModel finance) {
+    final controller = TextEditingController(text: finance.targetProfitBulanan.toInt().toString());
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: kCard,
+          title: const Text('Set Target Profit', style: TextStyle(color: kWhite)),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            style: const TextStyle(color: kWhite),
+            decoration: const InputDecoration(
+              labelText: 'Target Profit (Rp)',
+              labelStyle: TextStyle(color: kWhite70),
+              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: kWhite40)),
+              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: kGreen)),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Batal', style: TextStyle(color: kWhite70)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final target = double.tryParse(controller.text);
+                if (target != null) {
+                  finance.setTargetProfit(target);
+                }
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: kGreenBtn),
+              child: const Text('Simpan', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ─── Bottom Navbar (FIXED) ────────────────────────────────────────────────
+  Widget _buildBottomNav() {
+    const navIcons = [
+      Icons.calculate_outlined, // 0 - HPP & BEP
+      Icons.account_balance_wallet_outlined, // 1 - Wallet
+      Icons.home, // 2 - Home (default aktif)
+      Icons.show_chart, // 3 - Chart
+      Icons.history, // 4 - History
+    ];
+    const int navCount = 5;
+    const double navHeight = 68.0;
+    const double circleSize = 48.0;
+    // circle selalu tepat di tengah vertikal navbar
+    const double circleTop = (navHeight - circleSize) / 2;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20, left: 20, right: 20),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final navWidth = constraints.maxWidth;
+          final itemWidth = navWidth / navCount;
+          // posisi horizontal circle mengikuti tab aktif, tepat di tengah item
+          final circleLeft =
+              itemWidth * _vm.selectedIndex + (itemWidth / 2) - circleSize / 2;
+
+          return SizedBox(
+            height: navHeight,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // ── Background pill ──────────────────────────────────────
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: kNavBg.withOpacity(0.95),
+                      borderRadius: BorderRadius.circular(34),
+                      border: Border.all(color: kNavBorder, width: 1.5),
+                    ),
+                  ),
+                ),
+
+                // ── Animated active circle (selalu rata tengah) ──────────
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 320),
+                  curve: Curves.easeInOutCubic,
+                  left: circleLeft,
+                  top: circleTop, // ← kunci: tidak hardcode, selalu center
+                  child: Container(
+                    width: circleSize,
+                    height: circleSize,
+                    decoration: BoxDecoration(
+                      color: kNavActive,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: kNavActive.withOpacity(0.45),
+                          blurRadius: 16,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      navIcons[_vm.selectedIndex],
+                      color: const Color(0xFF0C1B13),
+                      size: 24,
+                    ),
+                  ),
+                ),
+
+                // ── Tap areas + inactive icons ───────────────────────────
+                Row(
+                  children: List.generate(navCount, (i) {
+                    final isActive = i == _vm.selectedIndex;
+                    return Expanded(
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onTap: () async {
+                          if (i == 0) {
+                            // Tap HPP di navbar
+                            _vm.onNavTap(0);
+                            await Future.delayed(
+                                const Duration(milliseconds: 340));
+                            if (!mounted) return;
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const HitungHppPage()),
+                            );
+                            // Kembali ke Home → aktifkan index 2
+                            if (mounted) _vm.onNavTap(2);
+                          } else if (i == 3) {
+                            // Tap Insight di navbar
+                            _vm.onNavTap(3);
+                            await Future.delayed(
+                                const Duration(milliseconds: 340));
+                            if (!mounted) return;
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const InsightView()),
+                            );
+                            // Kembali ke Home → aktifkan index 2
+                            if (mounted) _vm.onNavTap(2);
+                          } else {
+                            _vm.onNavTap(i);
+                          }
+                        },
+                        child: SizedBox(
+                          height: navHeight,
+                          child: Center(
+                            child: AnimatedOpacity(
+                              duration: const Duration(milliseconds: 200),
+                              opacity: isActive ? 0.0 : 1.0,
+                              child: Icon(
+                                navIcons[i],
+                                color: kNavIcon,
+                                size: 24,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
 }
 
 // ── Sparkle Painter ───────────────────────────────────────────────────────────
