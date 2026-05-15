@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
@@ -8,10 +7,7 @@ import '../../viewmodels/home_viewmodel.dart';
 import '../../utils/currency_formatter.dart';
 import '../finance/hitung_hpp_page.dart';
 import '../insight/insight_view.dart';
-import '../riwayat/riwayat_view.dart';
-import '../notes/notes_list_view.dart';
 import 'profile_view.dart';
-import '../savings/saving_list_page.dart';
 
 // ─── Color Palette (Dark Green Theme) ────────────────────────────────────────
 const Color kBg = Color(0xFF0D2818);
@@ -53,33 +49,26 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
-  late HomeViewModel _vm;
+  final HomeViewModel _vm = HomeViewModel();
 
   late AnimationController _sparkleController;
-  late AnimationController _progressAnimController;
-  late Animation<double> _progressAnim;
   late List<_Sparkle> _sparkles;
   final Random _rng = Random();
+
+  late AnimationController _progressController;
+  late Animation<double> _progressAnim;
 
   @override
   void initState() {
     super.initState();
 
-    _vm = context.read<HomeViewModel>();
+    // Pastikan saat buka Home, navbar aktif di index 2 (Home)
+    _vm.onNavTap(2);
 
     _sparkleController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
     )..repeat();
-
-    _progressAnimController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
-    _progressAnim = Tween<double>(begin: 0, end: _vm.tabunganProgress).animate(
-      CurvedAnimation(parent: _progressAnimController, curve: Curves.easeOut),
-    );
-    _progressAnimController.forward();
 
     _sparkles = List.generate(
         12,
@@ -91,12 +80,23 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               phase: _rng.nextDouble() * 2 * pi,
               speed: _rng.nextDouble() * 1.5 + 0.5,
             ));
+
+    _progressController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+    _progressAnim = Tween<double>(begin: 0, end: _vm.tabunganProgress).animate(
+      CurvedAnimation(parent: _progressController, curve: Curves.easeOutCubic),
+    );
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) _progressController.forward();
+    });
   }
 
   @override
   void dispose() {
     _sparkleController.dispose();
-    _progressAnimController.dispose();
+    _progressController.dispose();
     super.dispose();
   }
 
@@ -142,13 +142,18 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                   ),
                 ),
               ),
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: _buildBottomNav(),
+              ),
             ],
           ),
         );
       },
     );
   }
-
 
   Widget _buildGradientBg() {
     return Container(
@@ -306,437 +311,227 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   }
 
   Widget _buildRiwayatCard() {
-    final riwayatVm = context.watch<RiwayatViewModel>();
-    final latest = riwayatVm.latest;
-    final currFmt = NumberFormat.currency(
-        locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
-
-    void goToRiwayat() {
-      _vm.onNavTapManual(4);
-    }
-
-    return GestureDetector(
-      onTap: goToRiwayat,
-      child: Container(
-        decoration: BoxDecoration(
-          color: kRiwayat,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFB8E88A), width: 0.8),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Text(
-                  'RIWAYAT',
-                  style: TextStyle(
-                    color: Color(0xFF1E3D0F),
-                    fontSize: 10,
-                    letterSpacing: 1.5,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const Spacer(),
-                if (riwayatVm.history.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1E3D0F).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      '${riwayatVm.history.length} data',
-                      style: const TextStyle(
-                          color: Color(0xFF1E3D0F),
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (riwayatVm.isLoading)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: CircularProgressIndicator(
-                      color: Color(0xFF1E3D0F), strokeWidth: 2),
-                ),
-              )
-            else if (latest == null)
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.receipt_long_outlined,
-                        color: Color(0xFF5A9A30), size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      'Belum ada riwayat perhitungan',
-                      style: TextStyle(
-                          color: Color(0xFF1A3A10),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500),
-                    ),
-                  ],
-                ),
-              )
-            else
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1E3D0F).withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.restaurant_menu,
-                        color: Color(0xFF1E3D0F),
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            latest.namaProduk,
-                            style: const TextStyle(
-                              color: Color(0xFF1A3A10),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'HPP/unit: ${currFmt.format(latest.jumlahUnit > 0 ? latest.totalHpp / latest.jumlahUnit : 0)}',
-                            style: const TextStyle(
-                                color: Color(0xFF5A9A30), fontSize: 11),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      currFmt.format(latest.hargaJualUnit),
-                      style: const TextStyle(
-                        color: Color(0xFF1A3A10),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            const SizedBox(height: 14),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: goToRiwayat,
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFF5A9A30), width: 1),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  foregroundColor: const Color(0xFF1E3D0F),
-                ),
-                child: const Text(
-                  'LIHAT SEMUA RIWAYAT',
-                  style: TextStyle(
-                    color: Color(0xFF1E3D0F),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+    return Container(
+      decoration: BoxDecoration(
+        color: kRiwayat,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFB8E88A), width: 0.8),
       ),
-    );
-  }
-
-  Widget _buildTabunganCard() {
-    return Consumer<SavingViewModel>(
-      builder: (context, savingVm, child) {
-        final bool hasData = savingVm.savings.isNotEmpty;
-
-        if (!hasData) {
-          return GestureDetector(
-            onTap: () {
-              _vm.onNavTapManual(1);
-            },
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: kCard,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: kWhite20, width: 0.8),
-              ),
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: kWhite.withOpacity(0.05),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.account_balance_wallet_outlined,
-                      color: kGreen,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'BELUM ADA TABUNGAN',
-                          style: TextStyle(
-                            color: kWhite40,
-                            fontSize: 10,
-                            letterSpacing: 1.2,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'Yuk, mulai menabung!',
-                          style: TextStyle(
-                            color: kWhite,
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF22C55E), Color(0xFF4ADE80)],
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      'TAMBAH',
-                      style: TextStyle(
-                        color: Color(0xFF0D2818),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'RIWAYAT',
+            style: TextStyle(
+              color: Color(0xFF1E3D0F),
+              fontSize: 10,
+              letterSpacing: 1.5,
+              fontWeight: FontWeight.w600,
             ),
-          );
-        }
-
-        // Ambil data terbaru (pertama di list)
-        final latestSaving = savingVm.savings.first;
-
-        final String nama = latestSaving.title;
-        final double current = latestSaving.currentAmount;
-        final double target = latestSaving.targetAmount;
-        final double progress = (current / target).clamp(0.0, 1.0);
-
-        return GestureDetector(
-          onTap: () {
-            _vm.onNavTapManual(1);
-          },
-          child: Container(
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  kCard,
-                  kCard.withOpacity(0.85),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: kWhite.withOpacity(0.08), width: 0.8),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 12,
-                  offset: const Offset(0, 5),
-                ),
-              ],
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
             ),
-            padding: const EdgeInsets.all(18),
-            child: Stack(
+            child: Row(
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'TABUNGAN TERBARU',
-                      style: TextStyle(
-                        color: kWhite40,
-                        fontSize: 10,
-                        letterSpacing: 1.5,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      nama,
-                      style: const TextStyle(
-                        color: kWhite,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        // Progress Circle
-                        SizedBox(
-                          width: 68,
-                          height: 68,
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              SizedBox(
-                                width: 64, // Sedikit lebih kecil agar tidak kepotong
-                                height: 64,
-                                child: CircularProgressIndicator(
-                                  value: progress,
-                                  strokeWidth: 5,
-                                  backgroundColor: kWhite20,
-                                  valueColor:
-                                      const AlwaysStoppedAnimation<Color>(kGreen),
-                                  strokeCap: StrokeCap.round,
-                                ),
-                              ),
-                              Text(
-                                '${(progress * 100).toInt()}%',
-                                style: const TextStyle(
-                                  color: kWhite,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        // Detail Teks
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'TERKUMPUL',
-                                style: TextStyle(
-                                  color: kWhite40,
-                                  fontSize: 9,
-                                  letterSpacing: 0.8,
-                                ),
-                              ),
-                              const SizedBox(height: 1),
-                              Text(
-                                'Rp ${current.toInt().toString().replaceAllMapped(RegExp(r"(\d)(?=(\d{3})+$)"), (m) => "${m[1]}.")}',
-                                style: const TextStyle(
-                                  color: kWhite,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              const Text(
-                                'TARGET',
-                                style: TextStyle(
-                                  color: kWhite40,
-                                  fontSize: 9,
-                                  letterSpacing: 0.8,
-                                ),
-                              ),
-                              const SizedBox(height: 1),
-                              Text(
-                                'Rp ${target.toInt().toString().replaceAllMapped(RegExp(r"(\d)(?=(\d{3})+$)"), (m) => "${m[1]}.")}',
-                                style: TextStyle(
-                                  color: kWhite.withOpacity(0.55),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8), // Gap lebih kecil antara teks dan foto
-                        // Gambar Goal
-                        Container(
-                          width: 68,
-                          height: 68,
-                          decoration: BoxDecoration(
-                            color: kWhite.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: kWhite.withOpacity(0.1), width: 1),
-                            image: latestSaving.imageUrl != null
-                                ? DecorationImage(
-                                    image: (savingVm.getCachedImage(latestSaving.imageUrl!) as ImageProvider?) ?? const AssetImage('assets/images/logo.png'),
-                                    fit: BoxFit.cover,
-                                  )
-                                : null,
-                          ),
-                          child: latestSaving.imageUrl == null
-                              ? Icon(Icons.savings_outlined, color: kWhite.withOpacity(0.2), size: 28)
-                              : null,
-                        ),
-                      ],
-                    ),
-                  ],
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1E3D0F).withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.restaurant_menu,
+                    color: Color(0xFF1E3D0F),
+                    size: 22,
+                  ),
                 ),
-                // Panah di pojok kanan bawah
-                Positioned(
-                  bottom: -4,
-                  right: -4,
-                  child: Icon(
-                    Icons.arrow_forward_ios_rounded, 
-                    color: kWhite.withOpacity(0.15), 
-                    size: 14
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _vm.riwayatNama,
+                    style: const TextStyle(
+                      color: Color(0xFF1A3A10),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                Text(
+                  'Rp ${_vm.riwayatHarga}',
+                  style: const TextStyle(
+                    color: Color(0xFF1A3A10),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
                   ),
                 ),
               ],
             ),
           ),
-        );
-      },
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: _vm.onLihatRiwayat,
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFF5A9A30), width: 1),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                foregroundColor: const Color(0xFF1E3D0F),
+              ),
+              child: const Text(
+                'LIHAT SEMUA RIWAYAT',
+                style: TextStyle(
+                  color: Color(0xFF1E3D0F),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
+
+  Widget _buildTabunganCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: kCard,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: kWhite20, width: 0.8),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'TABUNGAN',
+            style: TextStyle(
+              color: kWhite40,
+              fontSize: 10,
+              letterSpacing: 1.5,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            _vm.tabunganNama,
+            style: const TextStyle(
+              color: kWhite,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              AnimatedBuilder(
+                animation: _progressAnim,
+                builder: (context, _) {
+                  return SizedBox(
+                    width: 86,
+                    height: 86,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        SizedBox(
+                          width: 86,
+                          height: 86,
+                          child: CircularProgressIndicator(
+                            value: _progressAnim.value,
+                            strokeWidth: 8,
+                            backgroundColor: kWhite20,
+                            valueColor:
+                                const AlwaysStoppedAnimation<Color>(kGreen),
+                            strokeCap: StrokeCap.round,
+                          ),
+                        ),
+                        Text(
+                          '${(_progressAnim.value * 100).toInt()}%',
+                          style: const TextStyle(
+                            color: kWhite,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'TERKUMPUL',
+                      style: TextStyle(
+                        color: kWhite40,
+                        fontSize: 10,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _vm.tabunganSaatIni,
+                      style: const TextStyle(
+                        color: kWhite,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'TARGET',
+                      style: TextStyle(
+                        color: kWhite40,
+                        fontSize: 10,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _vm.tabunganTarget,
+                      style: const TextStyle(
+                        color: kWhite70,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildHppBepCard() {
     return GestureDetector(
-      onTap: () {
-        _vm.onNavTapManual(0);
+      onTap: () async {
+        // Pindahkan active navbar ke HPP (index 0) saat card diklik
+        _vm.onNavTap(0);
+        await Future.delayed(const Duration(milliseconds: 380));
+        if (!mounted) return;
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const HitungHppPage()),
+        );
+        // Saat user balik ke Home, kembalikan active navbar ke Home (index 2)
+        if (mounted) _vm.onNavTap(2);
       },
       child: Container(
         decoration: BoxDecoration(
@@ -747,7 +542,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         child: Row(
           children: [
-            // Lingkaran gelap solid
+            // Lingkaran gelap solid (bukan rounded rect, bukan transparan)
             Container(
               width: 52,
               height: 52,
@@ -865,8 +660,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                             color: kWhite, size: 15),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -898,12 +693,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                   Row(
                     children: [
                       GestureDetector(
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const NotesListView(),
-                          ),
-                        ),
+                        onTap: _vm.onCatatanTap,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8),
@@ -924,12 +714,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                       ),
                       const Spacer(),
                       GestureDetector(
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const NotesListView(),
-                          ),
-                        ),
+                        onTap: _vm.onCatatanTap,
                         child: const Icon(
                           Icons.arrow_forward,
                           color: Color(0xFF1E3D0F),
@@ -948,53 +733,22 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   }
 
   List<Widget> _buildNoteLines() {
-    final noteVm = context.watch<NoteViewModel>();
-    final notes = noteVm.notes;
-
-    if (notes.isEmpty) {
-      return [
-        const Text(
-          'Belum ada catatan',
-          style: TextStyle(
-            color: Color(0xFF2D5A1B),
-            fontSize: 13,
-            height: 1.5,
-          ),
-        ),
-      ];
-    }
-
-    final latestNote = notes.first;
-    final lines = latestNote.content.split('\n').take(2).toList();
-
-    return [
-      Text(
-        latestNote.title,
-        style: const TextStyle(
-          color: Color(0xFF2D5A1B),
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          height: 1.5,
-        ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      ...lines
-          .map((line) => Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Text(
-                  line,
-                  style: const TextStyle(
-                    color: Color(0xFF2D5A1B),
-                    fontSize: 12,
-                    height: 1.4,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+    final widths = [1.0, 0.75, 0.88];
+    return widths
+        .map((w) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Container(
+                height: 5,
+                width: double.infinity,
+                margin: EdgeInsets.only(right: (1 - w) * 60),
+                decoration: BoxDecoration(
+                  // Hijau tua gelap sesuai screenshot
+                  color: const Color(0xFF2D5A1B),
+                  borderRadius: BorderRadius.circular(3),
                 ),
-              ))
-          .toList(),
-    ];
+              ),
+            ))
+        .toList();
   }
 
   Widget _insightLegend(Color color, String label) {
@@ -1373,15 +1127,6 @@ class _SparklePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_SparklePainter old) => old.time != time;
-}
-
-// Helper untuk image provider (ditambahkan untuk support gambar tabungan)
-ImageProvider _getImageProvider(String url) {
-  if (url.startsWith('data:image')) {
-    final base64String = url.split(',').last;
-    return MemoryImage(base64Decode(base64String));
-  }
-  return NetworkImage(url);
 }
 
 // ── Donut Painter ─────────────────────────────────────────────────────────────
