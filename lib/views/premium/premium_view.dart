@@ -243,7 +243,7 @@ class _PremiumViewState extends State<PremiumView>
                                   : 'Bayar sekali, nikmati selamanya',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.55),
+                                color: Colors.white.withOpacity(0.80),
                                 fontSize: 14,
                               ),
                             ),
@@ -432,7 +432,7 @@ class _BenefitCard extends StatelessWidget {
                 Text(
                   subtitle,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.5),
+                    color: Colors.white.withOpacity(0.78),
                     fontSize: 12,
                   ),
                 ),
@@ -589,7 +589,7 @@ class _BottomCTA extends StatelessWidget {
           Text(
             'Hanya Rp ${_fmt(MidtransConfig.premiumPrice)} SEUMUR HIDUP 🎉',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.45),
+              color: Colors.white.withOpacity(0.75),
               fontSize: 12,
             ),
           ),

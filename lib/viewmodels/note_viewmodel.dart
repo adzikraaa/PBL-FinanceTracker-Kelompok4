@@ -2,32 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/note_model.dart';
 
 class NoteViewModel extends ChangeNotifier {
-  final List<Note> _notes = [
-    Note(
-      id: '1',
-      title: 'Compound Interest Strategy',
-      content: 'Consider increasing the monthly contribution by 5% every quarter to maximize long-term yield. This strategy assumes an average annual return of 8%.',
-      createdAt: DateTime.now().subtract(const Duration(days: 2)),
-    ),
-    Note(
-      id: '2',
-      title: 'Emergency Fund Target',
-      content: 'Goal: 6 months of expenses. Current progress is at 4.2 months. Need to adjust the savings rate to hit the target by December.',
-      createdAt: DateTime.now().subtract(const Duration(days: 5)),
-    ),
-    Note(
-      id: '3',
-      title: 'Tax Optimization 2024',
-      content: 'Review potential deductions for the solar panel installation and the home office upgrade. Consult with the tax advisor by mid-October.',
-      createdAt: DateTime.now().subtract(const Duration(days: 10)),
-    ),
-    Note(
-      id: '4',
-      title: 'Portfolio Rebalancing',
-      content: 'Shift 2% from growth stocks to fixed income to maintain the 80/20 risk profile during market volatility.',
-      createdAt: DateTime.now().subtract(const Duration(days: 15)),
-    ),
-  ];
+  final List<Note> _notes = [];
 
   List<Note> get notes => _notes;
 

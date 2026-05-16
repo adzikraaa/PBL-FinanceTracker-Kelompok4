@@ -1170,19 +1170,11 @@ class _PremiumUpgradeSheetState extends State<_PremiumUpgradeSheet>
                               ),
                               const SizedBox(height: 12),
                               _buildFeatureRow(
-                                Icons.cloud_sync_rounded,
-                                'Backup Cloud Unlimited',
-                                'Semua data aman tersimpan di cloud',
-                                const Color(0xFF60D0FF),
-                                delay: 160,
-                              ),
-                              const SizedBox(height: 12),
-                              _buildFeatureRow(
                                 Icons.lock_open_rounded,
                                 'Akses Semua Fitur',
                                 'Tanpa batasan, selamanya',
                                 const Color(0xFFFF8C60),
-                                delay: 240,
+                                delay: 160,
                               ),
                             ],
                           ),
@@ -1351,8 +1343,15 @@ class _PremiumUpgradeSheetState extends State<_PremiumUpgradeSheet>
         // TODO: navigate to payment page
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Fitur pembayaran segera hadir! 🚀'),
-            backgroundColor: const Color(0xFF1A3A10),
+            content: const Text(
+              'Fitur pembayaran segera hadir! 🚀',
+              style: TextStyle(
+                color: Color(0xFF0A1F0E),
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+            backgroundColor: const Color(0xFF4ADE80),
             behavior: SnackBarBehavior.floating,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

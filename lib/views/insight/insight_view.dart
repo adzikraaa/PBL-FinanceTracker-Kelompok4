@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/finance_viewmodel.dart';
 import '../../utils/currency_formatter.dart';
-import '../finance/hitung_hpp_page.dart';
 
 const Color kBg = Color(0xFF0A1F12);
 const Color kCardDark = Color(0xFF132F1D);
@@ -22,10 +21,170 @@ class InsightView extends StatefulWidget {
 }
 
 class _InsightViewState extends State<InsightView> {
+  DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
+
+  // Filter history berdasarkan bulan yang dipilih
+  List<MapEntry<int, dynamic>> _filteredIndexed(List<dynamic> history) {
+    return history
+        .asMap()
+        .entries
+        .where((e) =>
+            e.value.createdAt.year == _selectedMonth.year &&
+            e.value.createdAt.month == _selectedMonth.month)
+        .toList();
+  }
+
+  bool get _isCurrentMonth =>
+      _selectedMonth.year == DateTime.now().year &&
+      _selectedMonth.month == DateTime.now().month;
+
+  void _showMonthPicker(BuildContext context) {
+    int tempYear = _selectedMonth.year;
+    final now = DateTime.now();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => StatefulBuilder(
+        builder: (ctx, setModal) {
+          return Container(
+            decoration: const BoxDecoration(
+              color: kCardDark,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Handle bar
+                Center(
+                  child: Container(
+                    width: 40, height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Year nav
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    GestureDetector(
+                      onTap: () => setModal(() => tempYear--),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white10,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.chevron_left, color: kWhite, size: 20),
+                      ),
+                    ),
+                    Text(
+                      '$tempYear',
+                      style: const TextStyle(color: kWhite, fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        if (tempYear < now.year) setModal(() => tempYear++);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: tempYear < now.year ? Colors.white10 : Colors.white.withOpacity(0.03),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(Icons.chevron_right,
+                            color: tempYear < now.year ? kWhite : Colors.white24, size: 20),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Month grid
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    childAspectRatio: 2.0,
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 8,
+                  ),
+                  itemCount: 12,
+                  itemBuilder: (_, i) {
+                    final m = i + 1;
+                    final isFuture = DateTime(tempYear, m).isAfter(DateTime(now.year, now.month));
+                    final isSelected = tempYear == _selectedMonth.year && m == _selectedMonth.month;
+                    return GestureDetector(
+                      onTap: isFuture
+                          ? null
+                          : () {
+                              setState(() => _selectedMonth = DateTime(tempYear, m));
+                              Navigator.pop(ctx);
+                            },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? kGreenAccent
+                              : isFuture
+                                  ? Colors.white.withOpacity(0.03)
+                                  : Colors.white.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(10),
+                          border: isSelected
+                              ? Border.all(color: kGreenAccent, width: 2)
+                              : null,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          DateFormat('MMM', 'id_ID').format(DateTime(tempYear, m)),
+                          style: TextStyle(
+                            color: isSelected
+                                ? kTextDark
+                                : isFuture
+                                    ? Colors.white24
+                                    : kWhite,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final finance = context.watch<FinanceViewModel>();
+
+    // Filter history berdasarkan bulan dipilih
+    final indexed = _filteredIndexed(finance.history);
+    final filteredHistory = indexed.map((e) => e.value).toList();
+
+    // Hitung metrik dari history yang sudah difilter
+    double filteredUntung = filteredHistory.fold(0.0, (sum, item) {
+      double untungPerUnit = item.hargaJualUnit -
+          (item.jumlahUnit > 0 ? item.totalHpp / item.jumlahUnit : 0);
+      return sum + untungPerUnit * (item.jumlahUnitTerjual ?? 0);
+    });
+    double filteredProgress = finance.targetProfitBulanan > 0
+        ? (filteredUntung / finance.targetProfitBulanan).clamp(0.0, 1.0)
+        : 0.0;
+    double filteredSisa =
+        (finance.targetProfitBulanan - filteredUntung).clamp(0.0, double.infinity);
+    int filteredTerjual =
+        filteredHistory.fold<int>(0, (sum, item) => sum + ((item.jumlahUnitTerjual ?? 0) as int));
 
     return Scaffold(
       backgroundColor: kBg,
@@ -41,11 +200,11 @@ class _InsightViewState extends State<InsightView> {
                 children: [
                   _buildHeader(),
                   const SizedBox(height: 24),
-                  _buildDonutCard(finance),
+                  _buildDonutCard(finance, filteredProgress, filteredUntung, filteredSisa),
                   const SizedBox(height: 16),
-                  _buildMetricsGrid(finance),
+                  _buildMetricsGrid(finance, filteredUntung, filteredSisa, filteredTerjual),
                   const SizedBox(height: 16),
-                  _buildCatatPenjualan(finance),
+                  _buildCatatPenjualan(finance, indexed),
                 ],
               ),
             ),
@@ -79,41 +238,50 @@ class _InsightViewState extends State<InsightView> {
             ],
           ),
         ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            children: [
-              Text(
-                DateFormat('MMMM yyyy', 'id_ID').format(DateTime.now()),
-                style: const TextStyle(color: kTextDark, fontWeight: FontWeight.bold, fontSize: 12),
-              ),
-              const SizedBox(width: 4),
-              Icon(Icons.keyboard_arrow_down, color: kTextDark, size: 16),
-            ],
+        GestureDetector(
+          onTap: () => _showMonthPicker(context),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: _isCurrentMonth ? Colors.white : kGreenAccent.withOpacity(0.9),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  DateFormat('MMMM yyyy', 'id_ID').format(_selectedMonth),
+                  style: TextStyle(
+                    color: _isCurrentMonth ? kTextDark : kTextDark,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(Icons.keyboard_arrow_down, color: kTextDark, size: 16),
+              ],
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildDonutCard(FinanceViewModel finance) {
-    double sisaTarget = finance.targetProfitBulanan - finance.totalUntungBersih;
-    if (sisaTarget < 0) sisaTarget = 0;
-    
-    int cupsLagi = 0;
-    if (sisaTarget > 0 && finance.history.isNotEmpty) {
-      double avgHpp = finance.averageHpp;
-      double avgJual = finance.history.fold<double>(0, (sum, item) => sum + item.hargaJualUnit) / finance.history.length;
+  Widget _buildDonutCard(
+    FinanceViewModel finance,
+    double filteredProgress,
+    double filteredUntung,
+    double filteredSisa,
+  ) {
+    // Hitung estimasi unit yg harus dijual lagi
+    int unitLagi = 0;
+    if (filteredSisa > 0 && finance.history.isNotEmpty) {
+      final filtered = _filteredIndexed(finance.history).map((e) => e.value).toList();
+      final src = filtered.isNotEmpty ? filtered : finance.history;
+      double avgHpp = src.fold<double>(0, (s, i) => s + (i.jumlahUnit > 0 ? i.totalHpp / i.jumlahUnit : 0)) / src.length;
+      double avgJual = src.fold<double>(0, (s, i) => s + i.hargaJualUnit) / src.length;
       double avgMargin = avgJual - avgHpp;
-      if (avgMargin > 0) {
-        cupsLagi = (sisaTarget / avgMargin).ceil();
-      } else {
-        cupsLagi = (sisaTarget / 5000).ceil(); 
-      }
+      unitLagi = avgMargin > 0 ? (filteredSisa / avgMargin).ceil() : (filteredSisa / 5000).ceil();
     }
 
     return Container(
@@ -155,7 +323,7 @@ class _InsightViewState extends State<InsightView> {
                 CustomPaint(
                   size: const Size(140, 140),
                   painter: _DonutChartPainter(
-                    progress: finance.progressProfit,
+                    progress: filteredProgress,
                     trackColor: const Color(0xFFE8F5E9),
                     progressColor: const Color(0xFF2E7D32),
                     strokeWidth: 14.0,
@@ -165,7 +333,7 @@ class _InsightViewState extends State<InsightView> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      '${(finance.progressProfit * 100).toInt()}%',
+                      '${(filteredProgress * 100).toInt()}%',
                       style: const TextStyle(color: kTextDark, fontSize: 32, fontWeight: FontWeight.bold),
                     ),
                     const Text('tercapai', style: TextStyle(color: Colors.grey, fontSize: 12)),
@@ -200,9 +368,9 @@ class _InsightViewState extends State<InsightView> {
                       text: 'Bagus! Kamu sudah mencapai ',
                       style: const TextStyle(color: kTextDark, fontSize: 12),
                       children: [
-                        TextSpan(text: '${(finance.progressProfit * 100).toInt()}%', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        TextSpan(text: '${(filteredProgress * 100).toInt()}%', style: const TextStyle(fontWeight: FontWeight.bold)),
                         const TextSpan(text: ' dari target. Jual '),
-                        TextSpan(text: '$cupsLagi cup', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        TextSpan(text: '$unitLagi unit', style: const TextStyle(fontWeight: FontWeight.bold)),
                         const TextSpan(text: ' lagi untuk mencapai target!'),
                       ],
                     ),
@@ -226,12 +394,12 @@ class _InsightViewState extends State<InsightView> {
     );
   }
 
-  Widget _buildMetricsGrid(FinanceViewModel finance) {
-    double sisaTarget = finance.targetProfitBulanan - finance.totalUntungBersih;
-    if (sisaTarget < 0) sisaTarget = 0;
-
-    int totalTerjual = finance.history.fold<int>(0, (sum, item) => sum + (item.jumlahUnitTerjual ?? 0));
-
+  Widget _buildMetricsGrid(
+    FinanceViewModel finance,
+    double filteredUntung,
+    double filteredSisa,
+    int filteredTerjual,
+  ) {
     return GridView.count(
       crossAxisCount: 2,
       crossAxisSpacing: 12,
@@ -240,10 +408,10 @@ class _InsightViewState extends State<InsightView> {
       physics: const NeverScrollableScrollPhysics(),
       childAspectRatio: 2.2,
       children: [
-        _buildMetricCard('UNTUNG TERKUMPUL', CurrencyFormatter.formatRupiah(finance.totalUntungBersih), kCardDark, kWhite),
-        _buildMetricCard('SISA KE TARGET', CurrencyFormatter.formatRupiah(sisaTarget), kCardLight, kTextDark),
+        _buildMetricCard('UNTUNG TERKUMPUL', CurrencyFormatter.formatRupiah(filteredUntung), kCardDark, kWhite),
+        _buildMetricCard('SISA KE TARGET', CurrencyFormatter.formatRupiah(filteredSisa), kCardLight, kTextDark),
         _buildMetricCard('TARGET PROFIT', CurrencyFormatter.formatRupiah(finance.targetProfitBulanan), kCardLight, kTextDark),
-        _buildMetricCard('TOTAL TERJUAL', '$totalTerjual cup', kCardDark, kWhite),
+        _buildMetricCard('TOTAL TERJUAL', '$filteredTerjual unit', kCardDark, kWhite),
       ],
     );
   }
@@ -267,7 +435,7 @@ class _InsightViewState extends State<InsightView> {
     );
   }
 
-  Widget _buildCatatPenjualan(FinanceViewModel finance) {
+  Widget _buildCatatPenjualan(FinanceViewModel finance, List<MapEntry<int, dynamic>> indexed) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.transparent,
@@ -278,55 +446,84 @@ class _InsightViewState extends State<InsightView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Catat Penjualan', style: TextStyle(color: kWhite, fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          const Text('Pilih produk & jumlah yang laku hari ini', style: TextStyle(color: Colors.white54, fontSize: 12)),
+          Row(
+            children: [
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Catat Penjualan', style: TextStyle(color: kWhite, fontSize: 16, fontWeight: FontWeight.bold)),
+                    SizedBox(height: 2),
+                    Text('Produk yang laku bulan ini', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                  ],
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
-          ...List.generate(finance.history.length, (index) {
-            final item = finance.history[index];
-            double untungPerCup = item.hargaJualUnit - (item.jumlahUnit > 0 ? item.totalHpp / item.jumlahUnit : 0);
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          if (indexed.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Column(
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(item.namaProduk, style: const TextStyle(color: kWhite, fontWeight: FontWeight.bold, fontSize: 14)),
-                        Text('Untung/cup: ${CurrencyFormatter.formatRupiah(untungPerCup)}', style: const TextStyle(color: Colors.white54, fontSize: 10)),
-                      ],
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => finance.updatePenjualan(index, -1),
-                        child: Container(
-                          width: 32, height: 32,
-                          decoration: BoxDecoration(border: Border.all(color: Colors.white24), borderRadius: BorderRadius.circular(8)),
-                          child: const Icon(Icons.remove, color: Colors.white54, size: 16),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 36,
-                        child: Text('${item.jumlahUnitTerjual ?? 0}', textAlign: TextAlign.center, style: const TextStyle(color: kWhite, fontWeight: FontWeight.bold)),
-                      ),
-                      GestureDetector(
-                        onTap: () => finance.updatePenjualan(index, 1),
-                        child: Container(
-                          width: 32, height: 32,
-                          decoration: BoxDecoration(border: Border.all(color: Colors.white24), borderRadius: BorderRadius.circular(8)),
-                          child: const Icon(Icons.add, color: Colors.white54, size: 16),
-                        ),
-                      ),
-                    ],
+                  Icon(Icons.inbox_outlined, color: Colors.white24, size: 40),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Tidak ada produk di ${DateFormat('MMMM yyyy', 'id_ID').format(_selectedMonth)}',
+                    style: const TextStyle(color: Colors.white38, fontSize: 13),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
-            );
-          }),
+            )
+          else
+            ...indexed.map((entry) {
+              final originalIndex = entry.key;
+              final item = entry.value;
+              double untungPerUnit = item.hargaJualUnit - (item.jumlahUnit > 0 ? item.totalHpp / item.jumlahUnit : 0);
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(item.namaProduk, style: const TextStyle(color: kWhite, fontWeight: FontWeight.bold, fontSize: 14)),
+                          Text('Untung/unit: ${CurrencyFormatter.formatRupiah(untungPerUnit)}', style: const TextStyle(color: Colors.white54, fontSize: 10)),
+                        ],
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => finance.updatePenjualan(originalIndex, -1),
+                          child: Container(
+                            width: 32, height: 32,
+                            decoration: BoxDecoration(border: Border.all(color: Colors.white24), borderRadius: BorderRadius.circular(8)),
+                            child: const Icon(Icons.remove, color: Colors.white54, size: 16),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 36,
+                          child: Text('${item.jumlahUnitTerjual ?? 0}', textAlign: TextAlign.center, style: const TextStyle(color: kWhite, fontWeight: FontWeight.bold)),
+                        ),
+                        GestureDetector(
+                          onTap: () => finance.updatePenjualan(originalIndex, 1),
+                          child: Container(
+                            width: 32, height: 32,
+                            decoration: BoxDecoration(border: Border.all(color: Colors.white24), borderRadius: BorderRadius.circular(8)),
+                            child: const Icon(Icons.add, color: Colors.white54, size: 16),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
           const SizedBox(height: 8),
           SizedBox(
             width: double.infinity,
@@ -449,7 +646,7 @@ class _InsightViewState extends State<InsightView> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(item.namaProduk, style: const TextStyle(color: kWhite, fontWeight: FontWeight.bold, fontSize: 14)),
-                                    Text('Rp ${CurrencyFormatter.formatRupiah(item.hargaJualUnit).replaceAll('Rp ', '')}/cup', style: const TextStyle(color: Colors.white54, fontSize: 10)),
+                                    Text('Rp ${CurrencyFormatter.formatRupiah(item.hargaJualUnit).replaceAll('Rp ', '')}/unit', style: const TextStyle(color: Colors.white54, fontSize: 10)),
                                   ],
                                 ),
                               ),

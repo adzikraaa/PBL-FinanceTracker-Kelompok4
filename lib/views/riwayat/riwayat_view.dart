@@ -328,7 +328,7 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                     children: [
                       _buildStatGridItem('HPP', _currencyFmt.format(hppPerUnit)),
                       const SizedBox(height: 16),
-                      _buildStatGridItem('BEP UNIT', '${item.bepUnit.toStringAsFixed(0)} ${item.bepUnit > 100 ? 'Cup' : 'Porsi'}'),
+                      _buildStatGridItem('BEP UNIT', '${item.bepUnit.toStringAsFixed(0)} unit'),
                       const SizedBox(height: 8),
                       // Badge 1
                       if (item.bepUnit > 100)
