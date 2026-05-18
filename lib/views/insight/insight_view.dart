@@ -181,8 +181,9 @@ class _InsightViewState extends State<InsightView> {
     double filteredProgress = finance.targetProfitBulanan > 0
         ? (filteredUntung / finance.targetProfitBulanan).clamp(0.0, 1.0)
         : 0.0;
-    double filteredSisa =
-        (finance.targetProfitBulanan - filteredUntung).clamp(0.0, double.infinity);
+    double filteredSisa = finance.targetProfitBulanan > 0
+        ? (finance.targetProfitBulanan - filteredUntung).clamp(0.0, double.infinity)
+        : 0.0;
     int filteredTerjual =
         filteredHistory.fold<int>(0, (sum, item) => sum + ((item.jumlahUnitTerjual ?? 0) as int));
 
@@ -203,7 +204,7 @@ class _InsightViewState extends State<InsightView> {
                   _buildDonutCard(finance, filteredProgress, filteredUntung, filteredSisa),
                   const SizedBox(height: 16),
                   _buildMetricsGrid(finance, filteredUntung, filteredSisa, filteredTerjual),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
                   _buildCatatPenjualan(finance, indexed),
                 ],
               ),
