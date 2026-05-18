@@ -401,18 +401,27 @@ class _InsightViewState extends State<InsightView> {
     double filteredSisa,
     int filteredTerjual,
   ) {
-    return GridView.count(
-      crossAxisCount: 2,
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 12,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      childAspectRatio: 2.2,
+    return Column(
       children: [
-        _buildMetricCard('UNTUNG TERKUMPUL', CurrencyFormatter.formatRupiah(filteredUntung), kCardDark, kWhite),
-        _buildMetricCard('SISA KE TARGET', CurrencyFormatter.formatRupiah(filteredSisa), kCardLight, kTextDark),
-        _buildMetricCard('TARGET PROFIT', CurrencyFormatter.formatRupiah(finance.targetProfitBulanan), kCardLight, kTextDark),
-        _buildMetricCard('TOTAL TERJUAL', '$filteredTerjual unit', kCardDark, kWhite),
+        IntrinsicHeight(
+          child: Row(
+            children: [
+              Expanded(child: _buildMetricCard('UNTUNG TERKUMPUL', CurrencyFormatter.formatRupiah(filteredUntung), kCardDark, kWhite)),
+              const SizedBox(width: 12),
+              Expanded(child: _buildMetricCard('SISA KE TARGET', CurrencyFormatter.formatRupiah(filteredSisa), kCardLight, kTextDark)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        IntrinsicHeight(
+          child: Row(
+            children: [
+              Expanded(child: _buildMetricCard('TARGET PROFIT', CurrencyFormatter.formatRupiah(finance.targetProfitBulanan), kCardLight, kTextDark)),
+              const SizedBox(width: 12),
+              Expanded(child: _buildMetricCard('TOTAL TERJUAL', '$filteredTerjual unit', kCardDark, kWhite)),
+            ],
+          ),
+        ),
       ],
     );
   }

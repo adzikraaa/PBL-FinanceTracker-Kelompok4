@@ -139,7 +139,7 @@ class FinanceViewModel extends ChangeNotifier {
   // INSIGHT: TARGET PROFIT & PENJUALAN
   // ================================
 
-  double targetProfitBulanan = 2100000.0;
+  double targetProfitBulanan = 0.0;
 
   void setTargetProfit(double target) {
     targetProfitBulanan = target;
