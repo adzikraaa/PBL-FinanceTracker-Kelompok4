@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/note_viewmodel.dart';
 import '../../models/note_model.dart';
+import '../../viewmodels/home_viewmodel.dart';
 
 class NoteFormView extends StatefulWidget {
   final String? noteId; // Jika null, berarti tambah catatan baru
@@ -208,9 +209,9 @@ class _NoteFormViewState extends State<NoteFormView> {
                           ),
                           child: ElevatedButton(
                             onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Membuka riwayat perhitungan...')),
-                              );
+                              final homeVm = Provider.of<HomeViewModel>(context, listen: false);
+                              homeVm.onNavTapManual(4); // Navigasi ke tab Riwayat (index 4)
+                              Navigator.popUntil(context, (route) => route.isFirst);
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.transparent,
@@ -351,11 +352,9 @@ class _NoteFormViewState extends State<NoteFormView> {
                       behavior: HitTestBehavior.translucent,
                       onTap: () async {
                         if (i == _selectedIndex) return;
-                        if (i == 2) {
-                           Navigator.popUntil(context, (route) => route.isFirst);
-                        } else {
-                          Navigator.popUntil(context, (route) => route.isFirst);
-                        }
+                        final homeVm = Provider.of<HomeViewModel>(context, listen: false);
+                        homeVm.onNavTapManual(i);
+                        Navigator.popUntil(context, (route) => route.isFirst);
                       },
                       child: SizedBox(
                         height: navHeight,
