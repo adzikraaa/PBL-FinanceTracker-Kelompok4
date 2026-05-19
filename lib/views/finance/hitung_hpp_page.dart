@@ -107,8 +107,11 @@ class _HitungHppPageState extends State<HitungHppPage> {
       });
     }
 
-    return SafeArea(
-      child: _buildCurrentStep(vm),
+    return Scaffold(
+      backgroundColor: _kNavBg, // Kunci perbaikan error "No Material widget found"
+      body: SafeArea(
+        child: _buildCurrentStep(vm),
+      ),
     );
   }
 
