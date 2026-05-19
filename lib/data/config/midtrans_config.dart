@@ -5,8 +5,8 @@ class MidtransConfig {
   // ── Ganti dengan key Midtrans kamu ─────────────────────────────────────
   // Dashboard Sandbox : https://dashboard.sandbox.midtrans.com
   // Dashboard Produksi: https://dashboard.midtrans.com
-  static const String serverKey = 'SB-Mid-server-XXXXXXXXXXXXXXXX'; // TODO: ganti
-  static const String clientKey = 'SB-Mid-client-XXXXXXXXXXXXXXXX'; // TODO: ganti
+  static const String serverKey = 'Mid-server-XeNrvdn9CtzCFBJ-Ec_8mJ34';
+  static const String clientKey = 'Mid-client-fjEeyLRTTCSvXty6';
 
   // ── Mode: true = Sandbox (testing), false = Production (uang asli) ─────
   static const bool isSandbox = true;
