@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/home_viewmodel.dart';
 import '../../viewmodels/finance_viewmodel.dart';
+import '../../viewmodels/premium_viewmodel.dart';
+
 
 class HasilAnalisisPage extends StatefulWidget {
   const HasilAnalisisPage({super.key});
@@ -521,6 +523,50 @@ class _HasilAnalisisPageState extends State<HasilAnalisisPage> {
                       ),
                       child: ElevatedButton(
                         onPressed: () async {
+                          final premiumVm = Provider.of<PremiumViewModel>(context, listen: false);
+                          
+                          // Cek batas riwayat untuk Free User (maks 3)
+                          if (!premiumVm.isPremium && vm.history.length >= 3) {
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                backgroundColor: const Color(0xFF1B2D22),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                title: const Row(
+                                  children: [
+                                    Icon(Icons.lock_outline, color: Colors.orange),
+                                    SizedBox(width: 10),
+                                    Text('Batas Maksimal', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                                content: const Text(
+                                  'Kamu telah mencapai batas 3 riwayat untuk pengguna gratis. Upgrade ke Premium untuk menyimpan riwayat tanpa batas!',
+                                  style: TextStyle(color: Colors.white70, height: 1.5),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx),
+                                    child: const Text('Batal', style: TextStyle(color: Colors.white54)),
+                                  ),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF8BCA6E),
+                                      foregroundColor: const Color(0xFF0C1B13),
+                                    ),
+                                    onPressed: () {
+                                      Navigator.pop(ctx);
+                                      // Navigasi ke Premium dengan pindah ke Profile dulu (Profile ada tombol premium)
+                                      final homeVm = Provider.of<HomeViewModel>(context, listen: false);
+                                      homeVm.onNavTapManual(3); // Index 3 = Akun / Profile
+                                    },
+                                    child: const Text('Upgrade Premium', style: TextStyle(fontWeight: FontWeight.bold)),
+                                  ),
+                                ],
+                              ),
+                            );
+                            return; // Batalkan simpan
+                          }
+
                           final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
                           await vm.simpanPerhitungan(userId);
 

@@ -8,6 +8,7 @@ import '../../data/services/pdf_service.dart';
 import '../finance/hitung_hpp_page.dart';
 
 import '../../viewmodels/auth_viewmodel.dart';
+import '../../viewmodels/premium_viewmodel.dart';
 
 String _fmtTime(DateTime d) => DateFormat('HH:mm', 'id_ID').format(d);
 String _fmtDateFull(DateTime d) => DateFormat('dd MMM yyyy', 'id_ID').format(d);
@@ -388,7 +389,36 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                 const SizedBox(width: 10),
                 GestureDetector(
                   onTap: () async {
-                    await PdfService.downloadHpp(item, isPremium: isPremium);
+                    final premiumVm = context.read<PremiumViewModel>();
+                    bool allowNoWatermark = false;
+
+                    if (premiumVm.isPremium) {
+                      allowNoWatermark = true;
+                    } else if (premiumVm.canUsePdfTrial) {
+                      allowNoWatermark = true;
+                      await premiumVm.incrementPdfTrial();
+                      if (ctx.mounted) {
+                        ScaffoldMessenger.of(ctx).showSnackBar(
+                          SnackBar(
+                            content: Text('Menggunakan trial PDF tanpa watermark (${premiumVm.pdfTrialUsed}/${PremiumViewModel.maxPdfTrial})'),
+                            backgroundColor: Colors.orange,
+                            duration: const Duration(seconds: 3),
+                          ),
+                        );
+                      }
+                    } else {
+                      if (ctx.mounted) {
+                        ScaffoldMessenger.of(ctx).showSnackBar(
+                          const SnackBar(
+                            content: Text('Trial habis. Menampilkan watermark. Upgrade Premium untuk menghilangkan watermark.'),
+                            backgroundColor: Colors.grey,
+                            duration: Duration(seconds: 4),
+                          ),
+                        );
+                      }
+                    }
+
+                    await PdfService.downloadHpp(item, isPremium: allowNoWatermark);
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),

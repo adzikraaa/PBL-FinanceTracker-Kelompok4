@@ -18,6 +18,8 @@ class PremiumViewModel extends ChangeNotifier {
   String? _snapUrl;
   String? _currentOrderId;
   DateTime? _premiumPurchasedAt;
+  int _pdfTrialUsed = 0;
+  static const int maxPdfTrial = 3;
 
   // ── Getters ──────────────────────────────────────────────────────────
   bool get isPremium => _isPremium;
@@ -31,6 +33,9 @@ class PremiumViewModel extends ChangeNotifier {
   String? get snapUrl => _snapUrl;
   String? get currentOrderId => _currentOrderId;
   DateTime? get premiumPurchasedAt => _premiumPurchasedAt;
+  int get pdfTrialUsed => _pdfTrialUsed;
+  int get pdfTrialLeft => maxPdfTrial - _pdfTrialUsed;
+  bool get canUsePdfTrial => _pdfTrialUsed < maxPdfTrial;
 
   // Alias untuk backward-compat
   bool get isPremiumActive => _isPremium;
@@ -94,12 +99,32 @@ class PremiumViewModel extends ChangeNotifier {
         _isPremium = data['isPremium'] ?? false;
         final ts = data['premiumPurchasedAt'] as Timestamp?;
         _premiumPurchasedAt = ts?.toDate();
+        _pdfTrialUsed = data['pdfTrialUsed'] ?? 0;
       }
     } catch (e) {
       debugPrint('Error loading premium status: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// Tambah penggunaan trial PDF
+  Future<void> incrementPdfTrial() async {
+    if (_isPremium) return; // Premium tidak pakai trial
+    
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    try {
+      _pdfTrialUsed++;
+      notifyListeners();
+      await FirebaseFirestore.instance.collection('users').doc(uid).set(
+        {'pdfTrialUsed': _pdfTrialUsed},
+        SetOptions(merge: true),
+      );
+    } catch (e) {
+      debugPrint('Error increment pdf trial: $e');
     }
   }
 

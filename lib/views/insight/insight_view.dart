@@ -5,6 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/finance_viewmodel.dart';
 import '../../utils/currency_formatter.dart';
+import '../../viewmodels/premium_viewmodel.dart';
+import '../../viewmodels/home_viewmodel.dart';
+import 'dart:ui';
 
 const Color kBg = Color(0xFF0A1F12);
 const Color kCardDark = Color(0xFF132F1D);
@@ -167,6 +170,7 @@ class _InsightViewState extends State<InsightView> {
   @override
   Widget build(BuildContext context) {
     final finance = context.watch<FinanceViewModel>();
+    final premiumVm = context.watch<PremiumViewModel>();
 
     // Filter history berdasarkan bulan dipilih
     final indexed = _filteredIndexed(finance.history);
@@ -210,7 +214,66 @@ class _InsightViewState extends State<InsightView> {
               ),
             ),
           ),
+          if (!premiumVm.isPremium) _buildPremiumOverlay(context),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPremiumOverlay(BuildContext context) {
+    return Positioned.fill(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+        child: Container(
+          color: kBg.withOpacity(0.7),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1B2D22),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.orange.withOpacity(0.5), width: 2),
+                ),
+                child: const Icon(Icons.lock_outline, color: Colors.orange, size: 48),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Fitur Insight Terkunci',
+                style: TextStyle(color: kWhite, fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 40),
+                child: Text(
+                  'Upgrade ke Premium untuk membuka analitik bisnis lengkap, grafik profit, dan pemantauan target secara real-time.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
+                ),
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton(
+                onPressed: () {
+                  final homeVm = Provider.of<HomeViewModel>(context, listen: false);
+                  homeVm.onNavTapManual(3); // Navigasi ke Profile yang ada tombol Premium
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kGreenAccent,
+                  foregroundColor: kTextDark,
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  elevation: 8,
+                  shadowColor: kGreenAccent.withOpacity(0.5),
+                ),
+                child: const Text(
+                  'Buka Kunci Premium',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
