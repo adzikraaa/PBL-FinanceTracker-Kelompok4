@@ -9,10 +9,12 @@ import '../../viewmodels/note_viewmodel.dart';
 import '../../viewmodels/riwayat_viewmodel.dart';
 import '../../viewmodels/saving_viewmodel.dart';
 import '../../viewmodels/auth_viewmodel.dart';
+import '../../viewmodels/premium_viewmodel.dart';
 import '../finance/hitung_hpp_page.dart';
 import '../insight/insight_view.dart';
 import '../riwayat/riwayat_view.dart';
 import '../notes/notes_list_view.dart';
+import '../premium/premium_view.dart';
 import 'profile_view.dart';
 import '../savings/saving_list_page.dart';
 
@@ -1339,22 +1341,14 @@ class _PremiumUpgradeSheetState extends State<_PremiumUpgradeSheet>
   Widget _buildCtaButton(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.pop(context);
-        // TODO: navigate to payment page
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(
-              'Fitur pembayaran segera hadir! 🚀',
-              style: TextStyle(
-                color: Color(0xFF0A1F0E),
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
+        Navigator.pop(context); // tutup bottom sheet
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChangeNotifierProvider(
+              create: (_) => PremiumViewModel(),
+              child: const PremiumView(),
             ),
-            backgroundColor: const Color(0xFF4ADE80),
-            behavior: SnackBarBehavior.floating,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       },

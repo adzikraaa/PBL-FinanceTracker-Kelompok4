@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:async';
 import '../data/config/midtrans_config.dart';
 
 // Status hasil pembayaran
@@ -59,9 +60,17 @@ class PremiumViewModel extends ChangeNotifier {
     },
   ];
 
+  StreamSubscription<DocumentSnapshot>? _userSubscription;
+
   // ── Constructor ──────────────────────────────────────────────────────
   PremiumViewModel() {
-    _loadPremiumStatus();
+    _listenToPremiumStatus();
+  }
+
+  @override
+  void dispose() {
+    _userSubscription?.cancel();
+    super.dispose();
   }
 
   // ── Public Methods ───────────────────────────────────────────────────
@@ -80,7 +89,39 @@ class PremiumViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Load status premium dari Firestore
+  /// Listen status premium secara real-time dari Firestore
+  void _listenToPremiumStatus() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    _isLoading = true;
+    notifyListeners();
+
+    _userSubscription?.cancel();
+    _userSubscription = FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .snapshots()
+        .listen((doc) {
+      _isLoading = false;
+      if (doc.exists) {
+        final data = doc.data();
+        if (data != null) {
+          _isPremium = data['isPremium'] ?? false;
+          final ts = data['premiumPurchasedAt'] as Timestamp?;
+          _premiumPurchasedAt = ts?.toDate();
+          _pdfTrialUsed = data['pdfTrialUsed'] ?? 0;
+        }
+      }
+      notifyListeners();
+    }, onError: (e) {
+      _isLoading = false;
+      debugPrint('Error listening to premium status: $e');
+      notifyListeners();
+    });
+  }
+
+  /// Load status premium dari Firestore (fallback legacy)
   Future<void> _loadPremiumStatus() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
@@ -153,7 +194,8 @@ class PremiumViewModel extends ChangeNotifier {
       final userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(uid)
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 8));
       final userName =
           userDoc.data()?['name'] ?? user.displayName ?? 'Pengguna';
       final userEmail = user.email ?? 'user@bizprice.app';
@@ -194,7 +236,7 @@ class PremiumViewModel extends ChangeNotifier {
             'pending': MidtransConfig.pendingUrl,
           },
         }),
-      );
+      ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 201) {
         final data = json.decode(response.body);
@@ -213,7 +255,8 @@ class PremiumViewModel extends ChangeNotifier {
         return false;
       }
     } catch (e) {
-      _errorMessage = 'Koneksi gagal. Periksa internet kamu.';
+      debugPrint('Error creating Midtrans transaction: $e');
+      _errorMessage = 'Koneksi gagal atau diblokir CORS. Periksa internet kamu.';
       _paymentStatus = PaymentStatus.failed;
       notifyListeners();
       return false;

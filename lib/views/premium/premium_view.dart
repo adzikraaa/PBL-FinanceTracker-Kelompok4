@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../viewmodels/premium_viewmodel.dart';
 import '../../data/config/midtrans_config.dart';
 import 'payment_view.dart';
@@ -357,15 +359,29 @@ class _PremiumViewState extends State<PremiumView>
     final ok = await vm.createMidtransTransaction();
     if (!ok || !context.mounted) return;
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ChangeNotifierProvider.value(
-          value: vm,
-          child: const PaymentView(),
+    if (kIsWeb) {
+      final url = vm.snapUrl;
+      if (url != null) {
+        final messenger = ScaffoldMessenger.of(context);
+        if (await canLaunchUrl(Uri.parse(url))) {
+          await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+        } else {
+          messenger.showSnackBar(
+            const SnackBar(content: Text('Gagal membuka link pembayaran')),
+          );
+        }
+      }
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChangeNotifierProvider.value(
+            value: vm,
+            child: const PaymentView(),
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 }
 
