@@ -256,7 +256,11 @@ class PremiumViewModel extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint('Error creating Midtrans transaction: $e');
-      _errorMessage = 'Koneksi gagal atau diblokir CORS. Periksa internet kamu.';
+      if (kIsWeb) {
+        _errorMessage = 'Koneksi gagal atau diblokir CORS. Periksa internet kamu.';
+      } else {
+        _errorMessage = 'Koneksi gagal: $e';
+      }
       _paymentStatus = PaymentStatus.failed;
       notifyListeners();
       return false;
