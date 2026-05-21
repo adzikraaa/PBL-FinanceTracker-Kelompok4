@@ -33,11 +33,14 @@ class FirestoreService {
     return _db
         .collection('savings')
         .where('userId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => SavingModel.fromJson(doc.data(), doc.id))
-            .toList());
+        .map((snapshot) {
+          final list = snapshot.docs
+              .map((doc) => SavingModel.fromJson(doc.data(), doc.id))
+              .toList();
+          list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return list;
+        });
   }
 
   Future<void> updateSaving(String id, double newAmount) async {
@@ -59,7 +62,39 @@ class FirestoreService {
   // 3. DATABASE HPP (RIWAYAT & INSIGHT)
   // ==========================================
   
-  // Simpan hasil hitungan user ke riwayat agar bisa muncul di list
+  // ==========================================
+  // 4. DATABASE FINANCE (CALCULATIONS)
+  // ==========================================
+
+  // Simpan data perhitungan (editable) ke koleksi 'finance'
+  Future<void> addFinance(HppModel data) async {
+    await _db.collection('finance').add(data.toJson());
+  }
+
+  // Stream data perhitungan yang dapat diedit oleh pengguna
+  Stream<List<HppModel>> streamFinance(String userId) {
+    return _db
+        .collection('finance')
+        .where('userId', isEqualTo: userId)
+        .snapshots()
+        .map((snapshot) {
+          final list = snapshot.docs
+              .map((doc) => HppModel.fromJson(doc.data(), doc.id))
+              .toList();
+          list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return list;
+        });
+  }
+
+  // Update satu dokumen perhitungan yang sudah ada
+  Future<void> updateFinance(String docId, Map<String, dynamic> data) async {
+    await _db.collection('finance').doc(docId).update(data);
+  }
+
+  // Delete perhitungan yang tidak diperlukan lagi
+  Future<void> deleteFinance(String docId) async {
+    await _db.collection('finance').doc(docId).delete();
+  }
   Future<void> addHistory(HppModel data) async {
     await _db.collection('history').add(data.toJson());
   }
@@ -69,11 +104,14 @@ class FirestoreService {
     return _db
         .collection('history')
         .where('userId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => HppModel.fromJson(doc.data(), doc.id))
-            .toList());
+        .map((snapshot) {
+          final list = snapshot.docs
+              .map((doc) => HppModel.fromJson(doc.data(), doc.id))
+              .toList();
+          list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return list;
+        });
   }
 
   Future<void> deleteHistory(String id) async {

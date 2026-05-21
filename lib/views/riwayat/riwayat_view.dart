@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../../viewmodels/riwayat_viewmodel.dart';
 import '../../data/models/hpp_model.dart';
 import '../../data/services/pdf_service.dart';
@@ -151,22 +152,23 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                         _buildEmptyState()
                       else
                         Expanded(
-                          child: ListView.builder(
+                          child: ListView(
                             padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
                             physics: const BouncingScrollPhysics(),
-                            itemCount: groupKeys.length,
-                            itemBuilder: (_, i) {
-                              final key = groupKeys[i];
-                              final items = groupedHistory[key]!;
-                              final isPremium = context.read<AuthViewModel>().isPremium;
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _buildDateHeader(key),
-                                  ...items.map((item) => _buildRiwayatCard(item, vm, context, isPremium)),
-                                ],
-                              );
-                            },
+                            children: [
+                              _buildHistoryChart(vm.history),
+                              ...groupKeys.map((key) {
+                                final items = groupedHistory[key]!;
+                                final isPremium = context.read<AuthViewModel>().isPremium;
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildDateHeader(key),
+                                    ...items.map((item) => _buildRiwayatCard(item, vm, context, isPremium)),
+                                  ],
+                                );
+                              }),
+                            ],
                           ),
                         ),
                     ],
@@ -207,6 +209,40 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
           painter: _SparklesPainter(t: _sparkleCtrl.value),
         ),
       );
+
+  // ─── Chart ─────────────────────────────────────────────────────────────────
+  Widget _buildHistoryChart(List<HppModel> history) {
+    if (history.length < 2) return const SizedBox.shrink();
+    final reversed = history.reversed.take(7).toList();
+    
+    return Container(
+      height: 200,
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: _kDarkGreen.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: LineChart(
+        LineChartData(
+          gridData: const FlGridData(show: false),
+          titlesData: const FlTitlesData(show: false),
+          borderData: FlBorderData(show: false),
+          lineBarsData: [
+            LineChartBarData(
+              spots: reversed.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value.totalHpp)).toList(),
+              isCurved: true,
+              color: _kGreen,
+              barWidth: 3,
+              dotData: const FlDotData(show: false),
+              belowBarData: BarAreaData(show: true, color: _kGreen.withValues(alpha: 0.1)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   // ─── Header ────────────────────────────────────────────────────────────────
   Widget _buildHeader(BuildContext context) {

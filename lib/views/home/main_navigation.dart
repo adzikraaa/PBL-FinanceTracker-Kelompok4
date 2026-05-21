@@ -8,6 +8,7 @@ import '../savings/saving_list_page.dart';
 import '../finance/hitung_hpp_page.dart';
 import '../insight/insight_view.dart';
 import '../riwayat/riwayat_view.dart';
+import '../../data/services/firestore_seeder.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -33,7 +34,21 @@ class _MainNavigationState extends State<MainNavigation> {
       const RiwayatView(),
     ];
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final hasSeeded = await FirestoreSeeder.hasSeeded(user.uid);
+        if (!hasSeeded) {
+          await FirestoreSeeder.seedMockData(
+            user.uid,
+            email: user.email,
+            displayName: user.displayName,
+          );
+        }
+      }
+      
       if (!mounted) return;
       context.read<SavingViewModel>().listenSavings(_userId);
     });

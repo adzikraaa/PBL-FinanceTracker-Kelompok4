@@ -1,12 +1,13 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import '../data/models/hpp_model.dart';
 import '../data/services/firestore_service.dart';
 
 class FinanceViewModel extends ChangeNotifier {
   final FirestoreService _firestoreService = FirestoreService();
   StreamSubscription<List<HppModel>>? _sub;
+  StreamSubscription<User?>? _authSub;
 
   // --- Input Variables (State) ---
   double biayaProduksi = 0.0;
@@ -42,22 +43,25 @@ class FinanceViewModel extends ChangeNotifier {
   List<HppModel> history = [];
 
   FinanceViewModel() {
-    _init();
-  }
-
-  void _init() {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      _sub = _firestoreService.streamHistory(user.uid).listen((data) {
-        history = data;
+    _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (user != null) {
+        _sub?.cancel();
+        _sub = _firestoreService.streamFinance(user.uid).listen((data) {
+          history = data;
+          notifyListeners();
+        });
+      } else {
+        _sub?.cancel();
+        history = [];
         notifyListeners();
-      });
-    }
+      }
+    });
   }
 
   @override
   void dispose() {
     _sub?.cancel();
+    _authSub?.cancel();
     super.dispose();
   }
 
@@ -129,17 +133,17 @@ class FinanceViewModel extends ChangeNotifier {
       persediaanAkhir: persediaanAkhir,
     );
 
+    await _firestoreService.addFinance(newHpp);
+    // Also save a snapshot to riwayat (history) for Insight and immutable records
     await _firestoreService.addHistory(newHpp);
 
-    lastSaveSuccess = true;
-    notifyListeners();
   }
 
   // ================================
   // INSIGHT: TARGET PROFIT & PENJUALAN
   // ================================
 
-  double targetProfitBulanan = 0.0;
+  double targetProfitBulanan = 5000000.0;
 
   void setTargetProfit(double target) {
     targetProfitBulanan = target;

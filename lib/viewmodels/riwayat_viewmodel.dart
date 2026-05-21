@@ -12,7 +12,10 @@ class RiwayatViewModel extends ChangeNotifier {
   bool isLoading = true;
   String? error;
 
-  StreamSubscription<List<HppModel>>? _sub;
+  // Subscription ke stream Firestore
+  StreamSubscription<List<HppModel>>? _historySub;
+  // Subscription ke perubahan status auth
+  StreamSubscription<User?>? _authSub;
 
   List<HppModel> get history => _history;
 
@@ -20,17 +23,27 @@ class RiwayatViewModel extends ChangeNotifier {
   HppModel? get latest => _history.isNotEmpty ? _history.first : null;
 
   RiwayatViewModel() {
-    _init();
+    // Dengarkan perubahan auth — otomatis mulai/berhenti stream data
+    _authSub = _auth.authStateChanges().listen((user) {
+      if (user != null) {
+        _startListening(user.uid);
+      } else {
+        _stopListening();
+        _history = [];
+        isLoading = false;
+        notifyListeners();
+      }
+    });
   }
 
-  void _init() {
-    final user = _auth.currentUser;
-    if (user == null) {
-      isLoading = false;
-      notifyListeners();
-      return;
-    }
-    _sub = _firestoreService.streamHistory(user.uid).listen(
+  /// Mulai subscribe ke koleksi 'history' di Firestore
+  void _startListening(String uid) {
+    // Batalkan subscription lama jika ada
+    _historySub?.cancel();
+    isLoading = true;
+    notifyListeners();
+
+    _historySub = _firestoreService.streamHistory(uid).listen(
       (list) {
         _history = list;
         isLoading = false;
@@ -45,13 +58,20 @@ class RiwayatViewModel extends ChangeNotifier {
     );
   }
 
+  /// Hentikan subscription ke Firestore
+  void _stopListening() {
+    _historySub?.cancel();
+    _historySub = null;
+  }
+
   Future<void> deleteHistory(String id) async {
     await _firestoreService.deleteHistory(id);
   }
 
   @override
   void dispose() {
-    _sub?.cancel();
+    _historySub?.cancel();
+    _authSub?.cancel();
     super.dispose();
   }
 }
