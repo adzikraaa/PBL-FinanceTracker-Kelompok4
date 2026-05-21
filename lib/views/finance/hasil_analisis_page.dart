@@ -590,8 +590,8 @@ class _HasilAnalisisPageState extends State<HasilAnalisisPage> {
                             final homeVm = Provider.of<HomeViewModel>(context, listen: false);
                             homeVm.onNavTapManual(4);
 
-                            // 3. Reset step setelah navigasi selesai
-                            Future.microtask(() => vm.setStep(0));
+                            // 3. Reset step dan data setelah navigasi selesai
+                            Future.microtask(() => vm.resetData());
                           }
                         },
                         style: ElevatedButton.styleFrom(

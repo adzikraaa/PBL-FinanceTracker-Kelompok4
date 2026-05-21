@@ -19,6 +19,7 @@ class PremiumViewModel extends ChangeNotifier {
   String? _snapUrl;
   String? _currentOrderId;
   DateTime? _premiumPurchasedAt;
+  bool _showUpgradeNotification = false;
   int _pdfTrialUsed = 0;
   static const int maxPdfTrial = 3;
 
@@ -37,9 +38,20 @@ class PremiumViewModel extends ChangeNotifier {
   int get pdfTrialUsed => _pdfTrialUsed;
   int get pdfTrialLeft => maxPdfTrial - _pdfTrialUsed;
   bool get canUsePdfTrial => _pdfTrialUsed < maxPdfTrial;
+  bool get showUpgradeNotification => _showUpgradeNotification;
 
   // Alias untuk backward-compat
   bool get isPremiumActive => _isPremium;
+
+  void triggerUpgradeNotification() {
+    _showUpgradeNotification = true;
+    notifyListeners();
+  }
+
+  void dismissUpgradeNotification() {
+    _showUpgradeNotification = false;
+    notifyListeners();
+  }
 
   // ── Benefits Premium (sesuai screenshot, tanpa Backup Cloud) ─────────
   static const List<Map<String, String>> benefits = [
@@ -60,15 +72,33 @@ class PremiumViewModel extends ChangeNotifier {
     },
   ];
 
+  StreamSubscription<User?>? _authSubscription;
   StreamSubscription<DocumentSnapshot>? _userSubscription;
 
   // ── Constructor ──────────────────────────────────────────────────────
   PremiumViewModel() {
-    _listenToPremiumStatus();
+    _listenToAuthChanges();
+  }
+
+  void _listenToAuthChanges() {
+    _authSubscription?.cancel();
+    _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (user != null) {
+        _listenToPremiumStatus(user.uid);
+      } else {
+        _userSubscription?.cancel();
+        _userSubscription = null;
+        _isPremium = false;
+        _premiumPurchasedAt = null;
+        _pdfTrialUsed = 0;
+        notifyListeners();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _authSubscription?.cancel();
     _userSubscription?.cancel();
     super.dispose();
   }
@@ -90,10 +120,7 @@ class PremiumViewModel extends ChangeNotifier {
   }
 
   /// Listen status premium secara real-time dari Firestore
-  void _listenToPremiumStatus() {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
-
+  void _listenToPremiumStatus(String uid) {
     _isLoading = true;
     notifyListeners();
 
@@ -112,6 +139,10 @@ class PremiumViewModel extends ChangeNotifier {
           _premiumPurchasedAt = ts?.toDate();
           _pdfTrialUsed = data['pdfTrialUsed'] ?? 0;
         }
+      } else {
+        _isPremium = false;
+        _premiumPurchasedAt = null;
+        _pdfTrialUsed = 0;
       }
       notifyListeners();
     }, onError: (e) {
@@ -289,6 +320,7 @@ class PremiumViewModel extends ChangeNotifier {
       _isPremium = true;
       _premiumPurchasedAt = now;
       _paymentStatus = PaymentStatus.success;
+      _showUpgradeNotification = true;
       notifyListeners();
       return true;
     } catch (e) {

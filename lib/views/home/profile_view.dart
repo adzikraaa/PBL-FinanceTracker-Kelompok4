@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/auth_viewmodel.dart';
+import '../../viewmodels/premium_viewmodel.dart';
 import '../auth/welcome_view.dart';
 import 'edit_profile_view.dart';
 import 'support_view.dart';
@@ -15,8 +16,9 @@ class ProfileView extends StatefulWidget {
   State<ProfileView> createState() => _ProfileViewState();
 }
 
-class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStateMixin {
+class _ProfileViewState extends State<ProfileView> with TickerProviderStateMixin {
   late AnimationController _animController;
+  late AnimationController _pulseController;
   bool _isPushNotificationEnabled = true;
 
   @override
@@ -26,11 +28,17 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
       vsync: this,
       duration: const Duration(milliseconds: 800),
     )..forward();
+
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
   }
 
   @override
   void dispose() {
     _animController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
@@ -54,6 +62,7 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
     final displayName = user?.displayName ?? 'Pengguna';
     final email = user?.email ?? '-';
     final photoUrl = user?.photoURL;
+    final isPremium = context.watch<PremiumViewModel>().isPremium;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D2818),
@@ -213,60 +222,98 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
                           child: Column(
                             children: [
                               // Avatar circle
-                              Stack(
-                                children: [
-                                  Container(
-                                    width: 100,
-                                    height: 100,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          Color(0xFF22C55E),
-                                          Color(0xFF4ADE80),
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: const Color(0xFF4ADE80)
-                                              .withOpacity(0.2),
-                                          blurRadius: 15,
-                                          spreadRadius: 1,
-                                        ),
-                                      ],
-                                    ),
-                                    child: photoUrl != null
-                                        ? ClipOval(
-                                            child: Image.network(
-                                              photoUrl,
-                                              fit: BoxFit.cover,
-                                              errorBuilder:
-                                                  (_, __, ___) =>
-                                                      _buildInitialAvatar(
-                                                          displayName),
+                              AnimatedBuilder(
+                                animation: _pulseController,
+                                builder: (context, child) {
+                                  final double pulse = _pulseController.value;
+                                  final double glowSpread = isPremium ? 2.0 + pulse * 4.0 : 1.0;
+                                  final double glowBlur = isPremium ? 15.0 + pulse * 10.0 : 15.0;
+                                  final double glowOpacity = isPremium ? 0.3 + pulse * 0.3 : 0.2;
+
+                                  return Stack(
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      Container(
+                                        width: 100,
+                                        height: 100,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          gradient: isPremium
+                                              ? const LinearGradient(
+                                                  colors: [Color(0xFFFFD700), Color(0xFFFFA500), Color(0xFFFF8C00)],
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                )
+                                              : const LinearGradient(
+                                                  colors: [
+                                                    Color(0xFF22C55E),
+                                                    Color(0xFF4ADE80),
+                                                  ],
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: isPremium
+                                                  ? const Color(0xFFFFD700).withOpacity(glowOpacity)
+                                                  : const Color(0xFF4ADE80).withOpacity(glowOpacity),
+                                              blurRadius: glowBlur,
+                                              spreadRadius: glowSpread,
                                             ),
-                                          )
-                                        : _buildInitialAvatar(displayName),
-                                  ),
-                                  // Online indicator dot
-                                  Positioned(
-                                    bottom: 4,
-                                    right: 4,
-                                    child: Container(
-                                      width: 22,
-                                      height: 22,
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF22C55E),
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                            color: const Color(0xFF0D2818),
-                                            width: 4),
+                                          ],
+                                          border: Border.all(
+                                            color: isPremium ? const Color(0xFFFFD700) : const Color(0xFF4ADE80).withOpacity(0.5),
+                                            width: 3,
+                                          ),
+                                        ),
+                                        child: photoUrl != null
+                                            ? ClipOval(
+                                                child: Image.network(
+                                                  photoUrl,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (_, __, ___) =>
+                                                      _buildInitialAvatar(displayName, isPremium),
+                                                ),
+                                              )
+                                            : _buildInitialAvatar(displayName, isPremium),
                                       ),
-                                    ),
-                                  ),
-                                ],
+                                      // Online indicator dot or golden star
+                                      Positioned(
+                                        bottom: 4,
+                                        right: 4,
+                                        child: Container(
+                                          width: 22,
+                                          height: 22,
+                                          decoration: BoxDecoration(
+                                            color: isPremium ? const Color(0xFFFFD700) : const Color(0xFF22C55E),
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                                color: const Color(0xFF0D2818),
+                                                width: 4),
+                                          ),
+                                          child: isPremium
+                                              ? const Center(
+                                                  child: Icon(Icons.star, size: 10, color: Colors.black),
+                                                )
+                                              : null,
+                                        ),
+                                      ),
+                                      // Premium Crown Badge - floating
+                                      if (isPremium)
+                                        Positioned(
+                                          top: -12 + (pulse * -4),
+                                          right: -10,
+                                          child: Transform.rotate(
+                                            angle: 0.3 + (pulse * 0.15),
+                                            child: const Text(
+                                              '👑',
+                                              style: TextStyle(fontSize: 32),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  );
+                                },
                               ),
                               const SizedBox(height: 20),
                               Text(
@@ -291,26 +338,44 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF163520),
+                                  color: isPremium ? const Color(0xFF2D2006) : const Color(0xFF163520),
                                   borderRadius: BorderRadius.circular(24),
+                                  gradient: isPremium
+                                      ? const LinearGradient(
+                                          colors: [Color(0xFF2D2006), Color(0xFF1A1303)],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        )
+                                      : null,
                                   border: Border.all(
-                                    color: const Color(0xFF4ADE80).withOpacity(0.2),
-                                    width: 1,
+                                    color: isPremium
+                                        ? const Color(0xFFFFD700).withOpacity(0.4)
+                                        : const Color(0xFF4ADE80).withOpacity(0.2),
+                                    width: isPremium ? 1.5 : 1,
                                   ),
+                                  boxShadow: isPremium
+                                      ? [
+                                          BoxShadow(
+                                            color: const Color(0xFFFFD700).withOpacity(0.1),
+                                            blurRadius: 8,
+                                            spreadRadius: 1,
+                                          ),
+                                        ]
+                                      : null,
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(
-                                      Icons.verified,
-                                      color: Color(0xFF4ADE80),
+                                    Icon(
+                                      isPremium ? Icons.workspace_premium_rounded : Icons.verified,
+                                      color: isPremium ? const Color(0xFFFFD700) : const Color(0xFF4ADE80),
                                       size: 16,
                                     ),
                                     const SizedBox(width: 8),
-                                    const Text(
-                                      'Pengguna Aktif',
+                                    Text(
+                                      isPremium ? 'Premium Member 👑' : 'Pengguna Aktif',
                                       style: TextStyle(
-                                        color: Color(0xFF4ADE80),
+                                        color: isPremium ? const Color(0xFFFFD700) : const Color(0xFF4ADE80),
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -607,14 +672,14 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildInitialAvatar(String name) {
+  Widget _buildInitialAvatar(String name, [bool isPremium = false]) {
     final initial =
         name.isNotEmpty ? name[0].toUpperCase() : '?';
     return Center(
       child: Text(
         initial,
-        style: const TextStyle(
-          color: Color(0xFF0D2818),
+        style: TextStyle(
+          color: isPremium ? Colors.black : const Color(0xFF0D2818),
           fontSize: 34,
           fontWeight: FontWeight.bold,
         ),

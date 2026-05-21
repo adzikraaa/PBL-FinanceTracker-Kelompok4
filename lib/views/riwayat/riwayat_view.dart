@@ -8,7 +8,6 @@ import '../../data/models/hpp_model.dart';
 import '../../data/services/pdf_service.dart';
 import '../finance/hitung_hpp_page.dart';
 
-import '../../viewmodels/auth_viewmodel.dart';
 import '../../viewmodels/premium_viewmodel.dart';
 
 String _fmtTime(DateTime d) => DateFormat('HH:mm', 'id_ID').format(d);
@@ -125,6 +124,7 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
+    final isPremium = context.watch<PremiumViewModel>().isPremium;
     return Consumer<RiwayatViewModel>(
       builder: (context, vm, _) {
         final groupedHistory = _groupHistoryByDate(vm.history);
@@ -159,7 +159,6 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                               _buildHistoryChart(vm.history),
                               ...groupKeys.map((key) {
                                 final items = groupedHistory[key]!;
-                                final isPremium = context.read<AuthViewModel>().isPremium;
                                 return Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [

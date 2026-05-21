@@ -8,7 +8,6 @@ import '../../viewmodels/home_viewmodel.dart';
 import '../../viewmodels/note_viewmodel.dart';
 import '../../viewmodels/riwayat_viewmodel.dart';
 import '../../viewmodels/saving_viewmodel.dart';
-import '../../viewmodels/auth_viewmodel.dart';
 import '../../viewmodels/premium_viewmodel.dart';
 import '../finance/hitung_hpp_page.dart';
 import '../insight/insight_view.dart';
@@ -119,29 +118,53 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               _buildSparkleLayer(),
               SafeArea(
                 bottom: false,
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.only(bottom: 100),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildGreetingSection(),
-                      const SizedBox(height: 20),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Column(
-                          children: [
-                            _buildRiwayatCard(),
-                            const SizedBox(height: 14),
-                            _buildTabunganCard(),
-                            const SizedBox(height: 14),
-                            _buildHppBepCard(),
-                            const SizedBox(height: 14),
-                            _buildBottomRow(),
-                          ],
+                child: RefreshIndicator(
+                  color: kGreen,
+                  backgroundColor: kCard,
+                  displacement: 20,
+                  onRefresh: () async {
+                    final userId = FirebaseAuth.instance.currentUser?.uid;
+                    if (userId != null) {
+                      final premiumVm = context.read<PremiumViewModel>();
+                      final savingVm = context.read<SavingViewModel>();
+                      
+                      // Refresh premium status and restart savings listener
+                      savingVm.listenSavings(userId);
+                      
+                      await Future.wait([
+                        premiumVm.refreshStatus(),
+                        Future.delayed(const Duration(milliseconds: 1000)),
+                      ]);
+                    } else {
+                      await Future.delayed(const Duration(milliseconds: 1000));
+                    }
+                  },
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics(),
+                    ),
+                    padding: const EdgeInsets.only(bottom: 100),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildGreetingSection(),
+                        const SizedBox(height: 20),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Column(
+                            children: [
+                              _buildRiwayatCard(),
+                              const SizedBox(height: 14),
+                              _buildTabunganCard(),
+                              const SizedBox(height: 14),
+                              _buildHppBepCard(),
+                              const SizedBox(height: 14),
+                              _buildBottomRow(),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -193,7 +216,9 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     final photoUrl = user?.photoURL;
     final displayName = user?.displayName ?? _vm.userName;
     final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
-    final isPremium = context.watch<AuthViewModel>().isPremium;
+    final premiumVm = context.watch<PremiumViewModel>();
+    final isPremium = premiumVm.isPremium;
+    final showUpgradeNotification = premiumVm.showUpgradeNotification;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
@@ -258,94 +283,133 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               ),
             ),
           // ── Profile avatar button ──
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ProfileView()),
-              );
-            },
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                // Avatar
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF22C55E), Color(0xFF4ADE80)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF22C55E).withValues(alpha: 0.35),
-                        blurRadius: 12,
-                        spreadRadius: 1,
+          // ── Profile avatar button ──
+          AnimatedBuilder(
+            animation: _sparkleController,
+            builder: (context, child) {
+              final pulse = (sin(_sparkleController.value * 2 * pi) + 1.0) / 2.0;
+              final double glowSpread = isPremium ? 1.5 + pulse * 2.5 : 1.0;
+              final double glowBlur = isPremium ? 12.0 + pulse * 8.0 : 12.0;
+              final double glowOpacity = isPremium ? 0.3 + pulse * 0.35 : 0.35;
+
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProfileView()),
+                  );
+                },
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    // Avatar
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: isPremium
+                            ? const LinearGradient(
+                                colors: [Color(0xFFFFD700), Color(0xFFFFA500), Color(0xFFFF8C00)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                            : const LinearGradient(
+                                colors: [Color(0xFF22C55E), Color(0xFF4ADE80)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: isPremium
+                                ? const Color(0xFFFFD700).withOpacity(glowOpacity)
+                                : const Color(0xFF22C55E).withOpacity(glowOpacity),
+                            blurRadius: glowBlur,
+                            spreadRadius: glowSpread,
+                          ),
+                        ],
+                        border: Border.all(
+                          color: isPremium ? const Color(0xFFFFD700) : kGreen.withOpacity(0.5),
+                          width: 2,
+                        ),
                       ),
-                    ],
-                    border: Border.all(
-                      color: kGreen.withOpacity(0.5),
-                      width: 2,
-                    ),
-                  ),
-                  child: photoUrl != null
-                      ? ClipOval(
-                          child: Image.network(
-                            photoUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Center(
+                      child: photoUrl != null
+                          ? ClipOval(
+                              child: Image.network(
+                                photoUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Center(
+                                  child: Text(
+                                    initial,
+                                    style: TextStyle(
+                                      color: isPremium ? Colors.black : const Color(0xFF0D2818),
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Center(
                               child: Text(
                                 initial,
-                                style: const TextStyle(
-                                  color: Color(0xFF0D2818),
+                                style: TextStyle(
+                                  color: isPremium ? Colors.black : const Color(0xFF0D2818),
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
-                          ),
-                        )
-                      : Center(
-                          child: Text(
-                            initial,
-                            style: const TextStyle(
-                              color: Color(0xFF0D2818),
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
+                    ),
+                    // online dot
+                    Positioned(
+                      bottom: 2,
+                      right: 2,
+                      child: Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: isPremium ? const Color(0xFFFFD700) : kGreen,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: kBg, width: 2),
+                        ),
+                        child: isPremium
+                            ? const Center(
+                                child: Icon(Icons.star, size: 6, color: Colors.black),
+                              )
+                            : null,
+                      ),
+                    ),
+
+                    // Premium Crown Badge (Visible if premium) - tilted & floating
+                    if (isPremium)
+                      Positioned(
+                        top: -8 + (pulse * -3),
+                        right: -8,
+                        child: Transform.rotate(
+                          angle: 0.3 + (pulse * 0.15),
+                          child: const Text(
+                            '👑',
+                            style: TextStyle(fontSize: 20),
                           ),
                         ),
-                ),
-                // online dot
-                Positioned(
-                  bottom: 2,
-                  right: 2,
-                  child: Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: kGreen,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: kBg, width: 2),
-                    ),
-                  ),
-                ),
+                      ),
 
-                // Premium Crown Badge (Visible if premium)
-                if (isPremium)
-                  const Positioned(
-                    top: -8,
-                    right: -8,
-                    child: Text(
-                      '👑',
-                      style: TextStyle(fontSize: 22),
-                    ),
-                  ),
-              ],
-            ),
+                    // Bubble Chat success notification
+                    if (showUpgradeNotification)
+                      Positioned(
+                        bottom: 62,
+                        right: 0,
+                        child: PremiumBubbleChat(
+                          onClose: () {
+                            context.read<PremiumViewModel>().dismissUpgradeNotification();
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -1345,8 +1409,8 @@ class _PremiumUpgradeSheetState extends State<_PremiumUpgradeSheet>
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => ChangeNotifierProvider(
-              create: (_) => PremiumViewModel(),
+            builder: (_) => ChangeNotifierProvider.value(
+              value: context.read<PremiumViewModel>(),
               child: const PremiumView(),
             ),
           ),
@@ -1498,4 +1562,147 @@ class _DonutPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class PremiumBubbleChat extends StatefulWidget {
+  final VoidCallback onClose;
+  const PremiumBubbleChat({super.key, required this.onClose});
+
+  @override
+  State<PremiumBubbleChat> createState() => _PremiumBubbleChatState();
+}
+
+class _PremiumBubbleChatState extends State<PremiumBubbleChat> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 650),
+    );
+    _scaleAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.elasticOut,
+    );
+    _controller.forward();
+
+    // Auto dismiss after 6 seconds
+    Future.delayed(const Duration(seconds: 6), () {
+      if (mounted) {
+        _controller.reverse().then((_) {
+          if (mounted) widget.onClose();
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      alignment: Alignment.bottomRight,
+      child: Material(
+        color: Colors.transparent,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: 220,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF1E1B10), Color(0xFF14120B)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFFFFD700).withOpacity(0.7),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFFD700).withOpacity(0.25),
+                    blurRadius: 12,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'Transaksi Berhasil! 🎉',
+                          style: TextStyle(
+                            color: Color(0xFFFFD700),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          _controller.reverse().then((_) {
+                            if (mounted) widget.onClose();
+                          });
+                        },
+                        child: const Icon(
+                          Icons.close_rounded,
+                          color: Colors.white70,
+                          size: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Halo Premium Member! Nikmati semua fitur tanpa batas 👑',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Triangle pointer pointing down
+            Positioned(
+              bottom: -5,
+              right: 20,
+              child: Transform.rotate(
+                angle: pi / 4,
+                child: Container(
+                  width: 10,
+                  height: 10,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF14120B),
+                    border: Border(
+                      right: BorderSide(color: Color(0xFFFFD700), width: 1.5),
+                      bottom: BorderSide(color: Color(0xFFFFD700), width: 1.5),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

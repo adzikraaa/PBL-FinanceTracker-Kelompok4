@@ -235,6 +235,30 @@ class _PaymentViewState extends State<PaymentView> {
                 ),
               ),
             ),
+
+          // Tombol manual sukses khusus mode Sandbox
+          if (MidtransConfig.isSandbox && !_isConfirming && !_isPageLoading)
+            Positioned(
+              bottom: 20,
+              left: 20,
+              right: 20,
+              child: ElevatedButton(
+                onPressed: () => _onPaymentSuccess(context.read<PremiumViewModel>()),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFFD700),
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 8,
+                ),
+                child: const Text(
+                  'Simulasi: Selesai Pembayaran',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
+            ),
         ],
       ),
     );

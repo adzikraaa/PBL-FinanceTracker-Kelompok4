@@ -6,8 +6,8 @@ import 'package:provider/provider.dart';
 import '../../viewmodels/finance_viewmodel.dart';
 import '../../utils/currency_formatter.dart';
 import '../../viewmodels/premium_viewmodel.dart';
-import '../../viewmodels/home_viewmodel.dart';
 import 'dart:ui';
+import '../premium/premium_view.dart';
 
 const Color kBg = Color(0xFF0A1F12);
 const Color kCardDark = Color(0xFF132F1D);
@@ -255,8 +255,15 @@ class _InsightViewState extends State<InsightView> {
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () {
-                  final homeVm = Provider.of<HomeViewModel>(context, listen: false);
-                  homeVm.onNavTapManual(3); // Navigasi ke Profile yang ada tombol Premium
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChangeNotifierProvider.value(
+                        value: context.read<PremiumViewModel>(),
+                        child: const PremiumView(),
+                      ),
+                    ),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kGreenAccent,
