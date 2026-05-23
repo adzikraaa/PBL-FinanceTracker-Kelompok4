@@ -71,6 +71,9 @@ class AuthViewModel extends ChangeNotifier {
         case 'wrong-password':
           _setError('Password salah.');
           break;
+        case 'invalid-credential':
+          _setError('Password atau email salah.');
+          break;
         case 'invalid-email':
           _setError('Format email tidak valid.');
           break;
@@ -78,7 +81,16 @@ class AuthViewModel extends ChangeNotifier {
           _setError('Terlalu banyak percobaan login. Coba lagi nanti.');
           break;
         default:
-          _setError('Login gagal: ${e.message}');
+          if (e.message != null &&
+              (e.message!.contains('incorrect') ||
+               e.message!.contains('credential') ||
+               e.message!.contains('invalid') ||
+               e.message!.contains('malformed') ||
+               e.message!.contains('expired'))) {
+            _setError('Password atau email salah.');
+          } else {
+            _setError('Login gagal: ${e.message}');
+          }
       }
       return false;
     } catch (e) {

@@ -738,9 +738,9 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
             ),
             const SizedBox(height: 28),
             GestureDetector(
-              onTap: () => Navigator.pushReplacement(
+              onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const HitungHppPage()),
+                MaterialPageRoute(builder: (_) => const HitungHppPage(showBackButton: true)),
               ),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),

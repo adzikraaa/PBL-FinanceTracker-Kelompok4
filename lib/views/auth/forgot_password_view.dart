@@ -130,7 +130,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
                             const SizedBox(height: 8),
                             _buildTextField(
                               controller: _emailController,
-                              hint: 'Enter Email',
+                              hint: 'example@gmail.com',
                               keyboardType: TextInputType.emailAddress,
                             ),
                             const SizedBox(height: 32),

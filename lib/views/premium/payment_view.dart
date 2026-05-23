@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -16,12 +17,62 @@ class _PaymentViewState extends State<PaymentView> {
   late WebViewController _webController;
   bool _isPageLoading = true;
   bool _isConfirming = false;
+  bool _showSuccessButton = false;
+  Timer? _successCheckTimer;
 
   @override
   void initState() {
     super.initState();
     final vm = context.read<PremiumViewModel>();
     _initWebView(vm);
+    _startSuccessCheckTimer();
+  }
+
+  @override
+  void dispose() {
+    _successCheckTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startSuccessCheckTimer() {
+    _successCheckTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted && !_isPageLoading && !_isConfirming) {
+        _checkPageContent();
+      }
+    });
+  }
+
+  Future<void> _checkPageContent() async {
+    if (!mounted) return;
+    try {
+      final currentUrl = await _webController.currentUrl();
+      if (currentUrl == null) return;
+
+      // Detect finish URL redirect
+      if (currentUrl.startsWith(MidtransConfig.finishUrl)) {
+        if (!_showSuccessButton) {
+          setState(() {
+            _showSuccessButton = true;
+          });
+        }
+        return;
+      }
+
+      // Check if page contains payment success indicators
+      final result = await _webController.runJavaScriptReturningResult(
+        "document.body.innerText.indexOf('Transaction is successful') !== -1 || document.body.innerText.indexOf('PAID') !== -1"
+      );
+      final resultStr = result.toString().toLowerCase();
+      if (resultStr == 'true' || resultStr == '1' || resultStr.contains('true')) {
+        if (!_showSuccessButton) {
+          setState(() {
+            _showSuccessButton = true;
+          });
+        }
+      }
+    } catch (e) {
+      // Ignore javascript execution errors before page is fully loaded
+    }
   }
 
   void _initWebView(PremiumViewModel vm) {
@@ -31,7 +82,10 @@ class _PaymentViewState extends State<PaymentView> {
       ..setNavigationDelegate(
         NavigationDelegate(
           onPageStarted: (_) => setState(() => _isPageLoading = true),
-          onPageFinished: (_) => setState(() => _isPageLoading = false),
+          onPageFinished: (_) {
+            setState(() => _isPageLoading = false);
+            _checkPageContent();
+          },
           onWebResourceError: (_) => setState(() => _isPageLoading = false),
           onNavigationRequest: (NavigationRequest req) {
             return _handleNavigation(req.url, vm);
@@ -236,8 +290,8 @@ class _PaymentViewState extends State<PaymentView> {
               ),
             ),
 
-          // Tombol manual sukses khusus mode Sandbox
-          if (MidtransConfig.isSandbox && !_isConfirming && !_isPageLoading)
+          // Tombol "Pembayaran Selesai" hanya muncul setelah transaksi sukses (PAID)
+          if (_showSuccessButton && !_isConfirming)
             Positioned(
               bottom: 20,
               left: 20,
@@ -254,7 +308,7 @@ class _PaymentViewState extends State<PaymentView> {
                   elevation: 8,
                 ),
                 child: const Text(
-                  'Simulasi: Selesai Pembayaran',
+                  'Pembayaran Selesai',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),

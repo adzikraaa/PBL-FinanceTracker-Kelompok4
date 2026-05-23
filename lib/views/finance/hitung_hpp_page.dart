@@ -10,7 +10,8 @@ import 'hasil_analisis_page.dart';
 const Color _kNavBg     = Color(0xFF132018);
 const Color _kNavBorder = Color(0xFF2C4334);
 class HitungHppPage extends StatefulWidget {
-  const HitungHppPage({super.key});
+  final bool showBackButton;
+  const HitungHppPage({super.key, this.showBackButton = false});
 
   @override
   State<HitungHppPage> createState() => _HitungHppPageState();
@@ -152,6 +153,32 @@ class _HitungHppPageState extends State<HitungHppPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Back button (hanya muncul jika dibuka dari riwayat)
+                    if (widget.showBackButton)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: GestureDetector(
+                          onTap: () {
+                            final homeVm = Provider.of<HomeViewModel>(context, listen: false);
+                            Navigator.pop(context);
+                            homeVm.onNavTapManual(2); // Arahkan ke tab Home
+                          },
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1E3A2A),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFF2C4334)),
+                            ),
+                            child: const Icon(
+                              Icons.arrow_back_ios_new,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ),
                     const Text(
                       "HARGA POKOK PRODUKSI",
                       style: TextStyle(

@@ -19,6 +19,8 @@ class _LoginViewState extends State<LoginView>
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  String? _emailError;
+  String? _passwordError;
   late AnimationController _animController;
   late AnimationController _sparkleCtrl;
   late AnimationController _floatCtrl;
@@ -47,6 +49,13 @@ class _LoginViewState extends State<LoginView>
       vsync: this,
       duration: const Duration(seconds: 4),
     )..repeat(reverse: true);
+
+    _emailController.addListener(() {
+      if (_emailError != null) setState(() => _emailError = null);
+    });
+    _passwordController.addListener(() {
+      if (_passwordError != null) setState(() => _passwordError = null);
+    });
   }
 
   @override
@@ -136,15 +145,16 @@ class _LoginViewState extends State<LoginView>
                             const SizedBox(height: 8),
                             _buildTextField(
                               controller: _emailController,
-                              hint: 'Enter Email',
+                              hint: 'example@gmail.com',
                               keyboardType: TextInputType.emailAddress,
+                              errorText: _emailError,
                             ),
                             const SizedBox(height: 16),
 
                             // Password
                             _buildLabel('Password'),
                             const SizedBox(height: 8),
-                            _buildPasswordField(),
+                            _buildPasswordField(errorText: _passwordError),
                             const SizedBox(height: 8),
 
                             // Forgot password
@@ -177,6 +187,33 @@ class _LoginViewState extends State<LoginView>
                                   onTap: vm.isLoading
                                       ? null
                                       : () async {
+                                          // Client-side validation
+                                          bool hasError = false;
+                                          setState(() {
+                                            _emailError = null;
+                                            _passwordError = null;
+                                            if (_emailController.text.trim().isEmpty) {
+                                              _emailError = 'Email tidak boleh kosong';
+                                              hasError = true;
+                                            } else if (!RegExp(
+                                                    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+                                                .hasMatch(
+                                                    _emailController.text.trim())) {
+                                              _emailError = 'Format email tidak valid';
+                                              hasError = true;
+                                            }
+                                            if (_passwordController.text.isEmpty) {
+                                              _passwordError =
+                                                  'Password tidak boleh kosong';
+                                              hasError = true;
+                                            } else if (_passwordController.text.length < 6) {
+                                              _passwordError =
+                                                  'Password minimal 6 karakter';
+                                              hasError = true;
+                                            }
+                                          });
+                                          if (hasError) return;
+
                                           final success =
                                               await vm.loginWithEmail(
                                             email: _emailController.text.trim(),
@@ -193,12 +230,9 @@ class _LoginViewState extends State<LoginView>
                                               (route) => false,
                                             );
                                           } else if (vm.errorMessage != null) {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                content: Text(vm.errorMessage!),
-                                              ),
-                                            );
+                                            setState(() =>
+                                                _passwordError =
+                                                    vm.errorMessage);
                                           }
                                         },
                                   child: AnimatedContainer(
@@ -433,86 +467,188 @@ class _LoginViewState extends State<LoginView>
     required TextEditingController controller,
     required String hint,
     TextInputType keyboardType = TextInputType.text,
+    String? errorText,
   }) {
-    return TextField(
-      controller: controller,
-      keyboardType: keyboardType,
-      style: const TextStyle(
-        fontFamily: 'Lexend',
-        color: Colors.white,
-        fontSize: 14,
-      ),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(
-          color: AppColors.white.withValues(alpha: 0.4),
-          fontSize: 14,
+    final hasError = errorText != null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          decoration: hasError
+              ? BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFF4D4D).withValues(alpha: 0.28),
+                      blurRadius: 10,
+                      spreadRadius: 0,
+                    ),
+                  ],
+                )
+              : const BoxDecoration(),
+          child: TextField(
+            controller: controller,
+            keyboardType: keyboardType,
+            style: const TextStyle(
+              fontFamily: 'Lexend',
+              color: Colors.white,
+              fontSize: 14,
+            ),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: TextStyle(
+                color: AppColors.white.withValues(alpha: 0.4),
+                fontSize: 14,
+              ),
+              filled: true,
+              fillColor: hasError
+                  ? const Color(0xFFFF4D4D).withValues(alpha: 0.08)
+                  : AppColors.white.withValues(alpha: 0.08),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: hasError
+                      ? const Color(0xFFFF4D4D)
+                      : AppColors.white.withValues(alpha: 0.15),
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: hasError
+                      ? const Color(0xFFFF4D4D)
+                      : AppColors.white.withValues(alpha: 0.15),
+                  width: hasError ? 1.5 : 1.0,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: hasError
+                      ? const Color(0xFFFF4D4D)
+                      : AppColors.accentYellow,
+                  width: 1.5,
+                ),
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            ),
+          ),
         ),
-        filled: true,
-        fillColor: AppColors.white.withValues(alpha: 0.08),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              BorderSide(color: AppColors.white.withValues(alpha: 0.15)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              BorderSide(color: AppColors.white.withValues(alpha: 0.15)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              const BorderSide(color: AppColors.accentYellow, width: 1.5),
-        ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      ),
+        if (hasError) _buildErrorMessage(errorText),
+      ],
     );
   }
 
-  Widget _buildPasswordField() {
-    return TextField(
-      controller: _passwordController,
-      obscureText: _obscurePassword,
-      style: const TextStyle(
-        fontFamily: 'Lexend',
-        color: Colors.white,
-        fontSize: 14,
-      ),
-      decoration: InputDecoration(
-        hintText: 'Enter Password',
-        hintStyle: TextStyle(
-          color: AppColors.white.withValues(alpha: 0.4),
-          fontSize: 14,
-        ),
-        filled: true,
-        fillColor: AppColors.white.withValues(alpha: 0.08),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              BorderSide(color: AppColors.white.withValues(alpha: 0.15)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              BorderSide(color: AppColors.white.withValues(alpha: 0.15)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              const BorderSide(color: AppColors.accentYellow, width: 1.5),
-        ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        suffixIcon: IconButton(
-          icon: Icon(
-            _obscurePassword ? Icons.visibility_off : Icons.visibility,
-            color: AppColors.white.withValues(alpha: 0.4),
-            size: 18,
+  Widget _buildPasswordField({String? errorText}) {
+    final hasError = errorText != null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          decoration: hasError
+              ? BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFF4D4D).withValues(alpha: 0.28),
+                      blurRadius: 10,
+                      spreadRadius: 0,
+                    ),
+                  ],
+                )
+              : const BoxDecoration(),
+          child: TextField(
+            controller: _passwordController,
+            obscureText: _obscurePassword,
+            style: const TextStyle(
+              fontFamily: 'Lexend',
+              color: Colors.white,
+              fontSize: 14,
+            ),
+            decoration: InputDecoration(
+              hintText: '••••••',
+              hintStyle: TextStyle(
+                color: AppColors.white.withValues(alpha: 0.4),
+                fontSize: 14,
+              ),
+              filled: true,
+              fillColor: hasError
+                  ? const Color(0xFFFF4D4D).withValues(alpha: 0.08)
+                  : AppColors.white.withValues(alpha: 0.08),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: hasError
+                      ? const Color(0xFFFF4D4D)
+                      : AppColors.white.withValues(alpha: 0.15),
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: hasError
+                      ? const Color(0xFFFF4D4D)
+                      : AppColors.white.withValues(alpha: 0.15),
+                  width: hasError ? 1.5 : 1.0,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: hasError
+                      ? const Color(0xFFFF4D4D)
+                      : AppColors.accentYellow,
+                  width: 1.5,
+                ),
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                  color: AppColors.white.withValues(alpha: 0.4),
+                  size: 18,
+                ),
+                onPressed: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
+              ),
+            ),
           ),
-          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
         ),
+        if (hasError) _buildErrorMessage(errorText),
+      ],
+    );
+  }
+
+  Widget _buildErrorMessage(String message) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 6, left: 2),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.error_outline_rounded,
+            color: Color(0xFFFF6B6B),
+            size: 14,
+          ),
+          const SizedBox(width: 5),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                fontFamily: 'Lexend',
+                color: Color(0xFFFF6B6B),
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
