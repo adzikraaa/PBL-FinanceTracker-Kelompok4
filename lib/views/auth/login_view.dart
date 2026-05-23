@@ -5,10 +5,15 @@ import '../../viewmodels/auth_viewmodel.dart';
 import '../../shared/colors.dart';
 import 'register_view.dart';
 <<<<<<< HEAD
+<<<<<<< HEAD
 import '../../pages/home/home_view.dart';
 =======
 import '../home/home_view.dart';
 >>>>>>> 5e2f1ad1a14617cb7540495691450c15ca8f82a2
+=======
+import 'forgot_password_view.dart';
+import '../home/main_navigation.dart';
+>>>>>>> develop
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -22,6 +27,8 @@ class _LoginViewState extends State<LoginView>
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  String? _emailError;
+  String? _passwordError;
   late AnimationController _animController;
   late AnimationController _sparkleCtrl;
   late AnimationController _floatCtrl;
@@ -50,6 +57,13 @@ class _LoginViewState extends State<LoginView>
       vsync: this,
       duration: const Duration(seconds: 4),
     )..repeat(reverse: true);
+
+    _emailController.addListener(() {
+      if (_emailError != null) setState(() => _emailError = null);
+    });
+    _passwordController.addListener(() {
+      if (_passwordError != null) setState(() => _passwordError = null);
+    });
   }
 
   @override
@@ -139,22 +153,28 @@ class _LoginViewState extends State<LoginView>
                             const SizedBox(height: 8),
                             _buildTextField(
                               controller: _emailController,
-                              hint: 'Enter Email',
+                              hint: 'example@gmail.com',
                               keyboardType: TextInputType.emailAddress,
+                              errorText: _emailError,
                             ),
                             const SizedBox(height: 16),
 
                             // Password
                             _buildLabel('Password'),
                             const SizedBox(height: 8),
-                            _buildPasswordField(),
+                            _buildPasswordField(errorText: _passwordError),
                             const SizedBox(height: 8),
 
                             // Forgot password
                             Align(
                               alignment: Alignment.centerRight,
                               child: GestureDetector(
-                                onTap: () {},
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const ForgotPasswordView(),
+                                  ),
+                                ),
                                 child: const Text(
                                   'Forgot Password?',
                                   style: TextStyle(
@@ -175,6 +195,33 @@ class _LoginViewState extends State<LoginView>
                                   onTap: vm.isLoading
                                       ? null
                                       : () async {
+                                          // Client-side validation
+                                          bool hasError = false;
+                                          setState(() {
+                                            _emailError = null;
+                                            _passwordError = null;
+                                            if (_emailController.text.trim().isEmpty) {
+                                              _emailError = 'Email tidak boleh kosong';
+                                              hasError = true;
+                                            } else if (!RegExp(
+                                                    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+                                                .hasMatch(
+                                                    _emailController.text.trim())) {
+                                              _emailError = 'Format email tidak valid';
+                                              hasError = true;
+                                            }
+                                            if (_passwordController.text.isEmpty) {
+                                              _passwordError =
+                                                  'Password tidak boleh kosong';
+                                              hasError = true;
+                                            } else if (_passwordController.text.length < 6) {
+                                              _passwordError =
+                                                  'Password minimal 6 karakter';
+                                              hasError = true;
+                                            }
+                                          });
+                                          if (hasError) return;
+
                                           final success =
                                               await vm.loginWithEmail(
                                             email: _emailController.text.trim(),
@@ -186,17 +233,14 @@ class _LoginViewState extends State<LoginView>
                                               context,
                                               MaterialPageRoute(
                                                 builder: (_) =>
-                                                    const HomeView(),
+                                                    const MainNavigation(),
                                               ),
                                               (route) => false,
                                             );
                                           } else if (vm.errorMessage != null) {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                content: Text(vm.errorMessage!),
-                                              ),
-                                            );
+                                            setState(() =>
+                                                _passwordError =
+                                                    vm.errorMessage);
                                           }
                                         },
                                   child: AnimatedContainer(
@@ -276,53 +320,59 @@ class _LoginViewState extends State<LoginView>
                             // Social buttons
                             Consumer<AuthViewModel>(
                               builder: (context, vm, _) {
-                                return Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    _buildSocialButton(
-                                      icon: Icons.facebook,
-                                      iconColor: const Color(0xFF4267B2),
-                                      onTap: () {},
+                                return GestureDetector(
+                                  onTap: () async {
+                                    final success = await vm.loginWithGoogle();
+                                    if (!mounted) return;
+                                    if (success) {
+                                      Navigator.pushAndRemoveUntil(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const MainNavigation(),
+                                        ),
+                                        (route) => false,
+                                      );
+                                    } else if (vm.errorMessage != null) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(vm.errorMessage!),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  child: Container(
+                                    width: double.infinity,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(25),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.15),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 3),
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(width: 12),
-                                    _buildSocialButton(
-                                      label: 'X',
-                                      labelColor: Colors.white,
-                                      onTap: () {},
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const GoogleLogo(size: 22),
+                                        const SizedBox(width: 12),
+                                        const Text(
+                                          'Continue with Google',
+                                          style: TextStyle(
+                                            fontFamily: 'Lexend',
+                                            color: Color(0xFF3C4043),
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(width: 12),
-                                    _buildSocialButton(
-                                      label: 'G',
-                                      labelColor: const Color(0xFFEA4335),
-                                      onTap: () async {
-                                        final success =
-                                            await vm.loginWithGoogle();
-                                        if (!mounted) return;
-                                        if (success) {
-                                          Navigator.pushAndRemoveUntil(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (_) => const HomeView(),
-                                            ),
-                                            (route) => false,
-                                          );
-                                        } else if (vm.errorMessage != null) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            SnackBar(
-                                              content: Text(vm.errorMessage!),
-                                            ),
-                                          );
-                                        }
-                                      },
-                                    ),
-                                    const SizedBox(width: 12),
-                                    _buildSocialButton(
-                                      icon: Icons.apple,
-                                      iconColor: Colors.white,
-                                      onTap: () {},
-                                    ),
-                                  ],
+                                  ),
                                 );
                               },
                             ),
@@ -425,86 +475,188 @@ class _LoginViewState extends State<LoginView>
     required TextEditingController controller,
     required String hint,
     TextInputType keyboardType = TextInputType.text,
+    String? errorText,
   }) {
-    return TextField(
-      controller: controller,
-      keyboardType: keyboardType,
-      style: const TextStyle(
-        fontFamily: 'Lexend',
-        color: Colors.white,
-        fontSize: 14,
-      ),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(
-          color: AppColors.white.withValues(alpha: 0.4),
-          fontSize: 14,
+    final hasError = errorText != null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          decoration: hasError
+              ? BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFF4D4D).withValues(alpha: 0.28),
+                      blurRadius: 10,
+                      spreadRadius: 0,
+                    ),
+                  ],
+                )
+              : const BoxDecoration(),
+          child: TextField(
+            controller: controller,
+            keyboardType: keyboardType,
+            style: const TextStyle(
+              fontFamily: 'Lexend',
+              color: Colors.white,
+              fontSize: 14,
+            ),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: TextStyle(
+                color: AppColors.white.withValues(alpha: 0.4),
+                fontSize: 14,
+              ),
+              filled: true,
+              fillColor: hasError
+                  ? const Color(0xFFFF4D4D).withValues(alpha: 0.08)
+                  : AppColors.white.withValues(alpha: 0.08),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: hasError
+                      ? const Color(0xFFFF4D4D)
+                      : AppColors.white.withValues(alpha: 0.15),
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: hasError
+                      ? const Color(0xFFFF4D4D)
+                      : AppColors.white.withValues(alpha: 0.15),
+                  width: hasError ? 1.5 : 1.0,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: hasError
+                      ? const Color(0xFFFF4D4D)
+                      : AppColors.accentYellow,
+                  width: 1.5,
+                ),
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            ),
+          ),
         ),
-        filled: true,
-        fillColor: AppColors.white.withValues(alpha: 0.08),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              BorderSide(color: AppColors.white.withValues(alpha: 0.15)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              BorderSide(color: AppColors.white.withValues(alpha: 0.15)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              const BorderSide(color: AppColors.accentYellow, width: 1.5),
-        ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      ),
+        if (hasError) _buildErrorMessage(errorText),
+      ],
     );
   }
 
-  Widget _buildPasswordField() {
-    return TextField(
-      controller: _passwordController,
-      obscureText: _obscurePassword,
-      style: const TextStyle(
-        fontFamily: 'Lexend',
-        color: Colors.white,
-        fontSize: 14,
-      ),
-      decoration: InputDecoration(
-        hintText: 'Enter Password',
-        hintStyle: TextStyle(
-          color: AppColors.white.withValues(alpha: 0.4),
-          fontSize: 14,
-        ),
-        filled: true,
-        fillColor: AppColors.white.withValues(alpha: 0.08),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              BorderSide(color: AppColors.white.withValues(alpha: 0.15)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              BorderSide(color: AppColors.white.withValues(alpha: 0.15)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              const BorderSide(color: AppColors.accentYellow, width: 1.5),
-        ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        suffixIcon: IconButton(
-          icon: Icon(
-            _obscurePassword ? Icons.visibility_off : Icons.visibility,
-            color: AppColors.white.withValues(alpha: 0.4),
-            size: 18,
+  Widget _buildPasswordField({String? errorText}) {
+    final hasError = errorText != null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          decoration: hasError
+              ? BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFF4D4D).withValues(alpha: 0.28),
+                      blurRadius: 10,
+                      spreadRadius: 0,
+                    ),
+                  ],
+                )
+              : const BoxDecoration(),
+          child: TextField(
+            controller: _passwordController,
+            obscureText: _obscurePassword,
+            style: const TextStyle(
+              fontFamily: 'Lexend',
+              color: Colors.white,
+              fontSize: 14,
+            ),
+            decoration: InputDecoration(
+              hintText: '••••••',
+              hintStyle: TextStyle(
+                color: AppColors.white.withValues(alpha: 0.4),
+                fontSize: 14,
+              ),
+              filled: true,
+              fillColor: hasError
+                  ? const Color(0xFFFF4D4D).withValues(alpha: 0.08)
+                  : AppColors.white.withValues(alpha: 0.08),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: hasError
+                      ? const Color(0xFFFF4D4D)
+                      : AppColors.white.withValues(alpha: 0.15),
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: hasError
+                      ? const Color(0xFFFF4D4D)
+                      : AppColors.white.withValues(alpha: 0.15),
+                  width: hasError ? 1.5 : 1.0,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: hasError
+                      ? const Color(0xFFFF4D4D)
+                      : AppColors.accentYellow,
+                  width: 1.5,
+                ),
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                  color: AppColors.white.withValues(alpha: 0.4),
+                  size: 18,
+                ),
+                onPressed: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
+              ),
+            ),
           ),
-          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
         ),
+        if (hasError) _buildErrorMessage(errorText),
+      ],
+    );
+  }
+
+  Widget _buildErrorMessage(String message) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 6, left: 2),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.error_outline_rounded,
+            color: Color(0xFFFF6B6B),
+            size: 14,
+          ),
+          const SizedBox(width: 5),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                fontFamily: 'Lexend',
+                color: Color(0xFFFF6B6B),
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -568,6 +720,7 @@ class _LoginViewState extends State<LoginView>
           // Radial glow bottom left
           Positioned(
 <<<<<<< HEAD
+<<<<<<< HEAD
             top: -60,
             left: -40,
             child: _blob(200, AppColors.primaryLight),
@@ -592,6 +745,8 @@ class _LoginViewState extends State<LoginView>
             left: -20,
             child: _blob(100, AppColors.primaryPurple.withValues(alpha: 0.5)),
 =======
+=======
+>>>>>>> develop
             bottom: -100,
             left: -100,
             child: _glowOrb(300, const Color(0xFF0E3D22), 0.6),
@@ -667,7 +822,10 @@ class _LoginViewState extends State<LoginView>
             right: 40,
             size: 30,
             delay: 0.3,
+<<<<<<< HEAD
 >>>>>>> 5e2f1ad1a14617cb7540495691450c15ca8f82a2
+=======
+>>>>>>> develop
           ),
         ],
       ),
@@ -807,3 +965,71 @@ class _SparklePainter extends CustomPainter {
   @override
   bool shouldRepaint(_SparklePainter o) => o.color != color;
 }
+
+// ═══════════════════════════════════════════════
+//  Google Logo Native CustomPainter (No CORS issues)
+// ═══════════════════════════════════════════════
+class GoogleLogo extends StatelessWidget {
+  final double size;
+  const GoogleLogo({super.key, this.size = 24});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(
+        painter: _GoogleLogoPainter(),
+      ),
+    );
+  }
+}
+
+class _GoogleLogoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final strokeWidth = size.width * 0.22;
+    final radius = size.width / 2 - strokeWidth / 2;
+
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.butt;
+
+    final rect = Rect.fromCircle(center: center, radius: radius);
+
+    // Blue arc (bottom right)
+    paint.color = const Color(0xFF4285F4);
+    canvas.drawArc(rect, 0.0, 0.8, false, paint);
+
+    // Green arc (bottom to bottom left)
+    paint.color = const Color(0xFF34A853);
+    canvas.drawArc(rect, 0.8, 1.6, false, paint);
+
+    // Yellow arc (left)
+    paint.color = const Color(0xFFFBBC05);
+    canvas.drawArc(rect, 2.4, 1.5, false, paint);
+
+    // Red arc (top left to top right)
+    paint.color = const Color(0xFFEA4335);
+    canvas.drawArc(rect, -2.4, 1.8, false, paint);
+
+    // Blue horizontal bar
+    paint.color = const Color(0xFF4285F4);
+    paint.style = PaintingStyle.fill;
+    canvas.drawRect(
+      Rect.fromLTRB(
+        center.dx - strokeWidth * 0.05, 
+        center.dy - strokeWidth / 2, 
+        size.width, 
+        center.dy + strokeWidth / 2
+      ),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+

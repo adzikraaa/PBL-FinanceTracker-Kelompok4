@@ -5,6 +5,7 @@ class SavingModel {
   double targetAmount;
   double currentAmount;
   DateTime createdAt;
+  String? imageUrl;
 
   SavingModel({
     this.id,
@@ -13,6 +14,7 @@ class SavingModel {
     required this.targetAmount,
     required this.currentAmount,
     required this.createdAt,
+    this.imageUrl,
   });
 
   // Konversi dari JSON (Firestore) ke Object Flutter
@@ -26,8 +28,19 @@ class SavingModel {
       createdAt: json['createdAt'] != null 
           ? DateTime.parse(json['createdAt']) 
           : DateTime.now(),
+      imageUrl: json['imageUrl'],
     );
   }
+
+  get iconUrl => null;
+
+  String? get name => null;
+
+  get progress => null;
+
+  get remainingAmount => null;
+
+  String? get expectedCompletion => null;
 
   // Konversi dari Object Flutter ke JSON untuk disimpan di Firestore
   Map<String, dynamic> toJson() {
@@ -37,6 +50,7 @@ class SavingModel {
       'targetAmount': targetAmount,
       'currentAmount': currentAmount,
       'createdAt': createdAt.toIso8601String(),
+      'imageUrl': imageUrl,
     };
   }
 }

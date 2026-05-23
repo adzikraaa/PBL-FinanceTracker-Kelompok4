@@ -1,0 +1,17 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Koleksi feedback: user yang login bisa menulis, tidak bisa dibaca dari app (hanya dari Firebase Console)
+    match /feedback/{docId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if false; // Hanya bisa dilihat dari Firebase Console
+    }
+
+    // Koleksi lain tetap pakai aturan yang sudah ada
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

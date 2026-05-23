@@ -7,6 +7,7 @@ class AuthViewModel extends ChangeNotifier {
   String? _errorMessage;
   bool _isLoggedIn = false;
   User? _currentUser;
+  bool _isPremium = false; // Default: User Biasa
 
   // Firebase & Google Sign-In instances
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -16,6 +17,7 @@ class AuthViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   bool get isLoggedIn => _isLoggedIn;
   User? get currentUser => _currentUser;
+  bool get isPremium => _isPremium;
 
   // Constructor: Check current auth state
   AuthViewModel() {
@@ -69,6 +71,9 @@ class AuthViewModel extends ChangeNotifier {
         case 'wrong-password':
           _setError('Password salah.');
           break;
+        case 'invalid-credential':
+          _setError('Password atau email salah.');
+          break;
         case 'invalid-email':
           _setError('Format email tidak valid.');
           break;
@@ -76,7 +81,16 @@ class AuthViewModel extends ChangeNotifier {
           _setError('Terlalu banyak percobaan login. Coba lagi nanti.');
           break;
         default:
-          _setError('Login gagal: ${e.message}');
+          if (e.message != null &&
+              (e.message!.contains('incorrect') ||
+               e.message!.contains('credential') ||
+               e.message!.contains('invalid') ||
+               e.message!.contains('malformed') ||
+               e.message!.contains('expired'))) {
+            _setError('Password atau email salah.');
+          } else {
+            _setError('Login gagal: ${e.message}');
+          }
       }
       return false;
     } catch (e) {
@@ -216,6 +230,39 @@ class AuthViewModel extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _setError('Logout gagal: ${e.toString()}');
+    }
+  }
+
+  // ─── Reset Password ───────────────────────────────────────────────────────
+  Future<bool> resetPassword(String email) async {
+    _setLoading(true);
+    _setError(null);
+
+    try {
+      if (email.isEmpty) {
+        _setError('Email tidak boleh kosong.');
+        return false;
+      }
+
+      await _firebaseAuth.sendPasswordResetEmail(email: email);
+      return true;
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'user-not-found':
+          _setError('Email tidak terdaftar.');
+          break;
+        case 'invalid-email':
+          _setError('Format email tidak valid.');
+          break;
+        default:
+          _setError('Gagal mengirim email reset: ${e.message}');
+      }
+      return false;
+    } catch (e) {
+      _setError('Error: ${e.toString()}');
+      return false;
+    } finally {
+      _setLoading(false);
     }
   }
 
