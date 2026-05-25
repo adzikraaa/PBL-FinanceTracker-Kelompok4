@@ -6,6 +6,7 @@ import '../../shared/colors.dart';
 import 'register_view.dart';
 import 'forgot_password_view.dart';
 import '../home/main_navigation.dart';
+import 'email_verification_view.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -221,14 +222,26 @@ class _LoginViewState extends State<LoginView>
                                           );
                                           if (!mounted) return;
                                           if (success) {
-                                            Navigator.pushAndRemoveUntil(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (_) =>
-                                                    const MainNavigation(),
-                                              ),
-                                              (route) => false,
-                                            );
+                                            final user = vm.currentUser;
+                                            if (user != null && !user.emailVerified) {
+                                              Navigator.pushAndRemoveUntil(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (_) =>
+                                                      const EmailVerificationView(),
+                                                ),
+                                                (route) => false,
+                                              );
+                                            } else {
+                                              Navigator.pushAndRemoveUntil(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (_) =>
+                                                      const MainNavigation(),
+                                                ),
+                                                (route) => false,
+                                              );
+                                            }
                                           } else if (vm.errorMessage != null) {
                                             setState(() =>
                                                 _passwordError =

@@ -178,7 +178,16 @@ class AuthViewModel extends ChangeNotifier {
         debugPrint("Profil update skipped (Pigeon bug): $e");
       }
 
-      // 3. Ambil data user terbaru
+      // 3. Kirim Email Verifikasi
+      try {
+        if (userCredential.user != null) {
+          await userCredential.user!.sendEmailVerification();
+        }
+      } catch (e) {
+        debugPrint("Gagal mengirim email verifikasi: $e");
+      }
+
+      // 4. Ambil data user terbaru
       _currentUser = _firebaseAuth.currentUser;
       _isLoggedIn = _currentUser != null;
 
@@ -208,9 +217,66 @@ class AuthViewModel extends ChangeNotifier {
         debugPrint("Caught Pigeon Bug - User created successfully anyway.");
         _currentUser = _firebaseAuth.currentUser;
         _isLoggedIn = true;
+        
+        try {
+          if (_currentUser != null) {
+            await _currentUser!.sendEmailVerification();
+          }
+        } catch (err) {
+          debugPrint("Gagal mengirim email verifikasi (pigeon catch): $err");
+        }
+
         notifyListeners();
         return true;
       }
+      _setError('Error: ${e.toString()}');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // ─── Kirim Ulang Email Verifikasi ───────────────────────────────────────
+  Future<bool> sendVerificationEmail() async {
+    _setError(null);
+    _setLoading(true);
+    try {
+      final user = _firebaseAuth.currentUser;
+      if (user != null) {
+        await user.sendEmailVerification();
+        return true;
+      }
+      _setError('User tidak ditemukan.');
+      return false;
+    } on FirebaseAuthException catch (e) {
+      _setError('Gagal mengirim email verifikasi: ${e.message}');
+      return false;
+    } catch (e) {
+      _setError('Error: ${e.toString()}');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // ─── Cek Status Verifikasi Email ──────────────────────────────────────────
+  Future<bool> checkIfEmailVerified() async {
+    _setError(null);
+    _setLoading(true);
+    try {
+      final user = _firebaseAuth.currentUser;
+      if (user != null) {
+        await user.reload();
+        _currentUser = _firebaseAuth.currentUser;
+        _isLoggedIn = _currentUser != null;
+        notifyListeners();
+        return _currentUser?.emailVerified ?? false;
+      }
+      return false;
+    } on FirebaseAuthException catch (e) {
+      _setError('Gagal memeriksa status verifikasi: ${e.message}');
+      return false;
+    } catch (e) {
       _setError('Error: ${e.toString()}');
       return false;
     } finally {
