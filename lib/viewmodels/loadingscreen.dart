@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../views/auth/welcome_view.dart';
 import '../views/home/main_navigation.dart';
+import '../views/auth/email_verification_view.dart';
 
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({super.key});
@@ -217,10 +218,21 @@ class _LoadingScreenState extends State<LoadingScreen>
       final user = FirebaseAuth.instance.currentUser ?? await FirebaseAuth.instance.authStateChanges().first;
       
       if (!mounted) return;
+      
+      Widget targetView;
+      if (user != null) {
+        if (!user.emailVerified) {
+          targetView = const EmailVerificationView();
+        } else {
+          targetView = const MainNavigation();
+        }
+      } else {
+        targetView = const WelcomeView();
+      }
+
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
-          pageBuilder: (_, __, ___) =>
-              user != null ? const MainNavigation() : const WelcomeView(),
+          pageBuilder: (_, __, ___) => targetView,
           transitionsBuilder: (_, animation, __, child) {
             return FadeTransition(opacity: animation, child: child);
           },

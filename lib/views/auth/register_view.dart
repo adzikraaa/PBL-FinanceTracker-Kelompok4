@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../../shared/colors.dart';
 import 'login_view.dart';
+import 'email_verification_view.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -293,7 +294,14 @@ class _RegisterViewState extends State<RegisterView>
                                               .showSnackBar(const SnackBar(
                                                   content: Text(
                                                       'Registrasi berhasil! 🎉')));
-                                          Navigator.of(context).pop();
+                                          Navigator.pushAndRemoveUntil(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                                  const EmailVerificationView(),
+                                            ),
+                                            (route) => false,
+                                          );
                                         } else if (vm.errorMessage != null) {
                                           setState(() => _passwordError =
                                               vm.errorMessage);
