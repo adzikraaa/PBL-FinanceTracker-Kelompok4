@@ -9,6 +9,7 @@ import '../../viewmodels/note_viewmodel.dart';
 import '../../viewmodels/riwayat_viewmodel.dart';
 import '../../viewmodels/saving_viewmodel.dart';
 import '../../viewmodels/premium_viewmodel.dart';
+import '../../viewmodels/finance_viewmodel.dart';
 import '../finance/hitung_hpp_page.dart';
 import '../insight/insight_view.dart';
 import '../riwayat/riwayat_view.dart';
@@ -912,58 +913,87 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           Expanded(
             child: GestureDetector(
               onTap: () => _vm.onNavTapManual(3),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: kCard,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: kWhite20, width: 0.8),
-                ),
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'INSIGHT',
-                      style: TextStyle(
-                        color: kWhite40,
-                        fontSize: 10,
-                        letterSpacing: 1.2,
-                        fontWeight: FontWeight.w600,
-                      ),
+              child: Consumer<FinanceViewModel>(
+                builder: (context, financeVm, _) {
+                  final double progress = financeVm.progressProfit;
+                  final double sisa = 1.0 - progress;
+                  final int progressPct = (progress * 100).round();
+                  final int sisaPct = 100 - progressPct;
+                  final bool hasTarget = financeVm.targetProfitBulanan > 0;
+
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: kCard,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: kWhite20, width: 0.8),
                     ),
-                    const SizedBox(height: 14),
-                    Center(
-                      child: SizedBox(
-                        width: 68,
-                        height: 68,
-                        child: CustomPaint(
-                          painter: _DonutPainter(
-                            slices: const [0.4, 0.6],
-                            colors: [kGreen, kCardLight],
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'INSIGHT',
+                          style: TextStyle(
+                            color: kWhite40,
+                            fontSize: 10,
+                            letterSpacing: 1.2,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _insightLegend(kGreen, 'Cat A: 40%'),
-                    const SizedBox(height: 4),
-                    _insightLegend(kWhite40, 'Cat B: 60%'),
-                    const Spacer(),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Container(
-                        width: 30,
-                        height: 30,
-                        decoration: const BoxDecoration(
-                          color: kWhite20,
-                          shape: BoxShape.circle,
+                        const SizedBox(height: 14),
+                        Center(
+                          child: SizedBox(
+                            width: 68,
+                            height: 68,
+                            child: hasTarget
+                                ? CustomPaint(
+                                    painter: _DonutPainter(
+                                      slices: progress > 0
+                                          ? [progress, sisa]
+                                          : [0.001, 0.999],
+                                      colors: [kGreen, kCardLight],
+                                    ),
+                                  )
+                                : CustomPaint(
+                                    painter: _DonutPainter(
+                                      slices: const [0.001, 0.999],
+                                      colors: [kGreen, kCardLight],
+                                    ),
+                                  ),
+                          ),
                         ),
-                        child: const Icon(Icons.arrow_forward,
-                            color: kWhite, size: 15),
-                      ),
+                        const SizedBox(height: 12),
+                        _insightLegend(
+                          kGreen,
+                          hasTarget
+                              ? 'Untung: $progressPct%'
+                              : 'Untung: -',
+                        ),
+                        const SizedBox(height: 4),
+                        _insightLegend(
+                          kWhite40,
+                          hasTarget
+                              ? 'Sisa: $sisaPct%'
+                              : 'Belum ada target',
+                        ),
+                        const Spacer(),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Container(
+                            width: 30,
+                            height: 30,
+                            decoration: const BoxDecoration(
+                              color: kWhite20,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.arrow_forward,
+                                color: kWhite, size: 15),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  );
+                },
               ),
             ),
           ),

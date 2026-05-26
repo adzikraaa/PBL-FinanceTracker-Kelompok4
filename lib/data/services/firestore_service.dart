@@ -21,6 +21,23 @@ class FirestoreService {
     return UserModel.fromJson(doc.data()!);
   }
 
+  // Update profil user (displayName, photoUrl, phone) tanpa overwrite field lain
+  Future<void> updateUserProfile(String uid, {
+    String? displayName,
+    String? photoUrl,
+    String? phone,
+  }) async {
+    final Map<String, dynamic> data = {};
+    if (displayName != null) {
+      data['displayName'] = displayName;
+      data['name'] = displayName;
+    }
+    if (photoUrl != null) data['photoUrl'] = photoUrl;
+    if (phone != null) data['phone'] = phone;
+    if (data.isEmpty) return;
+    await _db.collection('users').doc(uid).update(data);
+  }
+
   // ==========================================
   // 2. FITUR TABUNGAN (CRUD)
   // ==========================================
