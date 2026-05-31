@@ -377,9 +377,11 @@ class _EditProfileViewState extends State<EditProfileView>
 
                         _buildAnimatedChild(
                           _buildInputField(
-                              label: 'E-mail',
-                              controller: _emailController,
-                              isEmail: true),
+                            label: 'E-mail',
+                            controller: _emailController,
+                            isEmail: true,
+                            readOnly: true,
+                          ),
                           3,
                         ),
                         const SizedBox(height: 40),
@@ -452,14 +454,17 @@ class _EditProfileViewState extends State<EditProfileView>
     required String label,
     required TextEditingController controller,
     bool isEmail = false,
+    bool readOnly = false,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
-            color: Color(0xFF6EE89A),
+          style: TextStyle(
+            color: readOnly
+                ? const Color(0xFF6EE89A).withOpacity(0.5)
+                : const Color(0xFF6EE89A),
             fontSize: 12,
             fontWeight: FontWeight.bold,
           ),
@@ -469,17 +474,25 @@ class _EditProfileViewState extends State<EditProfileView>
           height: 56,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: const Color(0xFF163520),
+            color: readOnly
+                ? const Color(0xFF163520).withOpacity(0.5)
+                : const Color(0xFF163520),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFF2C4334)),
+            border: Border.all(
+              color: readOnly
+                  ? const Color(0xFF2C4334).withOpacity(0.5)
+                  : const Color(0xFF2C4334),
+            ),
           ),
           child: Center(
             child: TextField(
               controller: controller,
+              readOnly: readOnly,
+              showCursor: !readOnly,
               keyboardType:
                   isEmail ? TextInputType.emailAddress : TextInputType.name,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: readOnly ? Colors.white.withOpacity(0.5) : Colors.white,
                 fontSize: 16,
               ),
               decoration: const InputDecoration(

@@ -19,7 +19,6 @@ class ProfileView extends StatefulWidget {
 class _ProfileViewState extends State<ProfileView> with TickerProviderStateMixin {
   late AnimationController _animController;
   late AnimationController _pulseController;
-  bool _isPushNotificationEnabled = true;
 
   @override
   void initState() {
@@ -437,66 +436,6 @@ class _ProfileViewState extends State<ProfileView> with TickerProviderStateMixin
 
                         const SizedBox(height: 16),
 
-                        // ── Push Notifications ────────────────────────────
-                        _buildAnimatedChild(Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(32),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 48,
-                                height: 48,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF6FC83F),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(Icons.notifications_active_outlined, color: Color(0xFF0F2615), size: 24),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Push Notifications',
-                                      style: TextStyle(
-                                        color: Color(0xFF0F2615),
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    const Text(
-                                      'Real-time alerts & news',
-                                      style: TextStyle(
-                                        color: Color(0xFF756784),
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Switch(
-                                value: _isPushNotificationEnabled,
-                                onChanged: (val) {
-                                  setState(() {
-                                    _isPushNotificationEnabled = val;
-                                  });
-                                },
-                                activeColor: Colors.white,
-                                activeTrackColor: const Color(0xFF6FC83F),
-                                inactiveThumbColor: Colors.white,
-                                inactiveTrackColor: Colors.grey.shade300,
-                              ),
-                            ],
-                          ),
-                        ), 2),
-
-                        const SizedBox(height: 16),
-
                         // ── Support ───────────────────────────────────────
                         _buildAnimatedChild(GestureDetector(
                           onTap: () {
@@ -529,7 +468,7 @@ class _ProfileViewState extends State<ProfileView> with TickerProviderStateMixin
                               ],
                             ),
                           ),
-                        ), 3),
+                        ), 2),
 
                         const SizedBox(height: 16),
 
@@ -612,7 +551,7 @@ class _ProfileViewState extends State<ProfileView> with TickerProviderStateMixin
                               ],
                             ),
                           ),
-                        ), 4),
+                        ), 3),
 
                         const SizedBox(height: 32),
                       ],

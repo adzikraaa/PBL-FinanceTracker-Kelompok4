@@ -19,6 +19,7 @@ class EmailService {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
+          'Origin': 'http://localhost',
         },
         body: json.encode({
           'service_id': _serviceId,
