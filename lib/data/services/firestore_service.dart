@@ -117,4 +117,33 @@ class FirestoreService {
   Future<void> deleteHistory(String id) async {
     await _db.collection('history').doc(id).delete();
   }
+
+  // Stream data target bulanan dari koleksi 'monthly_targets'
+  Stream<Map<String, double>> streamMonthlyTargets(String userId) {
+    return _db
+        .collection('monthly_targets')
+        .where('userId', isEqualTo: userId)
+        .snapshots()
+        .map((snapshot) {
+          final Map<String, double> targets = {};
+          for (var doc in snapshot.docs) {
+            final data = doc.data();
+            final key = "${data['year']}_${data['month']}";
+            targets[key] = (data['target'] as num).toDouble();
+          }
+          return targets;
+        });
+  }
+
+  // Simpan atau update target bulanan ke Firestore
+  Future<void> saveMonthlyTarget(
+      String userId, int year, int month, double target) async {
+    final docId = "${userId}_${year}_${month}";
+    await _db.collection('monthly_targets').doc(docId).set({
+      'userId': userId,
+      'year': year,
+      'month': month,
+      'target': target,
+    });
+  }
 } // <--- KURUNG TUTUP CLASS HARUS DI PALING BAWAH

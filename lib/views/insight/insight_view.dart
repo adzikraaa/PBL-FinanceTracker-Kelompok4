@@ -176,17 +176,19 @@ class _InsightViewState extends State<InsightView> {
     final indexed = _filteredIndexed(finance.history);
     final filteredHistory = indexed.map((e) => e.value).toList();
 
+    final targetProfit = finance.getTargetProfitForMonth(_selectedMonth);
+
     // Hitung metrik dari history yang sudah difilter
     double filteredUntung = filteredHistory.fold(0.0, (sum, item) {
       double untungPerUnit = item.hargaJualUnit -
           (item.jumlahUnit > 0 ? item.totalHpp / item.jumlahUnit : 0);
       return sum + untungPerUnit * (item.jumlahUnitTerjual ?? 0);
     });
-    double filteredProgress = finance.targetProfitBulanan > 0
-        ? (filteredUntung / finance.targetProfitBulanan).clamp(0.0, 1.0)
+    double filteredProgress = targetProfit > 0
+        ? (filteredUntung / targetProfit).clamp(0.0, 1.0)
         : 0.0;
-    double filteredSisa = finance.targetProfitBulanan > 0
-        ? (finance.targetProfitBulanan - filteredUntung).clamp(0.0, double.infinity)
+    double filteredSisa = targetProfit > 0
+        ? (targetProfit - filteredUntung).clamp(0.0, double.infinity)
         : 0.0;
     int filteredTerjual =
         filteredHistory.fold<int>(0, (sum, item) => sum + ((item.jumlahUnitTerjual ?? 0) as int));
@@ -471,6 +473,7 @@ class _InsightViewState extends State<InsightView> {
     double filteredSisa,
     int filteredTerjual,
   ) {
+    final targetProfit = finance.getTargetProfitForMonth(_selectedMonth);
     return Column(
       children: [
         IntrinsicHeight(
@@ -486,7 +489,7 @@ class _InsightViewState extends State<InsightView> {
         IntrinsicHeight(
           child: Row(
             children: [
-              Expanded(child: _buildMetricCard('TARGET PROFIT', CurrencyFormatter.formatRupiah(finance.targetProfitBulanan), kCardLight, kTextDark)),
+              Expanded(child: _buildMetricCard('TARGET PROFIT', CurrencyFormatter.formatRupiah(targetProfit), kCardLight, kTextDark)),
               const SizedBox(width: 12),
               Expanded(child: _buildMetricCard('TOTAL TERJUAL', '$filteredTerjual unit', kCardDark, kWhite)),
             ],
@@ -608,8 +611,11 @@ class _InsightViewState extends State<InsightView> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Penjualan disimpan!')));
+              onPressed: () async {
+                final targetProfit = finance.getTargetProfitForMonth(_selectedMonth);
+                final messenger = ScaffoldMessenger.of(context);
+                await finance.simpanPenjualanDanTarget(_selectedMonth, targetProfit);
+                messenger.showSnackBar(const SnackBar(content: Text('Penjualan disimpan!')));
               },
               icon: const Icon(Icons.save_alt, color: kTextDark, size: 18),
               label: const Text('Simpan Penjualan', style: TextStyle(color: kTextDark, fontWeight: FontWeight.bold)),
@@ -626,15 +632,18 @@ class _InsightViewState extends State<InsightView> {
   }
 
   void _showEditDataDialog(BuildContext context, FinanceViewModel finance) {
-    final TextEditingController targetController = TextEditingController(text: CurrencyFormatter.formatRupiah(finance.targetProfitBulanan).replaceAll('Rp ', ''));
+    final initialTarget = finance.getTargetProfitForMonth(_selectedMonth);
+    final TextEditingController targetController = TextEditingController(text: CurrencyFormatter.formatRupiah(initialTarget).replaceAll('Rp ', ''));
     
     showDialog(
       context: context,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
+            final indexed = _filteredIndexed(finance.history);
             double currentTotal = 0;
-            for (var item in finance.history) {
+            for (var entry in indexed) {
+              final item = entry.value;
               currentTotal += (item.jumlahUnitTerjual ?? 0) * item.hargaJualUnit;
             }
 
@@ -703,8 +712,9 @@ class _InsightViewState extends State<InsightView> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      ...List.generate(finance.history.length, (index) {
-                        final item = finance.history[index];
+                      ...List.generate(indexed.length, (index) {
+                        final originalIndex = indexed[index].key;
+                        final item = indexed[index].value;
                         return Container(
                           margin: const EdgeInsets.only(bottom: 8),
                           padding: const EdgeInsets.all(12),
@@ -734,7 +744,7 @@ class _InsightViewState extends State<InsightView> {
                                 children: [
                                   GestureDetector(
                                     onTap: () {
-                                      finance.updatePenjualan(index, -1);
+                                      finance.updatePenjualan(originalIndex, -1);
                                       setStateDialog(() {});
                                     },
                                     child: Container(
@@ -749,7 +759,7 @@ class _InsightViewState extends State<InsightView> {
                                   ),
                                   GestureDetector(
                                     onTap: () {
-                                      finance.updatePenjualan(index, 1);
+                                      finance.updatePenjualan(originalIndex, 1);
                                       setStateDialog(() {});
                                     },
                                     child: Container(
@@ -776,13 +786,14 @@ class _InsightViewState extends State<InsightView> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
-                          onPressed: () {
+                          onPressed: () async {
+                            final navigator = Navigator.of(context);
+                            final messenger = ScaffoldMessenger.of(context);
                             String targetStr = targetController.text.replaceAll('.', '');
-                            if (targetStr.isNotEmpty) {
-                              finance.setTargetProfit(double.tryParse(targetStr) ?? 0);
-                            }
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Perubahan disimpan!')));
+                            double target = double.tryParse(targetStr) ?? 0;
+                            await finance.simpanPenjualanDanTarget(_selectedMonth, target);
+                            navigator.pop();
+                            messenger.showSnackBar(const SnackBar(content: Text('Perubahan disimpan!')));
                           },
                           icon: const Icon(Icons.save, color: kTextDark, size: 18),
                           label: const Text('Simpan Perubahan', style: TextStyle(color: kTextDark, fontWeight: FontWeight.bold)),
