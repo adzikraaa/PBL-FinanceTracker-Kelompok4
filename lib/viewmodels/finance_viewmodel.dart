@@ -8,6 +8,8 @@ class FinanceViewModel extends ChangeNotifier {
   final FirestoreService _firestoreService = FirestoreService();
   StreamSubscription<List<HppModel>>? _sub;
   StreamSubscription<User?>? _authSub;
+  StreamSubscription<Map<String, double>>? _targetsSub;
+  Map<String, double> monthlyTargets = {};
 
   // --- Input Variables (State) ---
   double biayaProduksi = 0.0;
@@ -50,9 +52,16 @@ class FinanceViewModel extends ChangeNotifier {
           history = data;
           notifyListeners();
         });
+        _targetsSub?.cancel();
+        _targetsSub = _firestoreService.streamMonthlyTargets(user.uid).listen((targetsMap) {
+          monthlyTargets = targetsMap;
+          notifyListeners();
+        });
       } else {
         _sub?.cancel();
+        _targetsSub?.cancel();
         history = [];
+        monthlyTargets = {};
         notifyListeners();
       }
     });
@@ -61,8 +70,31 @@ class FinanceViewModel extends ChangeNotifier {
   @override
   void dispose() {
     _sub?.cancel();
+    _targetsSub?.cancel();
     _authSub?.cancel();
     super.dispose();
+  }
+
+  // --- Target & Penjualan Bulanan ---
+  double getTargetProfitForMonth(DateTime month) {
+    final key = "${month.year}_${month.month}";
+    return monthlyTargets[key] ?? 0.0;
+  }
+
+  Future<void> simpanPenjualanDanTarget(DateTime month, double target) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    // Simpan target bulanan ke Firestore
+    await _firestoreService.saveMonthlyTarget(user.uid, month.year, month.month, target);
+
+    // Simpan perubahan jumlahUnitTerjual dari seluruh history yang diubah secara paralel
+    final futures = history
+        .where((item) => item.id != null)
+        .map((item) => _firestoreService.updateFinance(item.id!, {
+              'jumlahUnitTerjual': item.jumlahUnitTerjual,
+            }));
+    await Future.wait(futures);
   }
 
   // --- Getters untuk Kalkulasi Otomatis ---
