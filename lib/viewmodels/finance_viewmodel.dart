@@ -81,7 +81,7 @@ class FinanceViewModel extends ChangeNotifier {
     return monthlyTargets[key] ?? 0.0;
   }
 
-  Future<void> simpanPenjualanDanTarget(DateTime month, double target) async {
+  Future<void> simpanPenjualanDanTarget(DateTime month, double target, Map<String, int> salesMap) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
@@ -89,12 +89,24 @@ class FinanceViewModel extends ChangeNotifier {
     await _firestoreService.saveMonthlyTarget(user.uid, month.year, month.month, target);
 
     // Simpan perubahan jumlahUnitTerjual dari seluruh history yang diubah secara paralel
-    final futures = history
-        .where((item) => item.id != null)
-        .map((item) => _firestoreService.updateFinance(item.id!, {
-              'jumlahUnitTerjual': item.jumlahUnitTerjual,
-            }));
-    await Future.wait(futures);
+    final futures = <Future>[];
+    for (int i = 0; i < history.length; i++) {
+      final item = history[i];
+      final prodKey = item.id ?? 'idx_$i';
+      if (salesMap.containsKey(prodKey)) {
+        final newSales = salesMap[prodKey]!;
+        if (item.id != null) {
+          futures.add(_firestoreService.updateFinance(item.id!, {
+            'jumlahUnitTerjual': newSales,
+          }));
+        }
+        item.jumlahUnitTerjual = newSales;
+      }
+    }
+    if (futures.isNotEmpty) {
+      await Future.wait(futures);
+    }
+    notifyListeners();
   }
 
   // --- Getters untuk Kalkulasi Otomatis ---

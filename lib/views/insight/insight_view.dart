@@ -25,6 +25,11 @@ class InsightView extends StatefulWidget {
 
 class _InsightViewState extends State<InsightView> {
   DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
+  final Map<String, int> _editingSales = {};
+
+  String _getProductKey(dynamic item, int index) {
+    return item.id ?? 'idx_$index';
+  }
 
   // Filter history berdasarkan bulan yang dipilih
   List<MapEntry<int, dynamic>> _filteredIndexed(List<dynamic> history) {
@@ -564,6 +569,8 @@ class _InsightViewState extends State<InsightView> {
             ...indexed.map((entry) {
               final originalIndex = entry.key;
               final item = entry.value;
+              final prodKey = _getProductKey(item, originalIndex);
+              final currentSales = _editingSales[prodKey] ?? (item.jumlahUnitTerjual ?? 0);
               double untungPerUnit = item.hargaJualUnit - (item.jumlahUnit > 0 ? item.totalHpp / item.jumlahUnit : 0);
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
@@ -582,7 +589,11 @@ class _InsightViewState extends State<InsightView> {
                     Row(
                       children: [
                         GestureDetector(
-                          onTap: () => finance.updatePenjualan(originalIndex, -1),
+                          onTap: () {
+                            setState(() {
+                              _editingSales[prodKey] = max(0, currentSales - 1);
+                            });
+                          },
                           child: Container(
                             width: 32, height: 32,
                             decoration: BoxDecoration(border: Border.all(color: Colors.white24), borderRadius: BorderRadius.circular(8)),
@@ -591,10 +602,14 @@ class _InsightViewState extends State<InsightView> {
                         ),
                         SizedBox(
                           width: 36,
-                          child: Text('${item.jumlahUnitTerjual ?? 0}', textAlign: TextAlign.center, style: const TextStyle(color: kWhite, fontWeight: FontWeight.bold)),
+                          child: Text('$currentSales', textAlign: TextAlign.center, style: const TextStyle(color: kWhite, fontWeight: FontWeight.bold)),
                         ),
                         GestureDetector(
-                          onTap: () => finance.updatePenjualan(originalIndex, 1),
+                          onTap: () {
+                            setState(() {
+                              _editingSales[prodKey] = currentSales + 1;
+                            });
+                          },
                           child: Container(
                             width: 32, height: 32,
                             decoration: BoxDecoration(border: Border.all(color: Colors.white24), borderRadius: BorderRadius.circular(8)),
@@ -614,7 +629,10 @@ class _InsightViewState extends State<InsightView> {
               onPressed: () async {
                 final targetProfit = finance.getTargetProfitForMonth(_selectedMonth);
                 final messenger = ScaffoldMessenger.of(context);
-                await finance.simpanPenjualanDanTarget(_selectedMonth, targetProfit);
+                await finance.simpanPenjualanDanTarget(_selectedMonth, targetProfit, _editingSales);
+                setState(() {
+                  _editingSales.clear();
+                });
                 messenger.showSnackBar(const SnackBar(content: Text('Penjualan disimpan!')));
               },
               icon: const Icon(Icons.save_alt, color: kTextDark, size: 18),
@@ -644,7 +662,9 @@ class _InsightViewState extends State<InsightView> {
             double currentTotal = 0;
             for (var entry in indexed) {
               final item = entry.value;
-              currentTotal += (item.jumlahUnitTerjual ?? 0) * item.hargaJualUnit;
+              final prodKey = _getProductKey(item, entry.key);
+              final currentSales = _editingSales[prodKey] ?? (item.jumlahUnitTerjual ?? 0);
+              currentTotal += currentSales * item.hargaJualUnit;
             }
 
             return Dialog(
@@ -715,6 +735,8 @@ class _InsightViewState extends State<InsightView> {
                       ...List.generate(indexed.length, (index) {
                         final originalIndex = indexed[index].key;
                         final item = indexed[index].value;
+                        final prodKey = _getProductKey(item, originalIndex);
+                        final currentSales = _editingSales[prodKey] ?? (item.jumlahUnitTerjual ?? 0);
                         return Container(
                           margin: const EdgeInsets.only(bottom: 8),
                           padding: const EdgeInsets.all(12),
@@ -744,8 +766,10 @@ class _InsightViewState extends State<InsightView> {
                                 children: [
                                   GestureDetector(
                                     onTap: () {
-                                      finance.updatePenjualan(originalIndex, -1);
-                                      setStateDialog(() {});
+                                      setStateDialog(() {
+                                        _editingSales[prodKey] = max(0, currentSales - 1);
+                                      });
+                                      setState(() {});
                                     },
                                     child: Container(
                                       width: 28, height: 28,
@@ -755,12 +779,14 @@ class _InsightViewState extends State<InsightView> {
                                   ),
                                   SizedBox(
                                     width: 32,
-                                    child: Text('${item.jumlahUnitTerjual ?? 0}', textAlign: TextAlign.center, style: const TextStyle(color: kWhite, fontWeight: FontWeight.bold)),
+                                    child: Text('$currentSales', textAlign: TextAlign.center, style: const TextStyle(color: kWhite, fontWeight: FontWeight.bold)),
                                   ),
                                   GestureDetector(
                                     onTap: () {
-                                      finance.updatePenjualan(originalIndex, 1);
-                                      setStateDialog(() {});
+                                      setStateDialog(() {
+                                        _editingSales[prodKey] = currentSales + 1;
+                                      });
+                                      setState(() {});
                                     },
                                     child: Container(
                                       width: 28, height: 28,
@@ -791,7 +817,10 @@ class _InsightViewState extends State<InsightView> {
                             final messenger = ScaffoldMessenger.of(context);
                             String targetStr = targetController.text.replaceAll('.', '');
                             double target = double.tryParse(targetStr) ?? 0;
-                            await finance.simpanPenjualanDanTarget(_selectedMonth, target);
+                            await finance.simpanPenjualanDanTarget(_selectedMonth, target, _editingSales);
+                            setState(() {
+                              _editingSales.clear();
+                            });
                             navigator.pop();
                             messenger.showSnackBar(const SnackBar(content: Text('Perubahan disimpan!')));
                           },
