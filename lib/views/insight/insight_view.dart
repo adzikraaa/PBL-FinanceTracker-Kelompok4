@@ -586,37 +586,13 @@ class _InsightViewState extends State<InsightView> {
                         ],
                       ),
                     ),
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _editingSales[prodKey] = max(0, currentSales - 1);
-                            });
-                          },
-                          child: Container(
-                            width: 32, height: 32,
-                            decoration: BoxDecoration(border: Border.all(color: Colors.white24), borderRadius: BorderRadius.circular(8)),
-                            child: const Icon(Icons.remove, color: Colors.white54, size: 16),
-                          ),
-                        ),
-                        SizedBox(
-                          width: 36,
-                          child: Text('$currentSales', textAlign: TextAlign.center, style: const TextStyle(color: kWhite, fontWeight: FontWeight.bold)),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _editingSales[prodKey] = currentSales + 1;
-                            });
-                          },
-                          child: Container(
-                            width: 32, height: 32,
-                            decoration: BoxDecoration(border: Border.all(color: Colors.white24), borderRadius: BorderRadius.circular(8)),
-                            child: const Icon(Icons.add, color: Colors.white54, size: 16),
-                          ),
-                        ),
-                      ],
+                    _SalesCounterWidget(
+                      initialValue: currentSales,
+                      onChanged: (val) {
+                        setState(() {
+                          _editingSales[prodKey] = val;
+                        });
+                      },
                     ),
                   ],
                 ),
@@ -762,39 +738,15 @@ class _InsightViewState extends State<InsightView> {
                                   ],
                                 ),
                               ),
-                              Row(
-                                children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      setStateDialog(() {
-                                        _editingSales[prodKey] = max(0, currentSales - 1);
-                                      });
-                                      setState(() {});
-                                    },
-                                    child: Container(
-                                      width: 28, height: 28,
-                                      decoration: BoxDecoration(color: Colors.white12, borderRadius: BorderRadius.circular(6)),
-                                      child: const Icon(Icons.remove, color: Colors.white54, size: 14),
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    width: 32,
-                                    child: Text('$currentSales', textAlign: TextAlign.center, style: const TextStyle(color: kWhite, fontWeight: FontWeight.bold)),
-                                  ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      setStateDialog(() {
-                                        _editingSales[prodKey] = currentSales + 1;
-                                      });
-                                      setState(() {});
-                                    },
-                                    child: Container(
-                                      width: 28, height: 28,
-                                      decoration: BoxDecoration(color: Colors.white12, borderRadius: BorderRadius.circular(6)),
-                                      child: const Icon(Icons.add, color: Colors.white54, size: 14),
-                                    ),
-                                  ),
-                                ],
+                              _SalesCounterWidget(
+                                initialValue: currentSales,
+                                isSmall: true,
+                                onChanged: (val) {
+                                  setStateDialog(() {
+                                    _editingSales[prodKey] = val;
+                                  });
+                                  setState(() {});
+                                },
                               ),
                             ],
                           ),
@@ -889,5 +841,112 @@ class _DonutChartPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _DonutChartPainter oldDelegate) {
     return oldDelegate.progress != progress;
+  }
+}
+
+class _SalesCounterWidget extends StatefulWidget {
+  final int initialValue;
+  final ValueChanged<int> onChanged;
+  final bool isSmall;
+
+  const _SalesCounterWidget({
+    required this.initialValue,
+    required this.onChanged,
+    this.isSmall = false,
+  });
+
+  @override
+  State<_SalesCounterWidget> createState() => _SalesCounterWidgetState();
+}
+
+class _SalesCounterWidgetState extends State<_SalesCounterWidget> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue.toString());
+  }
+
+  @override
+  void didUpdateWidget(covariant _SalesCounterWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialValue.toString() != _controller.text) {
+      final intval = int.tryParse(_controller.text) ?? 0;
+      if (intval != widget.initialValue) {
+        _controller.text = widget.initialValue.toString();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _updateValue(int newValue) {
+    _controller.text = newValue.toString();
+    widget.onChanged(newValue);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final double size = widget.isSmall ? 28.0 : 32.0;
+    final double iconSize = widget.isSmall ? 14.0 : 16.0;
+    final double width = widget.isSmall ? 32.0 : 40.0;
+
+    return Row(
+      children: [
+        GestureDetector(
+          onTap: () {
+            int current = int.tryParse(_controller.text) ?? 0;
+            _updateValue(max(0, current - 1));
+          },
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.white24),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Icon(Icons.remove, color: Colors.white54, size: iconSize),
+          ),
+        ),
+        SizedBox(
+          width: width,
+          child: TextField(
+            controller: _controller,
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: kWhite, fontWeight: FontWeight.bold),
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              isDense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+            onChanged: (val) {
+              int parsed = int.tryParse(val) ?? 0;
+              widget.onChanged(parsed);
+            },
+          ),
+        ),
+        GestureDetector(
+          onTap: () {
+            int current = int.tryParse(_controller.text) ?? 0;
+            _updateValue(current + 1);
+          },
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.white24),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Icon(Icons.add, color: Colors.white54, size: iconSize),
+          ),
+        ),
+      ],
+    );
   }
 }
