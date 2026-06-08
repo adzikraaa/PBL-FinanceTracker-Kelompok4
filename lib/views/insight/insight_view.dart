@@ -385,7 +385,7 @@ class _InsightViewState extends State<InsightView> {
                   children: const [
                     Icon(Icons.check_circle_outline, color: kTextDark, size: 16),
                     SizedBox(width: 6),
-                    Text('Set Target', style: TextStyle(color: kTextDark, fontWeight: FontWeight.bold, fontSize: 12)),
+                    Text('Atur Target', style: TextStyle(color: kTextDark, fontWeight: FontWeight.bold, fontSize: 12)),
                   ],
                 ),
               ),
@@ -677,7 +677,7 @@ class _InsightViewState extends State<InsightView> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Monthly Goal', style: TextStyle(color: Colors.white38, fontSize: 10)),
+                            const Text('Target Bulanan', style: TextStyle(color: Colors.white38, fontSize: 10)),
                             Row(
                               children: [
                                 const Text('Rp ', style: TextStyle(color: kCardLight, fontSize: 20, fontWeight: FontWeight.bold)),

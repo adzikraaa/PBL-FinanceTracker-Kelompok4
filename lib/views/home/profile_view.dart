@@ -500,14 +500,22 @@ class _ProfileViewState extends State<ProfileView> with TickerProviderStateMixin
                                         Navigator.pop(context, false),
                                     child: const Text('Batal',
                                         style: TextStyle(
-                                            color: Color(0xFF4ADE80))),
+                                            color: Color(0xFFFF5252),
+                                            fontWeight: FontWeight.bold)),
                                   ),
-                                  TextButton(
+                                  ElevatedButton(
                                     onPressed: () =>
                                         Navigator.pop(context, true),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFFB5E48C),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
                                     child: const Text('Keluar',
                                         style: TextStyle(
-                                            color: Colors.redAccent)),
+                                            color: Color(0xFF1A3A10),
+                                            fontWeight: FontWeight.bold)),
                                   ),
                                 ],
                               ),

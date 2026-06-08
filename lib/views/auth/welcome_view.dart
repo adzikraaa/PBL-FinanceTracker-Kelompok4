@@ -202,7 +202,7 @@ class _WelcomeViewState extends State<WelcomeView>
                         child: SlideTransition(
                           position: _subtitleSlide,
                           child: const Text(
-                            'Take control of your business finances and\nreach your goals effortlessly!',
+                            'Kendalikan keuangan bisnismu dan\ncapai target dengan mudah!',
                             style: TextStyle(
                               color: _textMuted,
                               fontSize: 14.5,

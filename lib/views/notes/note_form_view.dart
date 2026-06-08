@@ -179,7 +179,7 @@ class _NoteFormViewState extends State<NoteFormView> {
                         
                         // Detailed Insights
                         const Text(
-                          'DETAILED INSIGHTS',
+                          'DETAIL INSIGHT',
                           style: TextStyle(
                             color: Color(0xFF8BCA6E),
                             fontSize: 10,
