@@ -90,7 +90,7 @@ class _NotesListViewState extends State<NotesListView>
                           ),
                           const SizedBox(width: 16),
                           const Text(
-                            'Notes',
+                            'Catatan',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 32,
@@ -101,7 +101,7 @@ class _NotesListViewState extends State<NotesListView>
                       ),
                       const SizedBox(height: 12),
                       const Text(
-                        'Manage your financial strategies and vault\ncalculations.',
+                        'Kelola strategi keuangan dan perhitungan\nbisnismu dengan mudah.',
                         style: TextStyle(
                           color: Color(0xFF8BCA6E),
                           fontSize: 14,

@@ -117,7 +117,7 @@ class _SavingDetailPageState extends State<SavingDetailPage> with TickerProvider
             ),
             const SizedBox(height: 16),
 
-            const Text('SAVINGS GOAL',
+            const Text('TARGET TABUNGAN',
                 style: TextStyle(
                     color: Color(0xFFFFD700),
                     fontSize: 12,
@@ -150,7 +150,7 @@ class _SavingDetailPageState extends State<SavingDetailPage> with TickerProvider
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold),
                           ),
-                          const Text('Complete',
+                          const Text('Selesai',
                               style:
                                   TextStyle(color: Colors.white70)),
                         ],
@@ -158,7 +158,7 @@ class _SavingDetailPageState extends State<SavingDetailPage> with TickerProvider
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          const Text('REMAINING',
+                          const Text('SISA',
                               style: TextStyle(
                                   color: Colors.white54, fontSize: 11)),
                           Text(
@@ -195,7 +195,7 @@ class _SavingDetailPageState extends State<SavingDetailPage> with TickerProvider
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('MONTHLY GOAL',
+                      const Text('TARGET BULANAN',
                           style: TextStyle(
                               color: Colors.white54, fontSize: 11)),
                       Text(
@@ -229,7 +229,7 @@ class _SavingDetailPageState extends State<SavingDetailPage> with TickerProvider
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('EXPECTED COMPLETION',
+                      const Text('ESTIMASI SELESAI',
                           style: TextStyle(
                               color: Colors.white54, fontSize: 11)),
                       Text(
@@ -273,7 +273,7 @@ class _SavingDetailPageState extends State<SavingDetailPage> with TickerProvider
                   color: progress >= 1.0 ? Colors.white38 : Colors.black,
                 ),
                 label: Text(
-                  progress >= 1.0 ? 'Goal Tercapai' : 'Edit Goal',
+                  progress >= 1.0 ? 'Target Tercapai' : 'Edit Target',
                   style: TextStyle(
                     color: progress >= 1.0 ? Colors.white38 : Colors.black,
                     fontWeight: FontWeight.bold,
@@ -308,7 +308,7 @@ class _SavingDetailPageState extends State<SavingDetailPage> with TickerProvider
                   ),
                 ),
                 icon: const Icon(Icons.delete, color: Colors.red),
-                label: const Text('Delete Goal',
+                label: const Text('Hapus Target',
                     style: TextStyle(color: Colors.white)),
                 onPressed: () => _showDeleteDialog(context, vm),
               ),
