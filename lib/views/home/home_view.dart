@@ -144,7 +144,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     physics: const BouncingScrollPhysics(
                       parent: AlwaysScrollableScrollPhysics(),
                     ),
-                    padding: const EdgeInsets.only(bottom: 100),
+                    padding: const EdgeInsets.only(bottom: 160), // Diperbesar agar bisa discroll melewati navbar
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

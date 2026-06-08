@@ -152,7 +152,7 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                       else
                         Expanded(
                           child: ListView(
-                            padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
+                            padding: const EdgeInsets.fromLTRB(20, 10, 20, 160),
                             physics: const BouncingScrollPhysics(),
                             children: [
                               ...groupKeys.map((key) {
