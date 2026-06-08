@@ -8,6 +8,7 @@ class AuthViewModel extends ChangeNotifier {
   bool _isLoggedIn = false;
   User? _currentUser;
   bool _isPremium = false; // Default: User Biasa
+  bool _isEmailAlreadyInUse = false;
 
   // Firebase & Google Sign-In instances
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -18,6 +19,7 @@ class AuthViewModel extends ChangeNotifier {
   bool get isLoggedIn => _isLoggedIn;
   User? get currentUser => _currentUser;
   bool get isPremium => _isPremium;
+  bool get isEmailAlreadyInUse => _isEmailAlreadyInUse;
 
   // Constructor: Check current auth state
   AuthViewModel() {
@@ -150,6 +152,7 @@ class AuthViewModel extends ChangeNotifier {
   }) async {
     _setLoading(true);
     _setError(null);
+    _isEmailAlreadyInUse = false;
 
     try {
       if (fullName.isEmpty || email.isEmpty || password.isEmpty) {
@@ -168,35 +171,50 @@ class AuthViewModel extends ChangeNotifier {
         password: password,
       );
 
-      // 2. Update Profile (Dibungkus try-catch agar tidak crash jika Pigeon error)
-      try {
-        if (userCredential.user != null) {
-          await userCredential.user!.updateDisplayName(fullName);
-          await userCredential.user!.reload();
-        }
-      } catch (e) {
-        debugPrint("Profil update skipped (Pigeon bug): $e");
-      }
+      // 2. Ambil user segera setelah create (sebelum updateDisplayName agar tidak kena Pigeon bug)
+      _currentUser = _firebaseAuth.currentUser;
 
-      // 3. Kirim Email Verifikasi
+      // 3. Kirim Email Verifikasi DULU (sebelum updateDisplayName yang bisa crash)
+      bool emailSent = false;
       try {
-        if (userCredential.user != null) {
-          await userCredential.user!.sendEmailVerification();
+        if (_currentUser != null) {
+          await _currentUser!.sendEmailVerification();
+          emailSent = true;
+          debugPrint("Email verifikasi berhasil dikirim ke: ${_currentUser!.email}");
         }
       } catch (e) {
         debugPrint("Gagal mengirim email verifikasi: $e");
       }
 
-      // 4. Ambil data user terbaru
+      // 4. Update Display Name (dibungkus try-catch agar tidak crash jika Pigeon error)
+      try {
+        if (userCredential.user != null) {
+          await userCredential.user!.updateDisplayName(fullName);
+        }
+      } catch (e) {
+        debugPrint("Profil update skipped (Pigeon bug): $e");
+        // Jika Pigeon bug tapi email belum terkirim, coba kirim ulang
+        if (!emailSent && _currentUser != null) {
+          try {
+            await _currentUser!.sendEmailVerification();
+            debugPrint("Email verifikasi dikirim ulang setelah Pigeon bug.");
+          } catch (err) {
+            debugPrint("Gagal kirim ulang verifikasi: $err");
+          }
+        }
+      }
+
+      // 5. Set state: user terdaftar tapi BELUM login penuh (perlu verifikasi email)
       _currentUser = _firebaseAuth.currentUser;
-      _isLoggedIn = _currentUser != null;
+      _isLoggedIn = true; // Tetap true agar EmailVerificationView bisa akses currentUser
 
       notifyListeners();
       return true;
     } on FirebaseAuthException catch (e) {
       switch (e.code) {
         case 'email-already-in-use':
-          _setError('Email sudah terdaftar.');
+          _isEmailAlreadyInUse = true;
+          _setError('Email sudah terdaftar. Silakan login.');
           break;
         case 'invalid-email':
           _setError('Format email tidak valid.');
@@ -205,7 +223,7 @@ class AuthViewModel extends ChangeNotifier {
           _setError('Password terlalu lemah.');
           break;
         case 'operation-not-allowed':
-          _setError('Registrasi tidak diizinkan.');
+          _setError('Registrasi tidak diizinkan. Hubungi admin.');
           break;
         default:
           _setError('Registrasi gagal: ${e.message}');
@@ -217,10 +235,12 @@ class AuthViewModel extends ChangeNotifier {
         debugPrint("Caught Pigeon Bug - User created successfully anyway.");
         _currentUser = _firebaseAuth.currentUser;
         _isLoggedIn = true;
-        
+
+        // Coba kirim email verifikasi jika belum terkirim
         try {
-          if (_currentUser != null) {
+          if (_currentUser != null && !_currentUser!.emailVerified) {
             await _currentUser!.sendEmailVerification();
+            debugPrint("Email verifikasi dikirim (after Pigeon catch).");
           }
         } catch (err) {
           debugPrint("Gagal mengirim email verifikasi (pigeon catch): $err");

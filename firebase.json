@@ -8,7 +8,7 @@
       "android": {
         "default": {
           "projectId": "bizzprice-39f54",
-          "appId": "1:583449756071:android:25ac8cc9ed7e9afb7fb682",
+          "appId": "1:583449756071:android:379b343d95c166ae7fb682",
           "fileOutput": "android/app/google-services.json"
         }
       },
@@ -16,7 +16,7 @@
         "lib/firebase_options.dart": {
           "projectId": "bizzprice-39f54",
           "configurations": {
-            "android": "1:583449756071:android:25ac8cc9ed7e9afb7fb682",
+            "android": "1:583449756071:android:379b343d95c166ae7fb682",
             "ios": "1:583449756071:ios:c8ed969232dda41b7fb682",
             "macos": "1:583449756071:ios:c8ed969232dda41b7fb682",
             "web": "1:583449756071:web:0af8ad0610749c0a7fb682",
