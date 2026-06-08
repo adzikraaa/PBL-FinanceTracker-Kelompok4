@@ -88,6 +88,7 @@ class _MainNavigationState extends State<MainNavigation> {
     const kNavActive = Color(0xFF6CF688);
 
     final screenWidth = MediaQuery.of(context).size.width;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
     final navWidth = screenWidth - 40;
     final itemWidth = navWidth / navCount;
     final safeIndex = vm.selectedIndex.clamp(0, navCount - 1);
@@ -95,7 +96,7 @@ class _MainNavigationState extends State<MainNavigation> {
 
     return Container(
       color: Colors.transparent,
-      padding: const EdgeInsets.only(bottom: 20, left: 20, right: 20),
+      padding: EdgeInsets.only(bottom: 24 + bottomPadding, left: 20, right: 20),
       child: SizedBox(
         height: navHeight,
         child: Stack(
