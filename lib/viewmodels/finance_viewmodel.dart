@@ -187,11 +187,17 @@ class FinanceViewModel extends ChangeNotifier {
   // INSIGHT: TARGET PROFIT & PENJUALAN
   // ================================
 
-  double targetProfitBulanan = 0.0;
+  double get targetProfitBulanan {
+    final now = DateTime.now();
+    return getTargetProfitForMonth(now);
+  }
 
   void setTargetProfit(double target) {
-    targetProfitBulanan = target;
-    notifyListeners();
+    final now = DateTime.now();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _firestoreService.saveMonthlyTarget(user.uid, now.year, now.month, target);
+    }
   }
 
   void updatePenjualan(int index, int delta) {
@@ -205,19 +211,23 @@ class FinanceViewModel extends ChangeNotifier {
   }
 
   double get totalUntungBersih {
+    final now = DateTime.now();
     double total = 0.0;
     for (var item in history) {
-      int laku = item.jumlahUnitTerjual ?? 0;
-      double hppPerUnit = item.jumlahUnit > 0 ? item.totalHpp / item.jumlahUnit : 0;
-      double untungPerUnit = item.hargaJualUnit - hppPerUnit;
-      total += (laku * untungPerUnit);
+      if (item.createdAt.year == now.year && item.createdAt.month == now.month) {
+        int laku = item.jumlahUnitTerjual ?? 0;
+        double hppPerUnit = item.jumlahUnit > 0 ? item.totalHpp / item.jumlahUnit : 0;
+        double untungPerUnit = item.hargaJualUnit - hppPerUnit;
+        total += (laku * untungPerUnit);
+      }
     }
     return total;
   }
 
   double get progressProfit {
-    if (targetProfitBulanan <= 0) return 0;
-    double prog = totalUntungBersih / targetProfitBulanan;
+    final target = targetProfitBulanan;
+    if (target <= 0) return 0;
+    double prog = totalUntungBersih / target;
     return prog.clamp(0.0, 1.0);
   }
 

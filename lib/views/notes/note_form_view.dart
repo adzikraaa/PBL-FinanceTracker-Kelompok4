@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../viewmodels/note_viewmodel.dart';
-import '../../models/note_model.dart';
+import '../../viewmodels/riwayat_viewmodel.dart';
 import '../../viewmodels/home_viewmodel.dart';
+import '../../data/models/hpp_model.dart';
 
 class NoteFormView extends StatefulWidget {
-  final String? noteId; // Jika null, berarti tambah catatan baru
+  final String? noteId; // ID dari riwayat HPP yang ingin diedit catatannya
 
   const NoteFormView({super.key, this.noteId});
 
@@ -26,12 +26,33 @@ class _NoteFormViewState extends State<NoteFormView> {
 
     if (widget.noteId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final noteVm = context.read<NoteViewModel>();
-        final note = noteVm.notes.firstWhere((n) => n.id == widget.noteId, orElse: () => Note(id: '', title: '', content: '', createdAt: DateTime.now()));
-        if (note.id.isNotEmpty) {
+        final riwayatVm = context.read<RiwayatViewModel>();
+        final hppItem = riwayatVm.history.firstWhere(
+          (n) => n.id == widget.noteId,
+          orElse: () => HppModel(
+            id: '',
+            userId: '',
+            namaProduk: '',
+            persediaanAwal: 0,
+            pembelianBersih: 0,
+            persediaanAkhir: 0,
+            biayaProduksi: 0,
+            biayaTenagaKerja: 0,
+            biayaOverhead: 0,
+            jumlahUnit: 0,
+            biayaTetap: 0,
+            hargaJualUnit: 0,
+            totalHpp: 0,
+            bepUnit: 0,
+            bepRupiah: 0,
+            catatan: '',
+            createdAt: DateTime.now(),
+          ),
+        );
+        if (hppItem.id != null && hppItem.id!.isNotEmpty) {
           setState(() {
-            _titleController.text = note.title;
-            _contentController.text = note.content;
+            _titleController.text = hppItem.namaProduk;
+            _contentController.text = hppItem.catatan;
           });
         }
       });
@@ -46,23 +67,20 @@ class _NoteFormViewState extends State<NoteFormView> {
   }
 
   void _saveNote() {
-    final noteVm = context.read<NoteViewModel>();
-    final title = _titleController.text.trim();
+    final riwayatVm = context.read<RiwayatViewModel>();
     final content = _contentController.text.trim();
 
-    if (title.isEmpty || content.isEmpty) {
+    if (content.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Judul dan isi catatan tidak boleh kosong.')),
+        const SnackBar(content: Text('Isi catatan tidak boleh kosong.')),
       );
       return;
     }
 
-    if (widget.noteId == null) {
-      noteVm.addNote(title, content);
-    } else {
-      noteVm.updateNote(widget.noteId!, title, content);
+    if (widget.noteId != null) {
+      riwayatVm.updateCatatan(widget.noteId!, content);
     }
-    Navigator.pop(context); // Go back after saving
+    Navigator.pop(context); // Kembali setelah menyimpan
   }
 
   @override
@@ -147,10 +165,11 @@ class _NoteFormViewState extends State<NoteFormView> {
                           ),
                           child: TextField(
                             controller: _titleController,
-                            style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                            readOnly: true,
+                            style: const TextStyle(color: Colors.white70, fontSize: 20, fontWeight: FontWeight.bold),
                             decoration: const InputDecoration(
                               border: InputBorder.none,
-                              hintText: 'Judul Catatan',
+                              hintText: 'Nama Produk',
                               hintStyle: TextStyle(color: Colors.white30, fontSize: 20, fontWeight: FontWeight.bold),
                             ),
                           ),
@@ -193,49 +212,13 @@ class _NoteFormViewState extends State<NoteFormView> {
                           ),
                         ),
                         
-                        const SizedBox(height: 32),
-                        
-                        // Action Buttons
-                        Container(
-                          width: double.infinity,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF55C772), Color(0xFF8BCA6E)],
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                            ),
-                            borderRadius: BorderRadius.circular(28),
-                          ),
-                          child: ElevatedButton(
-                            onPressed: () {
-                              final homeVm = Provider.of<HomeViewModel>(context, listen: false);
-                              homeVm.onNavTapManual(4); // Navigasi ke tab Riwayat (index 4)
-                              Navigator.popUntil(context, (route) => route.isFirst);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              shadowColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(28),
-                              ),
-                            ),
-                            child: const Text(
-                              'Lihat Riwayat Perhitungan',
-                              style: TextStyle(
-                                color: Color(0xFF0C1B13),
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
+                        const SizedBox(height: 16),
                         
                         if (isEditing) ...[
                           const SizedBox(height: 16),
                           OutlinedButton(
                             onPressed: () {
-                               context.read<NoteViewModel>().deleteNote(widget.noteId!);
+                               context.read<RiwayatViewModel>().updateCatatan(widget.noteId!, '');
                                Navigator.pop(context);
                             },
                             style: OutlinedButton.styleFrom(
@@ -251,7 +234,7 @@ class _NoteFormViewState extends State<NoteFormView> {
                                 Icon(Icons.delete_outline, color: Color(0xFFFF6B6B), size: 20),
                                 SizedBox(width: 8),
                                 Text(
-                                  'Hapus Permanen',
+                                  'Hapus Catatan',
                                   style: TextStyle(
                                     color: Color(0xFFFF6B6B),
                                     fontSize: 14,

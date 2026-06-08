@@ -22,6 +22,14 @@ class RiwayatViewModel extends ChangeNotifier {
   /// Item terbaru (untuk card di Home)
   HppModel? get latest => _history.isNotEmpty ? _history.first : null;
 
+  /// Riwayat yang punya catatan non-kosong (untuk halaman Catatan)
+  List<HppModel> get historyWithCatatan =>
+      _history.where((item) => item.catatan.trim().isNotEmpty).toList();
+
+  /// Catatan terbaru (untuk card Catatan di Home)
+  HppModel? get latestWithCatatan =>
+      historyWithCatatan.isNotEmpty ? historyWithCatatan.first : null;
+
   RiwayatViewModel() {
     // Dengarkan perubahan auth — otomatis mulai/berhenti stream data
     _authSub = _auth.authStateChanges().listen((user) {
@@ -66,6 +74,10 @@ class RiwayatViewModel extends ChangeNotifier {
 
   Future<void> deleteHistory(String id) async {
     await _firestoreService.deleteHistory(id);
+  }
+
+  Future<void> updateCatatan(String id, String catatan) async {
+    await _firestoreService.updateHistoryCatatan(id, catatan);
   }
 
   @override

@@ -135,6 +135,11 @@ class FirestoreService {
     await _db.collection('history').doc(id).delete();
   }
 
+  Future<void> updateHistoryCatatan(String id, String catatan) async {
+    await _db.collection('history').doc(id).update({'catatan': catatan});
+  }
+
+
   // Stream data target bulanan dari koleksi 'monthly_targets'
   Stream<Map<String, double>> streamMonthlyTargets(String userId) {
     return _db

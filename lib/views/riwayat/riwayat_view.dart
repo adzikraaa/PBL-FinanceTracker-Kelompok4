@@ -446,7 +446,7 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                 const SizedBox(width: 8),
                 GestureDetector(
                   onTap: () {
-                    _showLihatCatatan(ctx, item.catatan, item.namaProduk);
+                    _showLihatCatatan(ctx, vm, item);
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -530,143 +530,301 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
     );
   }
 
-  void _showLihatCatatan(BuildContext ctx, String catatan, String namaProduk) {
-    final isEmpty = catatan.trim().isEmpty;
+  void _showLihatCatatan(BuildContext ctx, RiwayatViewModel vm, HppModel item) {
     showModalBottomSheet(
       context: ctx,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) => Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(ctx).size.height * 0.75,
-        ),
-        decoration: const BoxDecoration(
-          color: Color(0xFF132A1D),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 36),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Handle bar
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(4),
-                ),
+      builder: (_) {
+        bool isEditing = item.catatan.trim().isEmpty;
+        final TextEditingController noteController =
+            TextEditingController(text: item.catatan);
+
+        return StatefulBuilder(
+          builder: (context, setStateSheet) {
+            final currentNote = item.catatan;
+            final isEmpty = currentNote.trim().isEmpty;
+
+            return Container(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom + 36,
+                top: 16,
+                left: 24,
+                right: 24,
               ),
-            ),
-            // Header
-            Row(
-              children: [
-                const Icon(Icons.description_outlined, color: Color(0xFF8BCA6E), size: 22),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              decoration: const BoxDecoration(
+                color: Color(0xFF132A1D),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Handle bar
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                  // Header
+                  Row(
                     children: [
-                      const Text(
-                        'Catatan Perhitungan',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                      const Icon(Icons.description_outlined,
+                          color: Color(0xFF8BCA6E), size: 22),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Catatan Perhitungan',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              item.namaProduk,
+                              style: const TextStyle(
+                                color: Color(0xFF8BCA6E),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      Text(
-                        namaProduk,
-                        style: const TextStyle(
-                          color: Color(0xFF8BCA6E),
-                          fontSize: 12,
+                      if (!isEditing && !isEmpty)
+                        IconButton(
+                          icon: const Icon(Icons.edit_outlined,
+                              color: Color(0xFF8BCA6E)),
+                          onPressed: () {
+                            setStateSheet(() {
+                              isEditing = true;
+                            });
+                          },
                         ),
-                      ),
                     ],
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            // Content
-            if (isEmpty)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1B3324),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFF2C4334)),
-                ),
-                child: Column(
-                  children: [
-                    const Icon(Icons.notes_outlined, color: Colors.white38, size: 40),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Tidak ada catatan',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  const SizedBox(height: 20),
+                  // Content
+                  if (isEditing)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextField(
+                          controller: noteController,
+                          maxLines: 4,
+                          maxLength: 200,
+                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                          decoration: InputDecoration(
+                            hintText: 'Tulis catatan perhitungan di sini...',
+                            hintStyle: const TextStyle(color: Colors.white30),
+                            fillColor: const Color(0xFF1B3324),
+                            filled: true,
+                            counterStyle: const TextStyle(color: Colors.white54),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(color: Color(0xFF2C4334)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(color: Color(0xFF8BCA6E)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            if (!isEmpty) // Only show cancel if there was a note already
+                              Expanded(
+                                child: SizedBox(
+                                  height: 48,
+                                  child: OutlinedButton(
+                                    onPressed: () {
+                                      setStateSheet(() {
+                                        isEditing = false;
+                                        noteController.text = item.catatan;
+                                      });
+                                    },
+                                    style: OutlinedButton.styleFrom(
+                                      side: const BorderSide(color: Colors.white38),
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                    ),
+                                    child: const Text('Batal'),
+                                  ),
+                                ),
+                              ),
+                            if (!isEmpty) const SizedBox(width: 12),
+                            Expanded(
+                              child: SizedBox(
+                                height: 48,
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    final newNote = noteController.text.trim();
+                                    await vm.updateCatatan(item.id!, newNote);
+                                    // Update the local item object so it updates visually immediately
+                                    item.catatan = newNote;
+                                    setStateSheet(() {
+                                      isEditing = false;
+                                    });
+                                    if (ctx.mounted) {
+                                      ScaffoldMessenger.of(ctx).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Catatan berhasil disimpan!'),
+                                          backgroundColor: Colors.green,
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF8BCA6E),
+                                    foregroundColor: const Color(0xFF0C1B13),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    elevation: 0,
+                                  ),
+                                  child: const Text(
+                                    'Simpan',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold, fontSize: 15),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    )
+                  else if (isEmpty)
+                    Column(
+                      children: [
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1B3324),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFF2C4334)),
+                          ),
+                          child: Column(
+                            children: const [
+                              Icon(Icons.notes_outlined,
+                                  color: Colors.white38, size: 40),
+                              SizedBox(height: 12),
+                              Text(
+                                'Tidak ada catatan',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              SizedBox(height: 6),
+                              Text(
+                                'Kamu belum menambahkan catatan untuk perhitungan ini.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    color: Colors.white38,
+                                    fontSize: 12,
+                                    height: 1.5),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              setStateSheet(() {
+                                isEditing = true;
+                              });
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF8BCA6E),
+                              foregroundColor: const Color(0xFF0C1B13),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: const Text(
+                              'Tambah Catatan',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 15),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    Column(
+                      children: [
+                        Container(
+                          width: double.infinity,
+                          constraints: BoxConstraints(
+                            maxHeight: MediaQuery.of(context).size.height * 0.4,
+                          ),
+                          child: SingleChildScrollView(
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF1B3324),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: const Color(0xFF2C4334)),
+                              ),
+                              child: Text(
+                                currentNote,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  height: 1.7,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF8BCA6E),
+                              foregroundColor: const Color(0xFF0C1B13),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14)),
+                              elevation: 0,
+                            ),
+                            child: const Text(
+                              'Tutup',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 15),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Catatan akan muncul di sini jika kamu\nmenambahkannya saat proses perhitungan.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white38, fontSize: 12, height: 1.5),
-                    ),
-                  ],
-                ),
-              )
-            else
-              Flexible(
-                child: SingleChildScrollView(
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1B3324),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFF2C4334)),
-                    ),
-                    child: Text(
-                      catatan,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        height: 1.7,
-                      ),
-                    ),
-                  ),
-                ),
+                ],
               ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(ctx),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF8BCA6E),
-                  foregroundColor: const Color(0xFF0C1B13),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  'Tutup',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+            );
+          },
+        );
+      },
     );
   }
 

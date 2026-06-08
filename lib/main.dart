@@ -6,7 +6,6 @@ import 'shared/colors.dart';
 import 'viewmodels/auth_viewmodel.dart';
 import 'viewmodels/saving_viewmodel.dart';
 import 'viewmodels/finance_viewmodel.dart';
-import 'viewmodels/note_viewmodel.dart';
 import 'viewmodels/loadingscreen.dart';
 import 'viewmodels/riwayat_viewmodel.dart';
 import 'viewmodels/home_viewmodel.dart';
@@ -36,7 +35,6 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(create: (_) => FinanceViewModel()),
-        ChangeNotifierProvider(create: (_) => NoteViewModel()),
         ChangeNotifierProvider(create: (_) => RiwayatViewModel()),
         ChangeNotifierProvider(create: (_) => SavingViewModel()),
         ChangeNotifierProvider(create: (_) => PremiumViewModel()),

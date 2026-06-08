@@ -945,21 +945,36 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                           child: SizedBox(
                             width: 68,
                             height: 68,
-                            child: hasTarget
-                                ? CustomPaint(
-                                    painter: _DonutPainter(
-                                      slices: progress > 0
-                                          ? [progress, sisa]
-                                          : [0.001, 0.999],
-                                      colors: [kGreen, kCardLight],
-                                    ),
-                                  )
-                                : CustomPaint(
-                                    painter: _DonutPainter(
-                                      slices: const [0.001, 0.999],
-                                      colors: [kGreen, kCardLight],
-                                    ),
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Positioned.fill(
+                                  child: hasTarget
+                                      ? CustomPaint(
+                                          painter: _DonutPainter(
+                                            slices: progress > 0
+                                                ? [progress, sisa]
+                                                : [0.001, 0.999],
+                                            colors: [kGreen, kCardLight],
+                                          ),
+                                        )
+                                      : CustomPaint(
+                                          painter: _DonutPainter(
+                                            slices: const [0.001, 0.999],
+                                            colors: [kGreen, kCardLight],
+                                          ),
+                                        ),
+                                ),
+                                Text(
+                                  hasTarget ? '$progressPct%' : '-',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
                                   ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -1075,8 +1090,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   }
 
   List<Widget> _buildNoteLines() {
-    final noteVm = context.watch<NoteViewModel>();
-    final notes = noteVm.notes;
+    final riwayatVm = context.watch<RiwayatViewModel>();
+    final notes = riwayatVm.historyWithCatatan.take(2).toList();
 
     if (notes.isEmpty) {
       return [
@@ -1091,37 +1106,53 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       ];
     }
 
-    final latestNote = notes.first;
-    final lines = latestNote.content.split('\n').take(2).toList();
+    final List<Widget> widgets = [];
+    for (int i = 0; i < notes.length; i++) {
+      if (i > 0) {
+        widgets.add(const SizedBox(height: 8));
+        widgets.add(
+          Container(
+            height: 0.5,
+            color: const Color(0xFF2D5A1B).withOpacity(0.2),
+          ),
+        );
+        widgets.add(const SizedBox(height: 8));
+      }
 
-    return [
-      Text(
-        latestNote.title,
-        style: const TextStyle(
-          color: Color(0xFF2D5A1B),
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          height: 1.5,
+      final note = notes[i];
+      widgets.add(
+        Text(
+          note.namaProduk,
+          style: const TextStyle(
+            color: Color(0xFF2D5A1B),
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            height: 1.3,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      ...lines
-          .map((line) => Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Text(
-                  line,
-                  style: const TextStyle(
-                    color: Color(0xFF2D5A1B),
-                    fontSize: 12,
-                    height: 1.4,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ))
-          .toList(),
-    ];
+      );
+
+      final firstLine = note.catatan.split('\n').first;
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            firstLine,
+            style: const TextStyle(
+              color: Color(0xFF2D5A1B),
+              fontSize: 12,
+              height: 1.3,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      );
+    }
+
+    return widgets;
   }
 
   Widget _insightLegend(Color color, String label) {
@@ -1582,10 +1613,21 @@ class _DonutPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     double startAngle = -pi / 2;
+    
+    // Count how many slices are non-zero
+    final nonZeroCount = slices.where((s) => s > 0).length;
+
     for (int i = 0; i < slices.length; i++) {
+      final val = slices[i];
+      if (val <= 0) continue; // Skip zero-value slices
+
       paint.color = colors[i % colors.length];
-      final sweepAngle = 2 * pi * slices[i];
-      canvas.drawArc(rect, startAngle, sweepAngle - 0.08, false, paint);
+      final sweepAngle = 2 * pi * val;
+      
+      // If there is only one non-zero slice (e.g. 100% progress), draw a complete circle without any gaps
+      final drawAngle = (nonZeroCount <= 1) ? sweepAngle : (sweepAngle - 0.08);
+
+      canvas.drawArc(rect, startAngle, drawAngle, false, paint);
       startAngle += sweepAngle;
     }
   }
