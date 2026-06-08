@@ -342,7 +342,62 @@ class _EmailVerificationViewState extends State<EmailVerificationView>
                           ],
                         ),
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 20),
+
+                      // ⚠️ Spam Warning Card
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFC107).withOpacity(0.10),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: const Color(0xFFFFC107).withOpacity(0.45),
+                            width: 1.2,
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.only(top: 2),
+                              child: Icon(
+                                Icons.warning_amber_rounded,
+                                color: Color(0xFFFFC107),
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Email tidak muncul di inbox?',
+                                    style: TextStyle(
+                                      fontFamily: 'Lexend',
+                                      color: Color(0xFFFFC107),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Cek folder Spam atau Junk di Gmail. Email verifikasi kadang masuk ke sana secara otomatis. Tandai sebagai "Bukan Spam" agar email berikutnya langsung masuk inbox.',
+                                    style: TextStyle(
+                                      fontFamily: 'Lexend',
+                                      color: const Color(0xFFFFC107).withOpacity(0.85),
+                                      fontSize: 12,
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
 
                       // Sign Out / Back button
                       TextButton.icon(
