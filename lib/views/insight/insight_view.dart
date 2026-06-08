@@ -205,7 +205,7 @@ class _InsightViewState extends State<InsightView> {
           SafeArea(
             bottom: false,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 120, left: 16, right: 16, top: 16),
+              padding: const EdgeInsets.only(bottom: 160, left: 16, right: 16, top: 16),
               physics: const BouncingScrollPhysics(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

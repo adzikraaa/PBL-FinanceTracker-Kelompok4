@@ -197,76 +197,38 @@ class _NotesListViewState extends State<NotesListView>
             ),
           ),
 
-          // Floating Action Button Row
+          // Floating Action Button
           Positioned(
             right: 24,
             bottom: 24,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    context.read<HomeViewModel>().onNavTapManual(4); // Pindah ke tab Riwayat (index 4)
-                    Navigator.popUntil(context, (route) => route.isFirst);
-                  },
-                  child: Container(
-                    height: 56,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1B3324),
-                      borderRadius: BorderRadius.circular(28),
-                      border: Border.all(color: const Color(0xFF2C4334)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.25),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'Lihat Riwayat Perhitungan',
-                        style: TextStyle(
-                          color: Color(0xFF8BCA6E),
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+            child: GestureDetector(
+              onTap: () {
+                context.read<HomeViewModel>().onNavTapManual(0); // Pindah ke tab Hitung HPP BEP
+                Navigator.popUntil(context, (route) => route.isFirst);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Silakan hitung HPP & BEP terlebih dahulu untuk membuat catatan.'),
+                    backgroundColor: Color(0xFF1B3324),
+                    duration: Duration(seconds: 3),
                   ),
-                ),
-                const SizedBox(width: 12),
-                GestureDetector(
-                  onTap: () {
-                    context.read<HomeViewModel>().onNavTapManual(0); // Pindah ke tab Hitung HPP BEP
-                    Navigator.popUntil(context, (route) => route.isFirst);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Silakan hitung HPP & BEP terlebih dahulu untuk membuat catatan.'),
-                        backgroundColor: Color(0xFF1B3324),
-                        duration: Duration(seconds: 3),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF6CF688),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF6CF688).withOpacity(0.3),
-                          blurRadius: 16,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+                );
+              },
+              child: Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6CF688),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF6CF688).withOpacity(0.3),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
                     ),
-                    child: const Icon(Icons.add, color: Color(0xFF0C1B13), size: 28),
-                  ),
+                  ],
                 ),
-              ],
+                child: const Icon(Icons.add, color: Color(0xFF0C1B13), size: 28),
+              ),
             ),
           ),
         ],

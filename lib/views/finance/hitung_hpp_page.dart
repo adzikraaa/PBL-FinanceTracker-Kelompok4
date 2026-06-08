@@ -338,7 +338,7 @@ class _HitungHppPageState extends State<HitungHppPage> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 120),
+                    const SizedBox(height: 160),
                   ],
                 ),
               ),
