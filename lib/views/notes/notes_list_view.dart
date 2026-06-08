@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/riwayat_viewmodel.dart';
 import '../../viewmodels/home_viewmodel.dart';
-import '../../data/models/hpp_model.dart';
 import 'note_form_view.dart';
 
 class NotesListView extends StatefulWidget {
@@ -15,7 +14,6 @@ class NotesListView extends StatefulWidget {
 
 class _NotesListViewState extends State<NotesListView>
     with TickerProviderStateMixin {
-
   late AnimationController _floatController;
   late AnimationController _glowController;
   late AnimationController _particleController;
@@ -154,14 +152,13 @@ class _NotesListViewState extends State<NotesListView>
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (_) => NoteFormView(
-                                                  noteId: note.id),
+                                              builder: (_) =>
+                                                  NoteFormView(noteId: note.id),
                                             ),
                                           );
                                         },
                                         child: const Icon(Icons.edit,
-                                            color: Color(0xFF6B7E72),
-                                            size: 20),
+                                            color: Color(0xFF6B7E72), size: 20),
                                       ),
                                       const SizedBox(width: 12),
                                       GestureDetector(
@@ -171,10 +168,8 @@ class _NotesListViewState extends State<NotesListView>
                                                 context, note.id!);
                                           }
                                         },
-                                        child: const Icon(
-                                            Icons.delete_outline,
-                                            color: Color(0xFF6B7E72),
-                                            size: 20),
+                                        child: const Icon(Icons.delete_outline,
+                                            color: Color(0xFF6B7E72), size: 20),
                                       ),
                                     ],
                                   ),
@@ -185,6 +180,59 @@ class _NotesListViewState extends State<NotesListView>
                                       color: Color(0xFFA1AFA6),
                                       fontSize: 13,
                                       height: 1.4,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        if (note.id != null) {
+                                          context
+                                              .read<RiwayatViewModel>()
+                                              .setSelectedHistoryId(note.id);
+                                          context
+                                              .read<HomeViewModel>()
+                                              .onNavTapManual(
+                                                  4); // Pindah ke tab Riwayat (Index 4)
+                                          Navigator.pop(
+                                              context); // Tutup halaman daftar catatan
+                                        }
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12, vertical: 8),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF2C4334)
+                                              .withOpacity(0.5),
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          border: Border.all(
+                                            color: const Color(0xFF6CF688)
+                                                .withOpacity(0.3),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: const [
+                                            Icon(
+                                              Icons.receipt_long_outlined,
+                                              color: Color(0xFF6CF688),
+                                              size: 14,
+                                            ),
+                                            SizedBox(width: 6),
+                                            Text(
+                                              'Lihat Riwayat Perhitungan',
+                                              style: TextStyle(
+                                                color: Color(0xFF6CF688),
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -203,11 +251,14 @@ class _NotesListViewState extends State<NotesListView>
             bottom: 24,
             child: GestureDetector(
               onTap: () {
-                context.read<HomeViewModel>().onNavTapManual(0); // Pindah ke tab Hitung HPP BEP
+                context
+                    .read<HomeViewModel>()
+                    .onNavTapManual(0); // Pindah ke tab Hitung HPP BEP
                 Navigator.popUntil(context, (route) => route.isFirst);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Silakan hitung HPP & BEP terlebih dahulu untuk membuat catatan.'),
+                    content: Text(
+                        'Silakan hitung HPP & BEP terlebih dahulu untuk membuat catatan.'),
                     backgroundColor: Color(0xFF1B3324),
                     duration: Duration(seconds: 3),
                   ),
@@ -227,7 +278,8 @@ class _NotesListViewState extends State<NotesListView>
                     ),
                   ],
                 ),
-                child: const Icon(Icons.add, color: Color(0xFF0C1B13), size: 28),
+                child:
+                    const Icon(Icons.add, color: Color(0xFF0C1B13), size: 28),
               ),
             ),
           ),
@@ -253,14 +305,13 @@ class _NotesListViewState extends State<NotesListView>
                   children: [
                     // Particle dots orbiting
                     ...List.generate(6, (i) {
-                      final angle = (i / 6) * 2 * pi +
-                          _particleController.value * 2 * pi;
+                      final angle =
+                          (i / 6) * 2 * pi + _particleController.value * 2 * pi;
                       final radius = 68.0;
                       final dx = cos(angle) * radius;
                       final dy = sin(angle) * radius;
-                      final opacity = (sin(
-                                  _particleController.value * 2 * pi +
-                                      (i * pi / 3)) +
+                      final opacity = (sin(_particleController.value * 2 * pi +
+                                  (i * pi / 3)) +
                               1) /
                           2;
                       return Transform.translate(
@@ -275,8 +326,8 @@ class _NotesListViewState extends State<NotesListView>
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF6CF688)
-                                      .withOpacity(0.8),
+                                  color:
+                                      const Color(0xFF6CF688).withOpacity(0.8),
                                   blurRadius: 6,
                                 ),
                               ],
@@ -343,8 +394,7 @@ class _NotesListViewState extends State<NotesListView>
             const SizedBox(height: 36),
             // Dashed border container with text
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 color: const Color(0xFF132018).withOpacity(0.6),
@@ -445,7 +495,6 @@ class _NotesListViewState extends State<NotesListView>
       ),
     );
   }
-
 
   void _showDeleteConfirmation(BuildContext context, String noteId) {
     showDialog(

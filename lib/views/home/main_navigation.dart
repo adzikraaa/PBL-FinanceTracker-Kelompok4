@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../viewmodels/home_viewmodel.dart';
 import '../../viewmodels/saving_viewmodel.dart';
+import '../../viewmodels/riwayat_viewmodel.dart';
 import 'home_view.dart';
 import '../savings/saving_list_page.dart';
 import '../finance/hitung_hpp_page.dart';
@@ -36,7 +37,7 @@ class _MainNavigationState extends State<MainNavigation> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      
+
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         final hasSeeded = await FirestoreSeeder.hasSeeded(user.uid);
@@ -48,7 +49,7 @@ class _MainNavigationState extends State<MainNavigation> {
           );
         }
       }
-      
+
       if (!mounted) return;
       context.read<SavingViewModel>().listenSavings(_userId);
     });
@@ -88,16 +89,17 @@ class _MainNavigationState extends State<MainNavigation> {
     const kNavActive = Color(0xFF6CF688);
 
     final screenWidth = MediaQuery.of(context).size.width;
-    
+
     // Gunakan nilai maksimum antara viewPadding dan padding biasa
     final viewPadding = MediaQuery.of(context).viewPadding.bottom;
     final paddingBottom = MediaQuery.of(context).padding.bottom;
-    final safeBottom = viewPadding > paddingBottom ? viewPadding : paddingBottom;
-    
-    // Jika sistem gagal mendeteksi height navbar bawaan (seperti di beberapa Samsung) 
+    final safeBottom =
+        viewPadding > paddingBottom ? viewPadding : paddingBottom;
+
+    // Jika sistem gagal mendeteksi height navbar bawaan (seperti di beberapa Samsung)
     // atau mereturn 0, kita beri nilai default 30 agar total margin menjadi 50 (30 + 20).
     final extraPadding = safeBottom > 0 ? safeBottom : 30.0;
-    
+
     // Base margin agar tidak terlalu mepet (awalnya 20)
     final baseMargin = 20.0;
 
@@ -108,7 +110,8 @@ class _MainNavigationState extends State<MainNavigation> {
 
     return Container(
       color: Colors.transparent,
-      padding: EdgeInsets.only(bottom: baseMargin + extraPadding, left: 20, right: 20),
+      padding: EdgeInsets.only(
+          bottom: baseMargin + extraPadding, left: 20, right: 20),
       child: SizedBox(
         height: navHeight,
         child: Stack(
@@ -162,6 +165,11 @@ class _MainNavigationState extends State<MainNavigation> {
                     behavior: HitTestBehavior.translucent,
                     onTap: () {
                       vm.onNavTapManual(i);
+                      if (i != 4) {
+                        context
+                            .read<RiwayatViewModel>()
+                            .clearSelectedHistoryId();
+                      }
                     },
                     child: SizedBox(
                       height: navHeight,

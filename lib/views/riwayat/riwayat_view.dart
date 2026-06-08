@@ -13,14 +13,14 @@ String _fmtTime(DateTime d) => DateFormat('HH:mm', 'id_ID').format(d);
 String _fmtDateFull(DateTime d) => DateFormat('dd MMM yyyy', 'id_ID').format(d);
 
 // ─── Colors ──────────────────────────────────────────────────────────────────
-const Color _kBg       = Color(0xFF0B2114);
-const Color _kGlow     = Color(0xFF1E472A);
-const Color _kCard     = Color(0xFFFFFFFF);
-const Color _kGreen    = Color(0xFF4ADE80);
-const Color _kDarkGreen= Color(0xFF163520);
-const Color _kWhite    = Color(0xFFFFFFFF);
-const Color _kWhite70  = Color(0xB3FFFFFF);
-const Color _kWhite40  = Color(0x66FFFFFF);
+const Color _kBg = Color(0xFF0B2114);
+const Color _kGlow = Color(0xFF1E472A);
+const Color _kCard = Color(0xFFFFFFFF);
+const Color _kGreen = Color(0xFF4ADE80);
+const Color _kDarkGreen = Color(0xFF163520);
+const Color _kWhite = Color(0xFFFFFFFF);
+const Color _kWhite70 = Color(0xB3FFFFFF);
+const Color _kWhite40 = Color(0x66FFFFFF);
 const Color _kGreyText = Color(0xFF6B7280);
 const Color _kLightGreenBtn = Color(0xFFA2E874);
 
@@ -31,22 +31,22 @@ class RiwayatView extends StatefulWidget {
   State<RiwayatView> createState() => _RiwayatViewState();
 }
 
-class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin {
+class _RiwayatViewState extends State<RiwayatView>
+    with TickerProviderStateMixin {
   late AnimationController _fadeCtrl;
   late Animation<double> _fadeAnim;
   late AnimationController _sparkleCtrl;
   int _localNavIndex = 4; // Riwayat
 
-  final _currencyFmt = NumberFormat.currency(
-    locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+  final _currencyFmt =
+      NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
   @override
   void initState() {
     super.initState();
     _fadeCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 600));
-    _fadeAnim =
-        CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
+    _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
     _fadeCtrl.forward();
 
     _sparkleCtrl =
@@ -95,7 +95,7 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
       ),
     );
   }
-  
+
   Map<String, List<HppModel>> _groupHistoryByDate(List<HppModel> history) {
     Map<String, List<HppModel>> grouped = {};
     final now = DateTime.now();
@@ -103,7 +103,8 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
     final yesterday = today.subtract(const Duration(days: 1));
 
     for (var item in history) {
-      final date = DateTime(item.createdAt.year, item.createdAt.month, item.createdAt.day);
+      final date = DateTime(
+          item.createdAt.year, item.createdAt.month, item.createdAt.day);
       String key;
       if (date == today) {
         key = 'HARI INI';
@@ -126,7 +127,12 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
     final isPremium = context.watch<PremiumViewModel>().isPremium;
     return Consumer<RiwayatViewModel>(
       builder: (context, vm, _) {
-        final groupedHistory = _groupHistoryByDate(vm.history);
+        final selectedId = vm.selectedHistoryId;
+        final historyList = selectedId != null
+            ? vm.history.where((item) => item.id == selectedId).toList()
+            : vm.history;
+
+        final groupedHistory = _groupHistoryByDate(historyList);
         final groupKeys = groupedHistory.keys.toList();
 
         return Scaffold(
@@ -142,12 +148,14 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                   child: Column(
                     children: [
                       _buildHeader(context),
+                      if (vm.selectedHistoryId != null)
+                        _buildConnectedNoteBanner(context, vm),
                       if (vm.isLoading)
                         const Expanded(
                           child: Center(
                               child: CircularProgressIndicator(color: _kGreen)),
                         )
-                      else if (vm.history.isEmpty)
+                      else if (historyList.isEmpty)
                         _buildEmptyState()
                       else
                         Expanded(
@@ -161,7 +169,8 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     _buildDateHeader(key),
-                                    ...items.map((item) => _buildRiwayatCard(item, vm, context, isPremium)),
+                                    ...items.map((item) => _buildRiwayatCard(
+                                        item, vm, context, isPremium)),
                                   ],
                                 );
                               }),
@@ -179,25 +188,118 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
     );
   }
 
+  Widget _buildConnectedNoteBanner(BuildContext context, RiwayatViewModel vm) {
+    final connectedItem = vm.history.firstWhere(
+      (item) => item.id == vm.selectedHistoryId,
+      orElse: () => HppModel(
+        userId: '',
+        namaProduk: 'Catatan',
+        persediaanAwal: 0,
+        pembelianBersih: 0,
+        persediaanAkhir: 0,
+        biayaProduksi: 0,
+        biayaTenagaKerja: 0,
+        biayaOverhead: 0,
+        jumlahUnit: 0,
+        biayaTetap: 0,
+        hargaJualUnit: 0,
+        totalHpp: 0,
+        bepUnit: 0,
+        bepRupiah: 0,
+        catatan: '',
+        createdAt: DateTime.now(),
+      ),
+    );
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF132A1D),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _kGreen.withOpacity(0.4), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: _kGreen.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline, color: _kGreen, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Menampilkan Riwayat Terhubung',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  connectedItem.namaProduk,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 11,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () {
+              vm.clearSelectedHistoryId();
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: _kGreen,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'Lihat Semua',
+                style: TextStyle(
+                  color: Color(0xFF0C1B13),
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ─── Background ────────────────────────────────────────────────────────────
   Widget _buildBgGlow() => Positioned(
-    top: -100,
-    left: 0,
-    right: 0,
-    child: Container(
-      height: 400,
-      decoration: BoxDecoration(
-        gradient: RadialGradient(
-          center: const Alignment(0, -0.5),
-          radius: 1.0,
-          colors: [
-            _kGlow.withValues(alpha: 0.5),
-            _kBg.withValues(alpha: 0.0),
-          ],
+        top: -100,
+        left: 0,
+        right: 0,
+        child: Container(
+          height: 400,
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: const Alignment(0, -0.5),
+              radius: 1.0,
+              colors: [
+                _kGlow.withValues(alpha: 0.5),
+                _kBg.withValues(alpha: 0.0),
+              ],
+            ),
+          ),
         ),
-      ),
-    ),
-  );
+      );
 
   Widget _buildSparkles() => AnimatedBuilder(
         animation: _sparkleCtrl,
@@ -206,7 +308,6 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
           painter: _SparklesPainter(t: _sparkleCtrl.value),
         ),
       );
-
 
   // ─── Header ────────────────────────────────────────────────────────────────
   Widget _buildHeader(BuildContext context) {
@@ -255,11 +356,14 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
   }
 
   // ─── Riwayat Card ──────────────────────────────────────────────────────────
-  Widget _buildRiwayatCard(HppModel item, RiwayatViewModel vm, BuildContext ctx, bool isPremium) {
-    final hppPerUnit = item.jumlahUnit > 0 ? item.totalHpp / item.jumlahUnit : 0.0;
+  Widget _buildRiwayatCard(
+      HppModel item, RiwayatViewModel vm, BuildContext ctx, bool isPremium) {
+    final hppPerUnit =
+        item.jumlahUnit > 0 ? item.totalHpp / item.jumlahUnit : 0.0;
     final margin = item.hargaJualUnit - hppPerUnit;
-    final marginPct = item.hargaJualUnit > 0 ? (margin / item.hargaJualUnit * 100) : 0.0;
-    
+    final marginPct =
+        item.hargaJualUnit > 0 ? (margin / item.hargaJualUnit * 100) : 0.0;
+
     // Logic for circular color and badges
     Color marginColor;
     if (marginPct >= 50) {
@@ -270,11 +374,23 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
       marginColor = Colors.orange;
     }
 
+    final isSelected = item.id == vm.selectedHistoryId;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: _kCard,
         borderRadius: BorderRadius.circular(24),
+        border: isSelected ? Border.all(color: _kGreen, width: 3) : null,
+        boxShadow: isSelected
+            ? [
+                BoxShadow(
+                  color: _kGreen.withOpacity(0.35),
+                  blurRadius: 16,
+                  spreadRadius: 2,
+                ),
+              ]
+            : null,
       ),
       child: Column(
         children: [
@@ -316,7 +432,7 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
               ],
             ),
           ),
-          
+
           // Grid stats
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -327,15 +443,19 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildStatGridItem('HPP', _currencyFmt.format(hppPerUnit)),
+                      _buildStatGridItem(
+                          'HPP', _currencyFmt.format(hppPerUnit)),
                       const SizedBox(height: 16),
-                      _buildStatGridItem('BEP UNIT', '${item.bepUnit.toStringAsFixed(0)} unit'),
+                      _buildStatGridItem('BEP UNIT',
+                          '${item.bepUnit.toStringAsFixed(0)} unit'),
                       const SizedBox(height: 8),
                       // Badge 1
                       if (item.bepUnit > 100)
-                        _buildBadge(Icons.warning_amber_rounded, 'BEP Tinggi', const Color(0xFFFFE4E6), const Color(0xFFE11D48))
+                        _buildBadge(Icons.warning_amber_rounded, 'BEP Tinggi',
+                            const Color(0xFFFFE4E6), const Color(0xFFE11D48))
                       else if (marginPct >= 50)
-                        _buildBadge(Icons.star, 'Paling Menguntungkan', const Color(0xFFF3E8FF), const Color(0xFF6B21A8))
+                        _buildBadge(Icons.star, 'Paling Menguntungkan',
+                            const Color(0xFFF3E8FF), const Color(0xFF6B21A8))
                     ],
                   ),
                 ),
@@ -343,29 +463,33 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildStatGridItem('HARGA JUAL', _currencyFmt.format(item.hargaJualUnit)),
+                      _buildStatGridItem('HARGA JUAL',
+                          _currencyFmt.format(item.hargaJualUnit)),
                       const SizedBox(height: 16),
-                      _buildStatGridItem('PROFIT MARGIN', '${marginPct.toStringAsFixed(0)}%', valueColor: marginColor),
+                      _buildStatGridItem(
+                          'PROFIT MARGIN', '${marginPct.toStringAsFixed(0)}%',
+                          valueColor: marginColor),
                       const SizedBox(height: 8),
                       // Badge 2
                       if (item.bepUnit <= 100 && marginPct >= 40)
-                        _buildBadge(Icons.flash_on, 'Laku Cepat', const Color(0xFFF3F4F6), const Color(0xFF4B5563))
+                        _buildBadge(Icons.flash_on, 'Laku Cepat',
+                            const Color(0xFFF3F4F6), const Color(0xFF4B5563))
                     ],
                   ),
                 ),
               ],
             ),
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Divider
           Container(
             height: 1,
             color: Colors.grey.withValues(alpha: 0.1),
             margin: const EdgeInsets.symmetric(horizontal: 20),
           ),
-          
+
           // Bottom row
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -374,12 +498,15 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                 Expanded(
                   child: Row(
                     children: [
-                      Icon(Icons.access_time, size: 14, color: _kGreyText.withValues(alpha: 0.7)),
+                      Icon(Icons.access_time,
+                          size: 14, color: _kGreyText.withValues(alpha: 0.7)),
                       const SizedBox(width: 4),
                       Flexible(
                         child: Text(
                           '${_fmtDateFull(item.createdAt)}, ${_fmtTime(item.createdAt)}',
-                          style: TextStyle(color: _kGreyText.withValues(alpha: 0.8), fontSize: 10),
+                          style: TextStyle(
+                              color: _kGreyText.withValues(alpha: 0.8),
+                              fontSize: 10),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -400,7 +527,8 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                       if (ctx.mounted) {
                         ScaffoldMessenger.of(ctx).showSnackBar(
                           SnackBar(
-                            content: Text('Menggunakan trial PDF tanpa watermark (${premiumVm.pdfTrialUsed}/${PremiumViewModel.maxPdfTrial})'),
+                            content: Text(
+                                'Menggunakan trial PDF tanpa watermark (${premiumVm.pdfTrialUsed}/${PremiumViewModel.maxPdfTrial})'),
                             backgroundColor: Colors.orange,
                             duration: const Duration(seconds: 3),
                           ),
@@ -410,7 +538,8 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                       if (ctx.mounted) {
                         ScaffoldMessenger.of(ctx).showSnackBar(
                           const SnackBar(
-                            content: Text('Trial habis. Menampilkan watermark. Upgrade Premium untuk menghilangkan watermark.'),
+                            content: Text(
+                                'Trial habis. Menampilkan watermark. Upgrade Premium untuk menghilangkan watermark.'),
                             backgroundColor: Colors.grey,
                             duration: Duration(seconds: 4),
                           ),
@@ -418,10 +547,12 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                       }
                     }
 
-                    await PdfService.downloadHpp(item, isPremium: allowNoWatermark);
+                    await PdfService.downloadHpp(item,
+                        isPremium: allowNoWatermark);
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF3F4F6), // Light grey
                       borderRadius: BorderRadius.circular(12),
@@ -429,7 +560,8 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.download_outlined, size: 14, color: _kDarkGreen),
+                        const Icon(Icons.download_outlined,
+                            size: 14, color: _kDarkGreen),
                         const SizedBox(width: 4),
                         const Text(
                           'PDF',
@@ -449,7 +581,8 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                     _showLihatCatatan(ctx, vm, item);
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     decoration: BoxDecoration(
                       color: _kLightGreenBtn,
                       borderRadius: BorderRadius.circular(12),
@@ -457,7 +590,8 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.description_outlined, size: 14, color: _kDarkGreen),
+                        const Icon(Icons.description_outlined,
+                            size: 14, color: _kDarkGreen),
                         const SizedBox(width: 4),
                         const Text(
                           'Catatan',
@@ -479,7 +613,8 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildStatGridItem(String label, String value, {Color valueColor = _kDarkGreen}) {
+  Widget _buildStatGridItem(String label, String value,
+      {Color valueColor = _kDarkGreen}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -504,8 +639,9 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
       ],
     );
   }
-  
-  Widget _buildBadge(IconData icon, String text, Color bgColor, Color textColor) {
+
+  Widget _buildBadge(
+      IconData icon, String text, Color bgColor, Color textColor) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -622,20 +758,24 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                           controller: noteController,
                           maxLines: 4,
                           maxLength: 200,
-                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 14),
                           decoration: InputDecoration(
                             hintText: 'Tulis catatan perhitungan di sini...',
                             hintStyle: const TextStyle(color: Colors.white30),
                             fillColor: const Color(0xFF1B3324),
                             filled: true,
-                            counterStyle: const TextStyle(color: Colors.white54),
+                            counterStyle:
+                                const TextStyle(color: Colors.white54),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: const BorderSide(color: Color(0xFF2C4334)),
+                              borderSide:
+                                  const BorderSide(color: Color(0xFF2C4334)),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: const BorderSide(color: Color(0xFF8BCA6E)),
+                              borderSide:
+                                  const BorderSide(color: Color(0xFF8BCA6E)),
                             ),
                           ),
                         ),
@@ -654,7 +794,8 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                                       });
                                     },
                                     style: OutlinedButton.styleFrom(
-                                      side: const BorderSide(color: Colors.white38),
+                                      side: const BorderSide(
+                                          color: Colors.white38),
                                       foregroundColor: Colors.white,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(14),
@@ -680,7 +821,8 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                                     if (ctx.mounted) {
                                       ScaffoldMessenger.of(ctx).showSnackBar(
                                         const SnackBar(
-                                          content: Text('Catatan berhasil disimpan!'),
+                                          content: Text(
+                                              'Catatan berhasil disimpan!'),
                                           backgroundColor: Colors.green,
                                         ),
                                       );
@@ -697,7 +839,8 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                                   child: const Text(
                                     'Simpan',
                                     style: TextStyle(
-                                        fontWeight: FontWeight.bold, fontSize: 15),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15),
                                   ),
                                 ),
                               ),
@@ -784,7 +927,8 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
                               decoration: BoxDecoration(
                                 color: const Color(0xFF1B3324),
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: const Color(0xFF2C4334)),
+                                border:
+                                    Border.all(color: const Color(0xFF2C4334)),
                               ),
                               child: Text(
                                 currentNote,
@@ -836,7 +980,8 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 100, height: 100,
+              width: 100,
+              height: 100,
               decoration: BoxDecoration(
                 color: const Color(0xFF1E472A).withValues(alpha: 0.3),
                 shape: BoxShape.circle,
@@ -848,25 +993,27 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
             const SizedBox(height: 20),
             const Text('Belum Ada Riwayat',
                 style: TextStyle(
-                    color: _kWhite, fontSize: 18,
-                    fontWeight: FontWeight.bold)),
+                    color: _kWhite, fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 48),
               child: Text(
                 'Riwayat akan muncul setelah kamu menghitung HPP & BEP.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white54, fontSize: 13, height: 1.5),
+                style:
+                    TextStyle(color: Colors.white54, fontSize: 13, height: 1.5),
               ),
             ),
             const SizedBox(height: 28),
             GestureDetector(
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const HitungHppPage(showBackButton: true)),
+                MaterialPageRoute(
+                    builder: (_) => const HitungHppPage(showBackButton: true)),
               ),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 decoration: BoxDecoration(
                   color: _kLightGreenBtn,
                   borderRadius: BorderRadius.circular(30),
@@ -887,10 +1034,7 @@ class _RiwayatViewState extends State<RiwayatView> with TickerProviderStateMixin
       ),
     );
   }
-
 }
-
-
 
 // ── Sparkles Painter ─────────────────────────────────────────────────────────
 class _SparklesPainter extends CustomPainter {
