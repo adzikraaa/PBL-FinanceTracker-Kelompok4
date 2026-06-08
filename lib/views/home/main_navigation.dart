@@ -88,7 +88,19 @@ class _MainNavigationState extends State<MainNavigation> {
     const kNavActive = Color(0xFF6CF688);
 
     final screenWidth = MediaQuery.of(context).size.width;
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    
+    // Gunakan nilai maksimum antara viewPadding dan padding biasa
+    final viewPadding = MediaQuery.of(context).viewPadding.bottom;
+    final paddingBottom = MediaQuery.of(context).padding.bottom;
+    final safeBottom = viewPadding > paddingBottom ? viewPadding : paddingBottom;
+    
+    // Jika sistem gagal mendeteksi height navbar bawaan (seperti di beberapa Samsung) 
+    // atau mereturn 0, kita beri nilai default 30 agar total margin menjadi 50 (30 + 20).
+    final extraPadding = safeBottom > 0 ? safeBottom : 30.0;
+    
+    // Base margin agar tidak terlalu mepet (awalnya 20)
+    final baseMargin = 20.0;
+
     final navWidth = screenWidth - 40;
     final itemWidth = navWidth / navCount;
     final safeIndex = vm.selectedIndex.clamp(0, navCount - 1);
@@ -96,7 +108,7 @@ class _MainNavigationState extends State<MainNavigation> {
 
     return Container(
       color: Colors.transparent,
-      padding: EdgeInsets.only(bottom: 24 + bottomPadding, left: 20, right: 20),
+      padding: EdgeInsets.only(bottom: baseMargin + extraPadding, left: 20, right: 20),
       child: SizedBox(
         height: navHeight,
         child: Stack(
