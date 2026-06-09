@@ -326,9 +326,13 @@ class _SavingDetailPageState extends State<SavingDetailPage> with TickerProvider
     showDialog(
       context: context,
       builder: (_) => Dialog(
-        backgroundColor: const Color(0xFF1A1A2E),
+        backgroundColor: const Color(0xFFD2E3C8),
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20)),
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(
+            color: const Color(0xFF8BCA6E).withValues(alpha: 0.3),
+          ),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -336,37 +340,37 @@ class _SavingDetailPageState extends State<SavingDetailPage> with TickerProvider
             children: [
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF3A1A1A),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD32F2F).withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.warning_amber_rounded,
-                    color: Colors.red, size: 32),
+                    color: Color(0xFFD32F2F), size: 32),
               ),
               const SizedBox(height: 16),
               const Text('Konfirmasi Hapus',
                   style: TextStyle(
-                      color: Colors.white,
+                      color: Color(0xFF0F2E1A),
                       fontSize: 18,
                       fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               const Text(
                 'Apakah anda yakin\ningin menghapus tabungan ini?',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white70),
+                style: TextStyle(color: Color(0xFF2E4F39)),
               ),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4AFF91),
+                    backgroundColor: const Color(0xFF1B3D2A),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30)),
                   ),
                   onPressed: () => Navigator.pop(context),
                   child: const Text('Tidak',
-                      style: TextStyle(color: Colors.black)),
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
               const SizedBox(height: 8),
@@ -374,7 +378,7 @@ class _SavingDetailPageState extends State<SavingDetailPage> with TickerProvider
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2A2A2A),
+                    backgroundColor: const Color(0xFFD32F2F),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30)),
                   ),
@@ -424,7 +428,7 @@ class _SavingDetailPageState extends State<SavingDetailPage> with TickerProvider
                     }
                   },
                   child: const Text('Iya',
-                      style: TextStyle(color: Colors.white)),
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],

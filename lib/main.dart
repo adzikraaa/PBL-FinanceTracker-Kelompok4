@@ -56,6 +56,12 @@ class MyApp extends StatelessWidget {
             backgroundColor: AppColors.darkScaffold,
             elevation: 0,
           ),
+          snackBarTheme: const SnackBarThemeData(
+            backgroundColor: Color(0xFF132A1D),
+            contentTextStyle: TextStyle(color: Colors.white, fontSize: 14),
+            actionTextColor: Color(0xFF6CF688),
+            behavior: SnackBarBehavior.floating,
+          ),
         ),
         // Tampilkan LoadingScreen saat pertama kali buka app
         home: const LoadingScreen(),

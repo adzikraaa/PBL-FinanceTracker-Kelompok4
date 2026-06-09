@@ -156,51 +156,57 @@ class _PaymentViewState extends State<PaymentView> {
       context: context,
       barrierDismissible: false,
       builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF111827),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: const Color(0xFFD2E3C8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(
+            color: const Color(0xFF8BCA6E).withValues(alpha: 0.3),
+          ),
+        ),
         title: const Row(
           children: [
             Icon(Icons.access_time_rounded,
-                color: Color(0xFFFFD700), size: 22),
+                color: Color(0xFF2E7D32), size: 22),
             SizedBox(width: 8),
             Text('Menunggu Pembayaran',
-                style: TextStyle(color: Colors.white, fontSize: 16)),
+                style: TextStyle(color: Color(0xFF0F2E1A), fontSize: 16, fontWeight: FontWeight.bold)),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Pembayaran kamu sedang diproses.',
               style: TextStyle(
-                  color: Colors.white.withOpacity(0.7), fontSize: 13),
+                  color: Color(0xFF2E4F39), fontSize: 13),
             ),
             const SizedBox(height: 10),
             if (orderId != null) ...[
-              Text('Order ID:',
+              const Text('Order ID:',
                   style: TextStyle(
-                      color: Colors.white.withOpacity(0.5), fontSize: 12)),
+                      color: Color(0xFF4E6E56), fontSize: 12)),
               const SizedBox(height: 4),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.06),
+                  color: const Color(0xFF1B3D2A).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(orderId,
                     style: const TextStyle(
-                        color: Color(0xFFFFD700),
+                        color: Color(0xFF1B3D2A),
                         fontSize: 12,
+                        fontWeight: FontWeight.bold,
                         fontFamily: 'monospace')),
               ),
               const SizedBox(height: 10),
             ],
-            Text(
+            const Text(
               'Premium akan aktif otomatis setelah transfer dikonfirmasi.',
               style: TextStyle(
-                  color: Colors.white.withOpacity(0.5), fontSize: 12),
+                  color: Color(0xFF4E6E56), fontSize: 12),
             ),
           ],
         ),
@@ -211,7 +217,7 @@ class _PaymentViewState extends State<PaymentView> {
               Navigator.pop(context); // kembali ke premium view
             },
             child: const Text('OK',
-                style: TextStyle(color: Color(0xFFFFD700))),
+                style: TextStyle(color: Color(0xFF1B3D2A), fontWeight: FontWeight.bold)),
           ),
         ],
       ),

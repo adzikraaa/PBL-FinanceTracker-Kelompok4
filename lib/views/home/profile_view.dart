@@ -305,7 +305,7 @@ class _ProfileViewState extends State<ProfileView> with TickerProviderStateMixin
                                           child: Transform.rotate(
                                             angle: 0.3 + (pulse * 0.15),
                                             child: const Text(
-                                              '👑',
+                                              '\u{1f451}',
                                               style: TextStyle(fontSize: 32),
                                             ),
                                           ),
@@ -372,7 +372,7 @@ class _ProfileViewState extends State<ProfileView> with TickerProviderStateMixin
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      isPremium ? 'Premium Member 👑' : 'Pengguna Aktif',
+                                      isPremium ? 'Premium Member \u{1f451}' : 'Pengguna Aktif',
                                       style: TextStyle(
                                         color: isPremium ? const Color(0xFFFFD700) : const Color(0xFF4ADE80),
                                         fontSize: 13,

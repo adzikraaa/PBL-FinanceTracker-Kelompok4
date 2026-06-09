@@ -122,7 +122,7 @@ class _PaymentSuccessViewState extends State<PaymentSuccessView>
                           child: const Column(
                             children: [
                               Text(
-                                'Pembayaran Berhasil! 🎉',
+                                'Pembayaran Berhasil! \u{1f389}',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 24,

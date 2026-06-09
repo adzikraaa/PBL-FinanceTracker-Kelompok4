@@ -228,7 +228,7 @@ class _PremiumViewState extends State<PremiumView>
                             // ── Judul ─────────────────────────────────
                             Text(
                               vm.isPremium
-                                  ? 'Kamu Sudah Premium! 🎉'
+                                  ? 'Kamu Sudah Premium! \u{1f389}'
                                   : 'Upgrade ke Premium',
                               textAlign: TextAlign.center,
                               style: const TextStyle(
@@ -603,7 +603,7 @@ class _BottomCTA extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Hanya Rp ${_fmt(MidtransConfig.premiumPrice)} SEUMUR HIDUP 🎉',
+            'Hanya Rp ${_fmt(MidtransConfig.premiumPrice)} SEUMUR HIDUP \u{1f389}',
             style: TextStyle(
               color: Colors.white.withOpacity(0.75),
               fontSize: 12,

@@ -267,18 +267,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                       color: Color(0xFFC49A45),
                       size: 28,
                     ),
-                    Positioned(
-                      top: -2,
-                      right: -2,
-                      child: Container(
-                        width: 12,
-                        height: 12,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFEF4444),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -390,7 +378,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                         child: Transform.rotate(
                           angle: 0.3 + (pulse * 0.15),
                           child: const Text(
-                            '👑',
+                            '\u{1f451}',
                             style: TextStyle(fontSize: 20),
                           ),
                         ),
@@ -1743,7 +1731,7 @@ class _PremiumBubbleChatState extends State<PremiumBubbleChat> with SingleTicker
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    'Halo Premium Member! Nikmati semua fitur tanpa batas 👑',
+                    'Halo Premium Member! Nikmati semua fitur tanpa batas \u{1f451}',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 10,

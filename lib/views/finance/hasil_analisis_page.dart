@@ -530,28 +530,33 @@ class _HasilAnalisisPageState extends State<HasilAnalisisPage> {
                             showDialog(
                               context: context,
                               builder: (ctx) => AlertDialog(
-                                backgroundColor: const Color(0xFF1B2D22),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                backgroundColor: const Color(0xFFD2E3C8),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  side: BorderSide(
+                                    color: const Color(0xFF8BCA6E).withValues(alpha: 0.3),
+                                  ),
+                                ),
                                 title: const Row(
                                   children: [
                                     Icon(Icons.lock_outline, color: Colors.orange),
                                     SizedBox(width: 10),
-                                    Text('Batas Maksimal', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                                    Text('Batas Maksimal', style: TextStyle(color: Color(0xFF0F2E1A), fontSize: 18, fontWeight: FontWeight.bold)),
                                   ],
                                 ),
                                 content: const Text(
                                   'Kamu telah mencapai batas 3 riwayat untuk pengguna gratis. Upgrade ke Premium untuk menyimpan riwayat tanpa batas!',
-                                  style: TextStyle(color: Colors.white70, height: 1.5),
+                                  style: TextStyle(color: Color(0xFF2E4F39), height: 1.5),
                                 ),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(ctx),
-                                    child: const Text('Batal', style: TextStyle(color: Colors.white54)),
+                                    child: const Text('Batal', style: TextStyle(color: Color(0xFF4E6E56), fontWeight: FontWeight.bold)),
                                   ),
                                   ElevatedButton(
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF8BCA6E),
-                                      foregroundColor: const Color(0xFF0C1B13),
+                                      backgroundColor: const Color(0xFF1B3D2A),
+                                      foregroundColor: Colors.white,
                                     ),
                                     onPressed: () {
                                       Navigator.pop(ctx);

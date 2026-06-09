@@ -77,7 +77,7 @@ class _EmailVerificationViewState extends State<EmailVerificationView>
   void _navigateToDashboard() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Email berhasil diverifikasi! 🎉 Selamat datang.'),
+        content: Text('Email berhasil diverifikasi! \u{1f389} Selamat datang.'),
         backgroundColor: AppColors.successGreen,
       ),
     );
@@ -308,7 +308,7 @@ class _EmailVerificationViewState extends State<EmailVerificationView>
                                       if (success) {
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           const SnackBar(
-                                            content: Text('Email verifikasi baru telah dikirim! 📩'),
+                                            content: Text('Email verifikasi baru telah dikirim! \u{1f4e9}'),
                                             backgroundColor: AppColors.successGreen,
                                           ),
                                         );

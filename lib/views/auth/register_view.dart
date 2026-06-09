@@ -294,7 +294,7 @@ class _RegisterViewState extends State<RegisterView>
                                           ScaffoldMessenger.of(context)
                                               .showSnackBar(const SnackBar(
                                                   content: Text(
-                                                      'Registrasi berhasil! 🎉')));
+                                                      'Registrasi berhasil! \u{1f389}')));
                                           Navigator.pushAndRemoveUntil(
                                             context,
                                             MaterialPageRoute(
