@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/saving_model.dart';
 import '../models/user_model.dart'; // Wajib di-import
 import '../models/hpp_model.dart';  // Wajib di-import
+import '../models/monthly_target_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -141,31 +142,20 @@ class FirestoreService {
 
 
   // Stream data target bulanan dari koleksi 'monthly_targets'
-  Stream<Map<String, double>> streamMonthlyTargets(String userId) {
+  Stream<List<MonthlyTargetModel>> streamMonthlyTargets(String userId) {
     return _db
         .collection('monthly_targets')
         .where('userId', isEqualTo: userId)
         .snapshots()
         .map((snapshot) {
-          final Map<String, double> targets = {};
-          for (var doc in snapshot.docs) {
-            final data = doc.data();
-            final key = "${data['year']}_${data['month']}";
-            targets[key] = (data['target'] as num).toDouble();
-          }
-          return targets;
+          return snapshot.docs
+              .map((doc) => MonthlyTargetModel.fromJson(doc.data(), doc.id))
+              .toList();
         });
   }
 
   // Simpan atau update target bulanan ke Firestore
-  Future<void> saveMonthlyTarget(
-      String userId, int year, int month, double target) async {
-    final docId = "${userId}_${year}_${month}";
-    await _db.collection('monthly_targets').doc(docId).set({
-      'userId': userId,
-      'year': year,
-      'month': month,
-      'target': target,
-    });
+  Future<void> saveMonthlyTarget(MonthlyTargetModel target) async {
+    await _db.collection('monthly_targets').doc(target.id).set(target.toJson());
   }
 } // <--- KURUNG TUTUP CLASS HARUS DI PALING BAWAH

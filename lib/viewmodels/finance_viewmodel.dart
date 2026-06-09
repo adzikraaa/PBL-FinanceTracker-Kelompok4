@@ -2,13 +2,14 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../data/models/hpp_model.dart';
+import '../data/models/monthly_target_model.dart';
 import '../data/services/firestore_service.dart';
 
 class FinanceViewModel extends ChangeNotifier {
   final FirestoreService _firestoreService = FirestoreService();
   StreamSubscription<List<HppModel>>? _sub;
   StreamSubscription<User?>? _authSub;
-  StreamSubscription<Map<String, double>>? _targetsSub;
+  StreamSubscription<List<MonthlyTargetModel>>? _targetsSub;
   Map<String, double> monthlyTargets = {};
 
   // --- Input Variables (State) ---
@@ -53,8 +54,10 @@ class FinanceViewModel extends ChangeNotifier {
           notifyListeners();
         });
         _targetsSub?.cancel();
-        _targetsSub = _firestoreService.streamMonthlyTargets(user.uid).listen((targetsMap) {
-          monthlyTargets = targetsMap;
+        _targetsSub = _firestoreService.streamMonthlyTargets(user.uid).listen((targetsList) {
+          monthlyTargets = {
+            for (var target in targetsList) "${target.year}_${target.month}": target.target
+          };
           notifyListeners();
         });
       } else {
@@ -86,7 +89,15 @@ class FinanceViewModel extends ChangeNotifier {
     if (user == null) return;
 
     // Simpan target bulanan ke Firestore
-    await _firestoreService.saveMonthlyTarget(user.uid, month.year, month.month, target);
+    final docId = "${user.uid}_${month.year}_${month.month}";
+    final targetModel = MonthlyTargetModel(
+      id: docId,
+      userId: user.uid,
+      year: month.year,
+      month: month.month,
+      target: target,
+    );
+    await _firestoreService.saveMonthlyTarget(targetModel);
 
     // Simpan perubahan jumlahUnitTerjual dari seluruh history yang diubah secara paralel
     final futures = <Future>[];
@@ -196,7 +207,15 @@ class FinanceViewModel extends ChangeNotifier {
     final now = DateTime.now();
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      _firestoreService.saveMonthlyTarget(user.uid, now.year, now.month, target);
+      final docId = "${user.uid}_${now.year}_${now.month}";
+      final targetModel = MonthlyTargetModel(
+        id: docId,
+        userId: user.uid,
+        year: now.year,
+        month: now.month,
+        target: target,
+      );
+      _firestoreService.saveMonthlyTarget(targetModel);
     }
   }
 

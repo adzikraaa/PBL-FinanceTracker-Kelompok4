@@ -1,10 +1,6 @@
-/// Konfigurasi Midtrans Payment Gateway
-/// ⚠️ Untuk PRODUKSI: pindahkan serverKey ke Firebase Cloud Functions
-/// Jangan expose serverKey di client-side untuk production
+
 class MidtransConfig {
-  // ── Ganti dengan key Midtrans kamu ─────────────────────────────────────
-  // Dashboard Sandbox : https://dashboard.sandbox.midtrans.com
-  // Dashboard Produksi: https://dashboard.midtrans.com
+
   static const String serverKey = 'Mid-server-XeNrvdn9CtzCFBJ-Ec_8mJ34';
   static const String clientKey = 'Mid-client-fjEeyLRTTCSvXty6';
 

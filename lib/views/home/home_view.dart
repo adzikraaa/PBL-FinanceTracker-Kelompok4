@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../viewmodels/home_viewmodel.dart';
-import '../../viewmodels/note_viewmodel.dart';
 import '../../viewmodels/riwayat_viewmodel.dart';
 import '../../viewmodels/saving_viewmodel.dart';
 import '../../viewmodels/premium_viewmodel.dart';

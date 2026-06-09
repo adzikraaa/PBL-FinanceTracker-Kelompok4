@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/note_model.dart';
+import '../data/models/note_model.dart';
 
 class NoteViewModel extends ChangeNotifier {
   final List<Note> _notes = [];
