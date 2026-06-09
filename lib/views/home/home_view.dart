@@ -9,6 +9,7 @@ import '../../viewmodels/note_viewmodel.dart';
 import '../../viewmodels/riwayat_viewmodel.dart';
 import '../../viewmodels/saving_viewmodel.dart';
 import '../../viewmodels/premium_viewmodel.dart';
+import '../../viewmodels/finance_viewmodel.dart';
 import '../finance/hitung_hpp_page.dart';
 import '../insight/insight_view.dart';
 import '../riwayat/riwayat_view.dart';
@@ -143,7 +144,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     physics: const BouncingScrollPhysics(
                       parent: AlwaysScrollableScrollPhysics(),
                     ),
-                    padding: const EdgeInsets.only(bottom: 100),
+                    padding: const EdgeInsets.only(bottom: 160), // Diperbesar agar bisa discroll melewati navbar
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -266,18 +267,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                       color: Color(0xFFC49A45),
                       size: 28,
                     ),
-                    Positioned(
-                      top: -2,
-                      right: -2,
-                      child: Container(
-                        width: 12,
-                        height: 12,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFEF4444),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -389,7 +378,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                         child: Transform.rotate(
                           angle: 0.3 + (pulse * 0.15),
                           child: const Text(
-                            '👑',
+                            '\u{1f451}',
                             style: TextStyle(fontSize: 20),
                           ),
                         ),
@@ -398,8 +387,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     // Bubble Chat success notification
                     if (showUpgradeNotification)
                       Positioned(
-                        bottom: 62,
-                        right: 0,
+                        top: -10,
+                        right: 62,
                         child: PremiumBubbleChat(
                           onClose: () {
                             context.read<PremiumViewModel>().dismissUpgradeNotification();
@@ -912,58 +901,102 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           Expanded(
             child: GestureDetector(
               onTap: () => _vm.onNavTapManual(3),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: kCard,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: kWhite20, width: 0.8),
-                ),
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'INSIGHT',
-                      style: TextStyle(
-                        color: kWhite40,
-                        fontSize: 10,
-                        letterSpacing: 1.2,
-                        fontWeight: FontWeight.w600,
-                      ),
+              child: Consumer<FinanceViewModel>(
+                builder: (context, financeVm, _) {
+                  final double progress = financeVm.progressProfit;
+                  final double sisa = 1.0 - progress;
+                  final int progressPct = (progress * 100).round();
+                  final int sisaPct = 100 - progressPct;
+                  final bool hasTarget = financeVm.targetProfitBulanan > 0;
+
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: kCard,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: kWhite20, width: 0.8),
                     ),
-                    const SizedBox(height: 14),
-                    Center(
-                      child: SizedBox(
-                        width: 68,
-                        height: 68,
-                        child: CustomPaint(
-                          painter: _DonutPainter(
-                            slices: const [0.4, 0.6],
-                            colors: [kGreen, kCardLight],
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'INSIGHT',
+                          style: TextStyle(
+                            color: kWhite40,
+                            fontSize: 10,
+                            letterSpacing: 1.2,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _insightLegend(kGreen, 'Cat A: 40%'),
-                    const SizedBox(height: 4),
-                    _insightLegend(kWhite40, 'Cat B: 60%'),
-                    const Spacer(),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Container(
-                        width: 30,
-                        height: 30,
-                        decoration: const BoxDecoration(
-                          color: kWhite20,
-                          shape: BoxShape.circle,
+                        const SizedBox(height: 14),
+                        Center(
+                          child: SizedBox(
+                            width: 68,
+                            height: 68,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Positioned.fill(
+                                  child: hasTarget
+                                      ? CustomPaint(
+                                          painter: _DonutPainter(
+                                            slices: progress > 0
+                                                ? [progress, sisa]
+                                                : [0.001, 0.999],
+                                            colors: [kGreen, kCardLight],
+                                          ),
+                                        )
+                                      : CustomPaint(
+                                          painter: _DonutPainter(
+                                            slices: const [0.001, 0.999],
+                                            colors: [kGreen, kCardLight],
+                                          ),
+                                        ),
+                                ),
+                                Text(
+                                  hasTarget ? '$progressPct%' : '-',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                        child: const Icon(Icons.arrow_forward,
-                            color: kWhite, size: 15),
-                      ),
+                        const SizedBox(height: 12),
+                        _insightLegend(
+                          kGreen,
+                          hasTarget
+                              ? 'Untung: $progressPct%'
+                              : 'Untung: -',
+                        ),
+                        const SizedBox(height: 4),
+                        _insightLegend(
+                          kWhite40,
+                          hasTarget
+                              ? 'Sisa: $sisaPct%'
+                              : 'Belum ada target',
+                        ),
+                        const Spacer(),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Container(
+                            width: 30,
+                            height: 30,
+                            decoration: const BoxDecoration(
+                              color: kWhite20,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.arrow_forward,
+                                color: kWhite, size: 15),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  );
+                },
               ),
             ),
           ),
@@ -1045,8 +1078,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   }
 
   List<Widget> _buildNoteLines() {
-    final noteVm = context.watch<NoteViewModel>();
-    final notes = noteVm.notes;
+    final riwayatVm = context.watch<RiwayatViewModel>();
+    final notes = riwayatVm.historyWithCatatan.take(2).toList();
 
     if (notes.isEmpty) {
       return [
@@ -1061,37 +1094,53 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       ];
     }
 
-    final latestNote = notes.first;
-    final lines = latestNote.content.split('\n').take(2).toList();
+    final List<Widget> widgets = [];
+    for (int i = 0; i < notes.length; i++) {
+      if (i > 0) {
+        widgets.add(const SizedBox(height: 8));
+        widgets.add(
+          Container(
+            height: 0.5,
+            color: const Color(0xFF2D5A1B).withOpacity(0.2),
+          ),
+        );
+        widgets.add(const SizedBox(height: 8));
+      }
 
-    return [
-      Text(
-        latestNote.title,
-        style: const TextStyle(
-          color: Color(0xFF2D5A1B),
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          height: 1.5,
+      final note = notes[i];
+      widgets.add(
+        Text(
+          note.namaProduk,
+          style: const TextStyle(
+            color: Color(0xFF2D5A1B),
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            height: 1.3,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      ...lines
-          .map((line) => Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Text(
-                  line,
-                  style: const TextStyle(
-                    color: Color(0xFF2D5A1B),
-                    fontSize: 12,
-                    height: 1.4,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ))
-          .toList(),
-    ];
+      );
+
+      final firstLine = note.catatan.split('\n').first;
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            firstLine,
+            style: const TextStyle(
+              color: Color(0xFF2D5A1B),
+              fontSize: 12,
+              height: 1.3,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      );
+    }
+
+    return widgets;
   }
 
   Widget _insightLegend(Color color, String label) {
@@ -1552,10 +1601,21 @@ class _DonutPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     double startAngle = -pi / 2;
+    
+    // Count how many slices are non-zero
+    final nonZeroCount = slices.where((s) => s > 0).length;
+
     for (int i = 0; i < slices.length; i++) {
+      final val = slices[i];
+      if (val <= 0) continue; // Skip zero-value slices
+
       paint.color = colors[i % colors.length];
-      final sweepAngle = 2 * pi * slices[i];
-      canvas.drawArc(rect, startAngle, sweepAngle - 0.08, false, paint);
+      final sweepAngle = 2 * pi * val;
+      
+      // If there is only one non-zero slice (e.g. 100% progress), draw a complete circle without any gaps
+      final drawAngle = (nonZeroCount <= 1) ? sweepAngle : (sweepAngle - 0.08);
+
+      canvas.drawArc(rect, startAngle, drawAngle, false, paint);
       startAngle += sweepAngle;
     }
   }
@@ -1620,20 +1680,20 @@ class _PremiumBubbleChatState extends State<PremiumBubbleChat> with SingleTicker
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF1E1B10), Color(0xFF14120B)],
+                  colors: [Color(0xFF3D2E00), Color(0xFF2A1F00)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: const Color(0xFFFFD700).withOpacity(0.7),
+                  color: const Color(0xFFFFD700).withOpacity(0.9),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFFFD700).withOpacity(0.25),
-                    blurRadius: 12,
-                    spreadRadius: 1,
+                    color: const Color(0xFFFFD700).withOpacity(0.4),
+                    blurRadius: 16,
+                    spreadRadius: 2,
                   ),
                 ],
               ),
@@ -1646,10 +1706,10 @@ class _PremiumBubbleChatState extends State<PremiumBubbleChat> with SingleTicker
                     children: [
                       const Expanded(
                         child: Text(
-                          'Transaksi Berhasil! 🎉',
+                          'Transaksi Berhasil! \u{1f389}',
                           style: TextStyle(
                             color: Color(0xFFFFD700),
-                            fontSize: 12,
+                            fontSize: 13,
                             fontWeight: FontWeight.bold,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -1671,11 +1731,11 @@ class _PremiumBubbleChatState extends State<PremiumBubbleChat> with SingleTicker
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    'Halo Premium Member! Nikmati semua fitur tanpa batas 👑',
+                    'Halo Premium Member! Nikmati\nsemua fitur tanpa batas \u{1f451}',
                     style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      height: 1.3,
+                      color: Color(0xFFFFF0C0),
+                      fontSize: 11,
+                      height: 1.4,
                     ),
                   ),
                 ],

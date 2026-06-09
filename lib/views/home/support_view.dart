@@ -399,6 +399,7 @@ class _AnimatedMessageButtonState extends State<_AnimatedMessageButton> with Sin
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Dismiss',
+      barrierColor: Colors.black.withValues(alpha: 0.6),
       transitionDuration: const Duration(milliseconds: 600),
       pageBuilder: (context, anim1, anim2) {
         return const _MessageDialog();
@@ -542,12 +543,17 @@ class _MessageDialogState extends State<_MessageDialog> {
           _hasError = true;
         });
         
+        String cleanError = e.toString();
+        if (cleanError.startsWith('Exception: ')) {
+          cleanError = cleanError.substring('Exception: '.length);
+        }
+        
         // Tampilkan pesan spesifik jika timeout
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString().toLowerCase().contains('timeout') 
+            content: Text(cleanError.toLowerCase().contains('timeout') 
                 ? 'Koneksi lambat, silakan coba lagi.' 
-                : 'Gagal mengirim pesan: $e'),
+                : 'Gagal mengirim pesan: $cleanError'),
             backgroundColor: Colors.redAccent,
           ),
         );

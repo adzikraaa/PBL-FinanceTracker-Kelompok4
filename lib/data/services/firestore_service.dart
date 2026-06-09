@@ -21,6 +21,23 @@ class FirestoreService {
     return UserModel.fromJson(doc.data()!);
   }
 
+  // Update profil user (displayName, photoUrl, phone) tanpa overwrite field lain
+  Future<void> updateUserProfile(String uid, {
+    String? displayName,
+    String? photoUrl,
+    String? phone,
+  }) async {
+    final Map<String, dynamic> data = {};
+    if (displayName != null) {
+      data['displayName'] = displayName;
+      data['name'] = displayName;
+    }
+    if (photoUrl != null) data['photoUrl'] = photoUrl;
+    if (phone != null) data['phone'] = phone;
+    if (data.isEmpty) return;
+    await _db.collection('users').doc(uid).update(data);
+  }
+
   // ==========================================
   // 2. FITUR TABUNGAN (CRUD)
   // ==========================================
@@ -116,5 +133,39 @@ class FirestoreService {
 
   Future<void> deleteHistory(String id) async {
     await _db.collection('history').doc(id).delete();
+  }
+
+  Future<void> updateHistoryCatatan(String id, String catatan) async {
+    await _db.collection('history').doc(id).update({'catatan': catatan});
+  }
+
+
+  // Stream data target bulanan dari koleksi 'monthly_targets'
+  Stream<Map<String, double>> streamMonthlyTargets(String userId) {
+    return _db
+        .collection('monthly_targets')
+        .where('userId', isEqualTo: userId)
+        .snapshots()
+        .map((snapshot) {
+          final Map<String, double> targets = {};
+          for (var doc in snapshot.docs) {
+            final data = doc.data();
+            final key = "${data['year']}_${data['month']}";
+            targets[key] = (data['target'] as num).toDouble();
+          }
+          return targets;
+        });
+  }
+
+  // Simpan atau update target bulanan ke Firestore
+  Future<void> saveMonthlyTarget(
+      String userId, int year, int month, double target) async {
+    final docId = "${userId}_${year}_${month}";
+    await _db.collection('monthly_targets').doc(docId).set({
+      'userId': userId,
+      'year': year,
+      'month': month,
+      'target': target,
+    });
   }
 } // <--- KURUNG TUTUP CLASS HARUS DI PALING BAWAH

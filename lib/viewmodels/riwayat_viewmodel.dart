@@ -12,15 +12,37 @@ class RiwayatViewModel extends ChangeNotifier {
   bool isLoading = true;
   String? error;
 
+  // State untuk menyimpan ID riwayat yang disorot/difilter dari catatan
+  String? _selectedHistoryId;
+
   // Subscription ke stream Firestore
   StreamSubscription<List<HppModel>>? _historySub;
   // Subscription ke perubahan status auth
   StreamSubscription<User?>? _authSub;
 
   List<HppModel> get history => _history;
+  String? get selectedHistoryId => _selectedHistoryId;
+
+  void setSelectedHistoryId(String? id) {
+    _selectedHistoryId = id;
+    notifyListeners();
+  }
+
+  void clearSelectedHistoryId() {
+    _selectedHistoryId = null;
+    notifyListeners();
+  }
 
   /// Item terbaru (untuk card di Home)
   HppModel? get latest => _history.isNotEmpty ? _history.first : null;
+
+  /// Riwayat yang punya catatan non-kosong (untuk halaman Catatan)
+  List<HppModel> get historyWithCatatan =>
+      _history.where((item) => item.catatan.trim().isNotEmpty).toList();
+
+  /// Catatan terbaru (untuk card Catatan di Home)
+  HppModel? get latestWithCatatan =>
+      historyWithCatatan.isNotEmpty ? historyWithCatatan.first : null;
 
   RiwayatViewModel() {
     // Dengarkan perubahan auth — otomatis mulai/berhenti stream data
@@ -66,6 +88,10 @@ class RiwayatViewModel extends ChangeNotifier {
 
   Future<void> deleteHistory(String id) async {
     await _firestoreService.deleteHistory(id);
+  }
+
+  Future<void> updateCatatan(String id, String catatan) async {
+    await _firestoreService.updateHistoryCatatan(id, catatan);
   }
 
   @override

@@ -6,7 +6,6 @@ import 'shared/colors.dart';
 import 'viewmodels/auth_viewmodel.dart';
 import 'viewmodels/saving_viewmodel.dart';
 import 'viewmodels/finance_viewmodel.dart';
-import 'viewmodels/note_viewmodel.dart';
 import 'viewmodels/loadingscreen.dart';
 import 'viewmodels/riwayat_viewmodel.dart';
 import 'viewmodels/home_viewmodel.dart';
@@ -36,7 +35,6 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(create: (_) => FinanceViewModel()),
-        ChangeNotifierProvider(create: (_) => NoteViewModel()),
         ChangeNotifierProvider(create: (_) => RiwayatViewModel()),
         ChangeNotifierProvider(create: (_) => SavingViewModel()),
         ChangeNotifierProvider(create: (_) => PremiumViewModel()),
@@ -57,6 +55,12 @@ class MyApp extends StatelessWidget {
           appBarTheme: const AppBarTheme(
             backgroundColor: AppColors.darkScaffold,
             elevation: 0,
+          ),
+          snackBarTheme: const SnackBarThemeData(
+            backgroundColor: Color(0xFF132A1D),
+            contentTextStyle: TextStyle(color: Colors.white, fontSize: 14),
+            actionTextColor: Color(0xFF6CF688),
+            behavior: SnackBarBehavior.floating,
           ),
         ),
         // Tampilkan LoadingScreen saat pertama kali buka app

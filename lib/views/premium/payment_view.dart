@@ -156,51 +156,57 @@ class _PaymentViewState extends State<PaymentView> {
       context: context,
       barrierDismissible: false,
       builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF111827),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: const Color(0xFFD2E3C8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(
+            color: const Color(0xFF8BCA6E).withValues(alpha: 0.3),
+          ),
+        ),
         title: const Row(
           children: [
             Icon(Icons.access_time_rounded,
-                color: Color(0xFFFFD700), size: 22),
+                color: Color(0xFF2E7D32), size: 22),
             SizedBox(width: 8),
             Text('Menunggu Pembayaran',
-                style: TextStyle(color: Colors.white, fontSize: 16)),
+                style: TextStyle(color: Color(0xFF0F2E1A), fontSize: 16, fontWeight: FontWeight.bold)),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Pembayaran kamu sedang diproses.',
               style: TextStyle(
-                  color: Colors.white.withOpacity(0.7), fontSize: 13),
+                  color: Color(0xFF2E4F39), fontSize: 13),
             ),
             const SizedBox(height: 10),
             if (orderId != null) ...[
-              Text('Order ID:',
+              const Text('Order ID:',
                   style: TextStyle(
-                      color: Colors.white.withOpacity(0.5), fontSize: 12)),
+                      color: Color(0xFF4E6E56), fontSize: 12)),
               const SizedBox(height: 4),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.06),
+                  color: const Color(0xFF1B3D2A).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(orderId,
                     style: const TextStyle(
-                        color: Color(0xFFFFD700),
+                        color: Color(0xFF1B3D2A),
                         fontSize: 12,
+                        fontWeight: FontWeight.bold,
                         fontFamily: 'monospace')),
               ),
               const SizedBox(height: 10),
             ],
-            Text(
+            const Text(
               'Premium akan aktif otomatis setelah transfer dikonfirmasi.',
               style: TextStyle(
-                  color: Colors.white.withOpacity(0.5), fontSize: 12),
+                  color: Color(0xFF4E6E56), fontSize: 12),
             ),
           ],
         ),
@@ -211,7 +217,7 @@ class _PaymentViewState extends State<PaymentView> {
               Navigator.pop(context); // kembali ke premium view
             },
             child: const Text('OK',
-                style: TextStyle(color: Color(0xFFFFD700))),
+                style: TextStyle(color: Color(0xFF1B3D2A), fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -237,24 +243,56 @@ class _PaymentViewState extends State<PaymentView> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF111827),
         elevation: 0,
-        leading: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Container(
-            margin: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.07),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(Icons.arrow_back_ios_new,
-                color: Colors.white, size: 15),
-          ),
-        ),
-        title: const Text(
-          'Pembayaran Premium',
-          style: TextStyle(
-              color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
+        leadingWidth: _showSuccessButton ? 180 : 56,
+        leading: _showSuccessButton
+            ? GestureDetector(
+                onTap: () => _onPaymentSuccess(context.read<PremiumViewModel>()),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFFD700).withOpacity(0.35),
+                        blurRadius: 10,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.check_circle_rounded,
+                          color: Colors.black, size: 15),
+                      SizedBox(width: 5),
+                      Text(
+                        'Pembayaran Selesai',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            : GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  margin: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.07),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.arrow_back_ios_new,
+                      color: Colors.white, size: 15),
+                ),
+              ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Divider(height: 1, color: Colors.white.withOpacity(0.06)),
@@ -286,30 +324,6 @@ class _PaymentViewState extends State<PaymentView> {
                       style: TextStyle(color: Colors.white54, fontSize: 14),
                     ),
                   ],
-                ),
-              ),
-            ),
-
-          // Tombol "Pembayaran Selesai" hanya muncul setelah transaksi sukses (PAID)
-          if (_showSuccessButton && !_isConfirming)
-            Positioned(
-              bottom: 20,
-              left: 20,
-              right: 20,
-              child: ElevatedButton(
-                onPressed: () => _onPaymentSuccess(context.read<PremiumViewModel>()),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFFD700),
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 8,
-                ),
-                child: const Text(
-                  'Pembayaran Selesai',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),
             ),

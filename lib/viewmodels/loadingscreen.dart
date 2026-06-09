@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../views/auth/welcome_view.dart';
 import '../views/home/main_navigation.dart';
+import '../views/auth/email_verification_view.dart';
 
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({super.key});
@@ -212,15 +213,27 @@ class _LoadingScreenState extends State<LoadingScreen>
     // Auto-redirect setelah loading selesai
     Future.delayed(const Duration(milliseconds: 3000), () async {
       if (!mounted) return;
-      
+
       // Tunggu hingga Firebase memuat session user (menghindari null karena delay internet)
-      final user = FirebaseAuth.instance.currentUser ?? await FirebaseAuth.instance.authStateChanges().first;
-      
+      final user = FirebaseAuth.instance.currentUser ??
+          await FirebaseAuth.instance.authStateChanges().first;
+
       if (!mounted) return;
+
+      Widget targetView;
+      if (user != null) {
+        if (!user.emailVerified) {
+          targetView = const EmailVerificationView();
+        } else {
+          targetView = const MainNavigation();
+        }
+      } else {
+        targetView = const WelcomeView();
+      }
+
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
-          pageBuilder: (_, __, ___) =>
-              user != null ? const MainNavigation() : const WelcomeView(),
+          pageBuilder: (_, __, ___) => targetView,
           transitionsBuilder: (_, animation, __, child) {
             return FadeTransition(opacity: animation, child: child);
           },
@@ -401,7 +414,8 @@ class _LoadingScreenState extends State<LoadingScreen>
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
-                                  color: const Color(0xFF4ade80).withOpacity(0.3),
+                                  color:
+                                      const Color(0xFF4ade80).withOpacity(0.3),
                                   width: 1.5,
                                 ),
                                 boxShadow: [
@@ -456,7 +470,7 @@ class _LoadingScreenState extends State<LoadingScreen>
                   FadeTransition(
                     opacity: _taglineFadeAnim,
                     child: const Text(
-                      'Ayo manage uangmu agar bisa jadi CEO!',
+                      'Kenali Biayamu, Kuasai Untungmu!',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 14,
@@ -485,7 +499,8 @@ class _LoadingScreenState extends State<LoadingScreen>
                               builder: (_, __) {
                                 return Container(
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF4ade80).withOpacity(0.15),
+                                    color: const Color(0xFF4ade80)
+                                        .withOpacity(0.15),
                                     borderRadius: BorderRadius.circular(2),
                                   ),
                                   child: ShaderMask(
@@ -502,7 +517,9 @@ class _LoadingScreenState extends State<LoadingScreen>
                                           _shimmerAnim.value - 0.3,
                                           _shimmerAnim.value,
                                           _shimmerAnim.value + 0.3,
-                                        ].map((s) => s.clamp(0.0, 1.0)).toList(),
+                                        ]
+                                            .map((s) => s.clamp(0.0, 1.0))
+                                            .toList(),
                                       ).createShader(bounds);
                                     },
                                     child: Container(

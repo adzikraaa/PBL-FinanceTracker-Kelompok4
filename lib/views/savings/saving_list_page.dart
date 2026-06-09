@@ -88,7 +88,7 @@ class _SavingListPageState extends State<SavingListPage> with TickerProviderStat
                       child: vm.savings.isEmpty
                           ? _buildEmptyState()
                           : ListView(
-                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 160),
                               children: [
                                 // Header / Total Tabungan inside ListView for better scrolling
                                 Padding(
@@ -143,7 +143,7 @@ class _SavingListPageState extends State<SavingListPage> with TickerProviderStat
           // Floating Action Button moved up
           Positioned(
             right: 20,
-            bottom: 100, // Di atas navbar
+            bottom: 140, // Di atas navbar
             child: FloatingActionButton(
               backgroundColor: const Color(0xFF4AFF91),
               onPressed: () {
@@ -254,7 +254,7 @@ class _SavingListPageState extends State<SavingListPage> with TickerProviderStat
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                isCompleted ? 'Goal Tercapai!' : 'Sisa Rp ${_formatRupiah(saving.targetAmount - saving.currentAmount)}',
+                                isCompleted ? 'Target Tercapai!' : 'Sisa Rp ${_formatRupiah(saving.targetAmount - saving.currentAmount)}',
                                 style: TextStyle(
                                   color: isCompleted ? const Color(0xFF4AFF91) : Colors.white54,
                                   fontSize: 13,
@@ -326,7 +326,7 @@ class _SavingListPageState extends State<SavingListPage> with TickerProviderStat
                               border: Border.all(color: const Color(0xFF4AFF91).withOpacity(0.3), width: 1),
                             ),
                             child: const Text(
-                              'DONE',
+                              'SELESAI',
                               style: TextStyle(
                                 color: Color(0xFF4AFF91),
                                 fontSize: 12,

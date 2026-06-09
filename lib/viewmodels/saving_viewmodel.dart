@@ -82,13 +82,32 @@ class SavingViewModel extends ChangeNotifier {
     return sisa / 12;
   }
 
-  // Expected completion otomatis
+  // Expected completion otomatis (diprediksi dari rata-rata tabungan per bulan saat ini)
   String getExpectedCompletion(SavingModel saving) {
-    double monthly = getMonthlyGoal(saving);
-    if (monthly <= 0) return 'Selesai!';
+    if (saving.currentAmount >= saving.targetAmount) return 'Selesai!';
+
+    // 1. Hitung berapa hari sejak tabungan dibuat
+    int daysElapsed = DateTime.now().difference(saving.createdAt).inDays;
+    
+    // 2. Jika kurang dari 30 hari (1 bulan), asumsikan sebagai 1 bulan 
+    //    agar bisa menghitung rata-rata (mencegah pembagian dengan 0)
+    double monthsElapsed = daysElapsed < 30 ? 1.0 : daysElapsed / 30.0;
+    
+    // 3. Rata-rata tabungan per bulan berdasarkan data saat ini
+    double averageMonthlySaving = saving.currentAmount / monthsElapsed;
+    
+    // Jika belum ada uang yang ditabung
+    if (averageMonthlySaving <= 0) return 'Belum diprediksi';
+
+    // 4. Sisa target yang harus dicapai
     double sisa = saving.targetAmount - saving.currentAmount;
-    int bulan = (sisa / monthly).ceil();
-    DateTime selesai = DateTime.now().add(Duration(days: bulan * 30));
+    
+    // 5. Prediksi sisa bulan yang dibutuhkan
+    int bulanSisa = (sisa / averageMonthlySaving).ceil();
+    
+    // 6. Tanggal selesai = hari ini ditambah sisa bulan
+    DateTime selesai = DateTime.now().add(Duration(days: bulanSisa * 30));
+    
     const monthNames = [
       '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'

@@ -19,7 +19,6 @@ class ProfileView extends StatefulWidget {
 class _ProfileViewState extends State<ProfileView> with TickerProviderStateMixin {
   late AnimationController _animController;
   late AnimationController _pulseController;
-  bool _isPushNotificationEnabled = true;
 
   @override
   void initState() {
@@ -173,16 +172,16 @@ class _ProfileViewState extends State<ProfileView> with TickerProviderStateMixin
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF163520),
+                            color: const Color(0xFFD3E3C8),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: const Color(0xFF4ADE80).withOpacity(0.2),
+                              color: const Color(0xFF8BCA6E).withOpacity(0.3),
                               width: 1,
                             ),
                           ),
                           child: const Icon(
                             Icons.edit,
-                            color: Color(0xFF4ADE80),
+                            color: Color(0xFF0C1B13),
                             size: 18,
                           ),
                         ),
@@ -306,7 +305,7 @@ class _ProfileViewState extends State<ProfileView> with TickerProviderStateMixin
                                           child: Transform.rotate(
                                             angle: 0.3 + (pulse * 0.15),
                                             child: const Text(
-                                              '👑',
+                                              '\u{1f451}',
                                               style: TextStyle(fontSize: 32),
                                             ),
                                           ),
@@ -373,7 +372,7 @@ class _ProfileViewState extends State<ProfileView> with TickerProviderStateMixin
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      isPremium ? 'Premium Member 👑' : 'Pengguna Aktif',
+                                      isPremium ? 'Premium Member \u{1f451}' : 'Pengguna Aktif',
                                       style: TextStyle(
                                         color: isPremium ? const Color(0xFFFFD700) : const Color(0xFF4ADE80),
                                         fontSize: 13,
@@ -426,7 +425,7 @@ class _ProfileViewState extends State<ProfileView> with TickerProviderStateMixin
                                 indent: 20,
                                 endIndent: 20,
                               ),
-                              _buildInfoTile(
+                                    _buildInfoTile(
                                 icon: Icons.login,
                                 label: 'Login dengan',
                                 value: _getProviderName(user),
@@ -434,66 +433,6 @@ class _ProfileViewState extends State<ProfileView> with TickerProviderStateMixin
                             ],
                           ),
                         ), 1),
-
-                        const SizedBox(height: 16),
-
-                        // ── Push Notifications ────────────────────────────
-                        _buildAnimatedChild(Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(32),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 48,
-                                height: 48,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF6FC83F),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(Icons.notifications_active_outlined, color: Color(0xFF0F2615), size: 24),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Push Notifications',
-                                      style: TextStyle(
-                                        color: Color(0xFF0F2615),
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    const Text(
-                                      'Real-time alerts & news',
-                                      style: TextStyle(
-                                        color: Color(0xFF756784),
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Switch(
-                                value: _isPushNotificationEnabled,
-                                onChanged: (val) {
-                                  setState(() {
-                                    _isPushNotificationEnabled = val;
-                                  });
-                                },
-                                activeColor: Colors.white,
-                                activeTrackColor: const Color(0xFF6FC83F),
-                                inactiveThumbColor: Colors.white,
-                                inactiveTrackColor: Colors.grey.shade300,
-                              ),
-                            ],
-                          ),
-                        ), 2),
 
                         const SizedBox(height: 16),
 
@@ -505,21 +444,21 @@ class _ProfileViewState extends State<ProfileView> with TickerProviderStateMixin
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFE9F800),
+                              color: const Color(0xFFD3E3C8),
                               borderRadius: BorderRadius.circular(32),
                               boxShadow: [
-                                BoxShadow(color: const Color(0xFFE9F800).withOpacity(0.15), blurRadius: 20, spreadRadius: 2),
+                                BoxShadow(color: const Color(0xFFD3E3C8).withOpacity(0.15), blurRadius: 20, spreadRadius: 2),
                               ],
                             ),
                             child: const Row(
                               children: [
-                                Icon(Icons.help_outline, color: Colors.black, size: 24),
+                                Icon(Icons.help_outline, color: Color(0xFF0C1B13), size: 24),
                                 SizedBox(width: 20),
                                 Expanded(
                                   child: Text(
                                     'Support',
                                     style: TextStyle(
-                                      color: Colors.black,
+                                      color: Color(0xFF0C1B13),
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -529,7 +468,7 @@ class _ProfileViewState extends State<ProfileView> with TickerProviderStateMixin
                               ],
                             ),
                           ),
-                        ), 3),
+                        ), 2),
 
                         const SizedBox(height: 16),
 
@@ -539,21 +478,21 @@ class _ProfileViewState extends State<ProfileView> with TickerProviderStateMixin
                             final confirm = await showDialog<bool>(
                               context: context,
                               builder: (_) => AlertDialog(
-                                backgroundColor: const Color(0xFF163520),
+                                backgroundColor: const Color(0xFFD2E3C8),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(20),
                                   side: BorderSide(
-                                    color: const Color(0xFF4ADE80)
-                                        .withOpacity(0.2),
+                                    color: const Color(0xFF8BCA6E).withOpacity(0.3),
                                   ),
                                 ),
                                 title: const Text('Keluar',
-                                    style:
-                                        TextStyle(color: Colors.white)),
+                                    style: TextStyle(
+                                        color: Color(0xFF0F2E1A),
+                                        fontWeight: FontWeight.bold)),
                                 content: const Text(
                                   'Apakah kamu yakin ingin keluar dari akun?',
                                   style: TextStyle(
-                                      color: Color(0xB3FFFFFF)),
+                                      color: Color(0xFF2E4F39)),
                                 ),
                                 actions: [
                                   TextButton(
@@ -561,14 +500,23 @@ class _ProfileViewState extends State<ProfileView> with TickerProviderStateMixin
                                         Navigator.pop(context, false),
                                     child: const Text('Batal',
                                         style: TextStyle(
-                                            color: Color(0xFF4ADE80))),
+                                            color: Color(0xFF4E6E56),
+                                            fontWeight: FontWeight.bold)),
                                   ),
-                                  TextButton(
+                                  ElevatedButton(
                                     onPressed: () =>
                                         Navigator.pop(context, true),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF1B3D2A),
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      elevation: 0,
+                                    ),
                                     child: const Text('Keluar',
                                         style: TextStyle(
-                                            color: Colors.redAccent)),
+                                            fontWeight: FontWeight.bold)),
                                   ),
                                 ],
                               ),
@@ -612,7 +560,7 @@ class _ProfileViewState extends State<ProfileView> with TickerProviderStateMixin
                               ],
                             ),
                           ),
-                        ), 4),
+                        ), 3),
 
                         const SizedBox(height: 32),
                       ],

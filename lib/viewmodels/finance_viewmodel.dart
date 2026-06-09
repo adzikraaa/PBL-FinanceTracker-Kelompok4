@@ -8,6 +8,8 @@ class FinanceViewModel extends ChangeNotifier {
   final FirestoreService _firestoreService = FirestoreService();
   StreamSubscription<List<HppModel>>? _sub;
   StreamSubscription<User?>? _authSub;
+  StreamSubscription<Map<String, double>>? _targetsSub;
+  Map<String, double> monthlyTargets = {};
 
   // --- Input Variables (State) ---
   double biayaProduksi = 0.0;
@@ -50,9 +52,16 @@ class FinanceViewModel extends ChangeNotifier {
           history = data;
           notifyListeners();
         });
+        _targetsSub?.cancel();
+        _targetsSub = _firestoreService.streamMonthlyTargets(user.uid).listen((targetsMap) {
+          monthlyTargets = targetsMap;
+          notifyListeners();
+        });
       } else {
         _sub?.cancel();
+        _targetsSub?.cancel();
         history = [];
+        monthlyTargets = {};
         notifyListeners();
       }
     });
@@ -61,8 +70,43 @@ class FinanceViewModel extends ChangeNotifier {
   @override
   void dispose() {
     _sub?.cancel();
+    _targetsSub?.cancel();
     _authSub?.cancel();
     super.dispose();
+  }
+
+  // --- Target & Penjualan Bulanan ---
+  double getTargetProfitForMonth(DateTime month) {
+    final key = "${month.year}_${month.month}";
+    return monthlyTargets[key] ?? 0.0;
+  }
+
+  Future<void> simpanPenjualanDanTarget(DateTime month, double target, Map<String, int> salesMap) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    // Simpan target bulanan ke Firestore
+    await _firestoreService.saveMonthlyTarget(user.uid, month.year, month.month, target);
+
+    // Simpan perubahan jumlahUnitTerjual dari seluruh history yang diubah secara paralel
+    final futures = <Future>[];
+    for (int i = 0; i < history.length; i++) {
+      final item = history[i];
+      final prodKey = item.id ?? 'idx_$i';
+      if (salesMap.containsKey(prodKey)) {
+        final newSales = salesMap[prodKey]!;
+        if (item.id != null) {
+          futures.add(_firestoreService.updateFinance(item.id!, {
+            'jumlahUnitTerjual': newSales,
+          }));
+        }
+        item.jumlahUnitTerjual = newSales;
+      }
+    }
+    if (futures.isNotEmpty) {
+      await Future.wait(futures);
+    }
+    notifyListeners();
   }
 
   // --- Getters untuk Kalkulasi Otomatis ---
@@ -143,11 +187,17 @@ class FinanceViewModel extends ChangeNotifier {
   // INSIGHT: TARGET PROFIT & PENJUALAN
   // ================================
 
-  double targetProfitBulanan = 0.0;
+  double get targetProfitBulanan {
+    final now = DateTime.now();
+    return getTargetProfitForMonth(now);
+  }
 
   void setTargetProfit(double target) {
-    targetProfitBulanan = target;
-    notifyListeners();
+    final now = DateTime.now();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _firestoreService.saveMonthlyTarget(user.uid, now.year, now.month, target);
+    }
   }
 
   void updatePenjualan(int index, int delta) {
@@ -161,19 +211,23 @@ class FinanceViewModel extends ChangeNotifier {
   }
 
   double get totalUntungBersih {
+    final now = DateTime.now();
     double total = 0.0;
     for (var item in history) {
-      int laku = item.jumlahUnitTerjual ?? 0;
-      double hppPerUnit = item.jumlahUnit > 0 ? item.totalHpp / item.jumlahUnit : 0;
-      double untungPerUnit = item.hargaJualUnit - hppPerUnit;
-      total += (laku * untungPerUnit);
+      if (item.createdAt.year == now.year && item.createdAt.month == now.month) {
+        int laku = item.jumlahUnitTerjual ?? 0;
+        double hppPerUnit = item.jumlahUnit > 0 ? item.totalHpp / item.jumlahUnit : 0;
+        double untungPerUnit = item.hargaJualUnit - hppPerUnit;
+        total += (laku * untungPerUnit);
+      }
     }
     return total;
   }
 
   double get progressProfit {
-    if (targetProfitBulanan <= 0) return 0;
-    double prog = totalUntungBersih / targetProfitBulanan;
+    final target = targetProfitBulanan;
+    if (target <= 0) return 0;
+    double prog = totalUntungBersih / target;
     return prog.clamp(0.0, 1.0);
   }
 

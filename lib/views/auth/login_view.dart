@@ -13,7 +13,7 @@ import '../home/home_view.dart';
 =======
 import 'forgot_password_view.dart';
 import '../home/main_navigation.dart';
->>>>>>> develop
+import 'email_verification_view.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -214,9 +214,9 @@ class _LoginViewState extends State<LoginView>
                                               _passwordError =
                                                   'Password tidak boleh kosong';
                                               hasError = true;
-                                            } else if (_passwordController.text.length < 6) {
+                                            } else if (_passwordController.text.length < 8) {
                                               _passwordError =
-                                                  'Password minimal 6 karakter';
+                                                  'Password minimal 8 karakter';
                                               hasError = true;
                                             }
                                           });
@@ -229,14 +229,26 @@ class _LoginViewState extends State<LoginView>
                                           );
                                           if (!mounted) return;
                                           if (success) {
-                                            Navigator.pushAndRemoveUntil(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (_) =>
-                                                    const MainNavigation(),
-                                              ),
-                                              (route) => false,
-                                            );
+                                            final user = vm.currentUser;
+                                            if (user != null && !user.emailVerified) {
+                                              Navigator.pushAndRemoveUntil(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (_) =>
+                                                      const EmailVerificationView(),
+                                                ),
+                                                (route) => false,
+                                              );
+                                            } else {
+                                              Navigator.pushAndRemoveUntil(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (_) =>
+                                                      const MainNavigation(),
+                                                ),
+                                                (route) => false,
+                                              );
+                                            }
                                           } else if (vm.errorMessage != null) {
                                             setState(() =>
                                                 _passwordError =
@@ -579,7 +591,7 @@ class _LoginViewState extends State<LoginView>
               fontSize: 14,
             ),
             decoration: InputDecoration(
-              hintText: '••••••',
+              hintText: '••••••••',
               hintStyle: TextStyle(
                 color: AppColors.white.withValues(alpha: 0.4),
                 fontSize: 14,

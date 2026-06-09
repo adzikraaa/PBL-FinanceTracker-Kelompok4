@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../../shared/colors.dart';
 import 'login_view.dart';
+import 'email_verification_view.dart';
+import '../home/main_navigation.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -265,9 +267,9 @@ class _RegisterViewState extends State<RegisterView>
                                             hasError = true;
                                           } else if (_passwordController
                                                   .text.length <
-                                              6) {
+                                              8) {
                                             _passwordError =
-                                                'Password minimal 6 karakter';
+                                                'Password minimal 8 karakter';
                                             hasError = true;
                                           }
                                         });
@@ -292,11 +294,40 @@ class _RegisterViewState extends State<RegisterView>
                                           ScaffoldMessenger.of(context)
                                               .showSnackBar(const SnackBar(
                                                   content: Text(
-                                                      'Registrasi berhasil! 🎉')));
-                                          Navigator.of(context).pop();
+                                                      'Registrasi berhasil! \u{1f389}')));
+                                          Navigator.pushAndRemoveUntil(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                                  const EmailVerificationView(),
+                                            ),
+                                            (route) => false,
+                                          );
                                         } else if (vm.errorMessage != null) {
-                                          setState(() => _passwordError =
-                                              vm.errorMessage);
+                                          final errMsg = vm.errorMessage!;
+                                          if (vm.isEmailAlreadyInUse) {
+                                            setState(() => _emailError = errMsg);
+                                            // Tampilkan snackbar dengan aksi langsung ke login
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: const Text(
+                                                    'Email sudah terdaftar. Silakan login dengan email tersebut.'),
+                                                action: SnackBarAction(
+                                                  label: 'Login',
+                                                  onPressed: () {
+                                                    Navigator.pushReplacement(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                          builder: (_) => const LoginView()),
+                                                    );
+                                                  },
+                                                ),
+                                                duration: const Duration(seconds: 5),
+                                              ),
+                                            );
+                                          } else {
+                                            setState(() => _passwordError = errMsg);
+                                          }
                                         }
                                       },
                                 child: AnimatedContainer(
@@ -378,11 +409,13 @@ class _RegisterViewState extends State<RegisterView>
                                   final success = await vm.loginWithGoogle();
                                   if (!mounted) return;
                                   if (success) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                            content: Text(
-                                                'Login Google berhasil! 🎉')));
-                                    Navigator.of(context).pop();
+                                    Navigator.pushAndRemoveUntil(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const MainNavigation(),
+                                      ),
+                                      (route) => false,
+                                    );
                                   } else if (vm.errorMessage != null) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
@@ -621,7 +654,7 @@ class _RegisterViewState extends State<RegisterView>
               fontSize: 14,
             ),
             decoration: InputDecoration(
-              hintText: '••••••',
+              hintText: '••••••••',
               hintStyle: TextStyle(
                 color: AppColors.white.withValues(alpha: 0.4),
                 fontSize: 14,

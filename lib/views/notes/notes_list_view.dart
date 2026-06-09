@@ -1,7 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../viewmodels/note_viewmodel.dart';
+import '../../viewmodels/riwayat_viewmodel.dart';
+import '../../viewmodels/home_viewmodel.dart';
 import 'note_form_view.dart';
 
 class NotesListView extends StatefulWidget {
@@ -13,8 +14,6 @@ class NotesListView extends StatefulWidget {
 
 class _NotesListViewState extends State<NotesListView>
     with TickerProviderStateMixin {
-  int _selectedIndex = 2;
-
   late AnimationController _floatController;
   late AnimationController _glowController;
   late AnimationController _particleController;
@@ -58,8 +57,8 @@ class _NotesListViewState extends State<NotesListView>
 
   @override
   Widget build(BuildContext context) {
-    final noteVm = context.watch<NoteViewModel>();
-    final notes = noteVm.notes;
+    final riwayatVm = context.watch<RiwayatViewModel>();
+    final notes = riwayatVm.historyWithCatatan;
 
     return Scaffold(
       backgroundColor: const Color(0xFF081E13),
@@ -89,7 +88,7 @@ class _NotesListViewState extends State<NotesListView>
                           ),
                           const SizedBox(width: 16),
                           const Text(
-                            'Notes',
+                            'Catatan',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 32,
@@ -100,7 +99,7 @@ class _NotesListViewState extends State<NotesListView>
                       ),
                       const SizedBox(height: 12),
                       const Text(
-                        'Manage your financial strategies and vault\ncalculations.',
+                        'Kelola strategi keuangan dan perhitungan\nbisnismu dengan mudah.',
                         style: TextStyle(
                           color: Color(0xFF8BCA6E),
                           fontSize: 14,
@@ -116,21 +115,41 @@ class _NotesListViewState extends State<NotesListView>
                       ? _buildEmptyState()
                       : ListView.separated(
                           padding: const EdgeInsets.only(
-                              left: 24, right: 24, bottom: 120),
+                              left: 24, right: 24, bottom: 80),
                           physics: const BouncingScrollPhysics(),
                           itemCount: notes.length,
                           separatorBuilder: (context, index) =>
                               const SizedBox(height: 16),
                           itemBuilder: (context, index) {
                             final note = notes[index];
-                            return Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF1B3324),
+
+                            void navigateToRiwayat() {
+                              if (note.id != null) {
+                                context
+                                    .read<RiwayatViewModel>()
+                                    .setSelectedHistoryId(note.id);
+                                context
+                                    .read<HomeViewModel>()
+                                    .onNavTapManual(4);
+                                Navigator.pop(context);
+                              }
+                            }
+
+                            return Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: navigateToRiwayat,
                                 borderRadius: BorderRadius.circular(16),
-                                border:
-                                    Border.all(color: const Color(0xFF2C4334)),
-                              ),
+                                splashColor: const Color(0xFF6CF688).withValues(alpha: 0.15),
+                                highlightColor: const Color(0xFF6CF688).withValues(alpha: 0.08),
+                                child: Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF1B3324),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border:
+                                      Border.all(color: const Color(0xFF2C4334)),
+                                ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -140,7 +159,7 @@ class _NotesListViewState extends State<NotesListView>
                                     children: [
                                       Expanded(
                                         child: Text(
-                                          note.title,
+                                          note.namaProduk,
                                           style: const TextStyle(
                                             color: Colors.white,
                                             fontSize: 16,
@@ -153,40 +172,82 @@ class _NotesListViewState extends State<NotesListView>
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (_) => NoteFormView(
-                                                  noteId: note.id),
+                                              builder: (_) =>
+                                                  NoteFormView(noteId: note.id),
                                             ),
                                           );
                                         },
                                         child: const Icon(Icons.edit,
-                                            color: Color(0xFF6B7E72),
-                                            size: 20),
+                                            color: Color(0xFF6B7E72), size: 20),
                                       ),
                                       const SizedBox(width: 12),
                                       GestureDetector(
                                         onTap: () {
-                                          _showDeleteConfirmation(
-                                              context, note.id);
+                                          if (note.id != null) {
+                                            _showDeleteConfirmation(
+                                                context, note.id!);
+                                          }
                                         },
-                                        child: const Icon(
-                                            Icons.delete_outline,
-                                            color: Color(0xFF6B7E72),
-                                            size: 20),
+                                        child: const Icon(Icons.delete_outline,
+                                            color: Color(0xFF6B7E72), size: 20),
                                       ),
                                     ],
                                   ),
                                   const SizedBox(height: 12),
                                   Text(
-                                    note.excerpt,
+                                    note.catatan,
                                     style: const TextStyle(
                                       color: Color(0xFFA1AFA6),
                                       fontSize: 13,
                                       height: 1.4,
                                     ),
                                   ),
+                                  const SizedBox(height: 16),
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: GestureDetector(
+                                      onTap: navigateToRiwayat,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12, vertical: 8),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF2C4334)
+                                              .withValues(alpha: 0.5),
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          border: Border.all(
+                                            color: const Color(0xFF6CF688)
+                                                .withValues(alpha: 0.3),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: const Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.receipt_long_outlined,
+                                              color: Color(0xFF6CF688),
+                                              size: 14,
+                                            ),
+                                            SizedBox(width: 6),
+                                            Text(
+                                              'Lihat Riwayat Perhitungan',
+                                              style: TextStyle(
+                                                color: Color(0xFF6CF688),
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
-                            );
+                              ), // closes Container
+                            ), // closes InkWell
+                            ); // closes Material
                           },
                         ),
                 ),
@@ -197,12 +258,34 @@ class _NotesListViewState extends State<NotesListView>
           // Floating Action Button
           Positioned(
             right: 24,
-            bottom: 100, // Above bottom nav
+            bottom: 24,
             child: GestureDetector(
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const NoteFormView()),
+                context
+                    .read<HomeViewModel>()
+                    .onNavTapManual(0); // Pindah ke tab Hitung HPP BEP
+                Navigator.popUntil(context, (route) => route.isFirst);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Row(
+                      children: [
+                        Icon(Icons.info_outline, color: Color(0xFF6CF688), size: 20),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Silakan hitung HPP & BEP terlebih dahulu untuk membuat catatan.',
+                            style: TextStyle(color: Colors.white, fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                    backgroundColor: const Color(0xFF132A1D),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    duration: const Duration(seconds: 3),
+                  ),
                 );
               },
               child: Container(
@@ -213,7 +296,7 @@ class _NotesListViewState extends State<NotesListView>
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF6CF688).withOpacity(0.3),
+                      color: const Color(0xFF6CF688).withValues(alpha: 0.3),
                       blurRadius: 16,
                       offset: const Offset(0, 4),
                     ),
@@ -223,14 +306,6 @@ class _NotesListViewState extends State<NotesListView>
                     const Icon(Icons.add, color: Color(0xFF0C1B13), size: 28),
               ),
             ),
-          ),
-
-          // Bottom Navigation
-          Positioned(
-            left: 20,
-            right: 20,
-            bottom: 20,
-            child: _buildBottomNav(),
           ),
         ],
       ),
@@ -254,14 +329,13 @@ class _NotesListViewState extends State<NotesListView>
                   children: [
                     // Particle dots orbiting
                     ...List.generate(6, (i) {
-                      final angle = (i / 6) * 2 * pi +
-                          _particleController.value * 2 * pi;
-                      final radius = 68.0;
+                      final angle =
+                          (i / 6) * 2 * pi + _particleController.value * 2 * pi;
+                      const radius = 68.0;
                       final dx = cos(angle) * radius;
                       final dy = sin(angle) * radius;
-                      final opacity = (sin(
-                                  _particleController.value * 2 * pi +
-                                      (i * pi / 3)) +
+                      final opacity = (sin(_particleController.value * 2 * pi +
+                                  (i * pi / 3)) +
                               1) /
                           2;
                       return Transform.translate(
@@ -276,8 +350,8 @@ class _NotesListViewState extends State<NotesListView>
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF6CF688)
-                                      .withOpacity(0.8),
+                                  color:
+                                      const Color(0xFF6CF688).withValues(alpha: 0.8),
                                   blurRadius: 6,
                                 ),
                               ],
@@ -295,7 +369,7 @@ class _NotesListViewState extends State<NotesListView>
                         boxShadow: [
                           BoxShadow(
                             color: const Color(0xFF6CF688)
-                                .withOpacity(_glowAnim.value * 0.25),
+                                .withValues(alpha: _glowAnim.value * 0.25),
                             blurRadius: 40,
                             spreadRadius: 12,
                           ),
@@ -310,21 +384,21 @@ class _NotesListViewState extends State<NotesListView>
                         height: 96,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: RadialGradient(
+                          gradient: const RadialGradient(
                             colors: [
-                              const Color(0xFF2B5C40),
-                              const Color(0xFF1B3324),
+                              Color(0xFF2B5C40),
+                              Color(0xFF1B3324),
                             ],
                           ),
                           border: Border.all(
                             color: const Color(0xFF6CF688)
-                                .withOpacity(_glowAnim.value * 0.6),
+                                .withValues(alpha: _glowAnim.value * 0.6),
                             width: 1.5,
                           ),
                           boxShadow: [
                             BoxShadow(
                               color: const Color(0xFF6CF688)
-                                  .withOpacity(_glowAnim.value * 0.15),
+                                  .withValues(alpha: _glowAnim.value * 0.15),
                               blurRadius: 20,
                               spreadRadius: 4,
                             ),
@@ -344,11 +418,10 @@ class _NotesListViewState extends State<NotesListView>
             const SizedBox(height: 36),
             // Dashed border container with text
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
-                color: const Color(0xFF132018).withOpacity(0.6),
+                color: const Color(0xFF132018).withValues(alpha: 0.6),
                 border: Border.all(
                   color: const Color(0xFF2C4334),
                   width: 1,
@@ -363,17 +436,17 @@ class _NotesListViewState extends State<NotesListView>
                       Container(
                           width: 24,
                           height: 2,
-                          color: const Color(0xFF6CF688).withOpacity(0.4)),
+                          color: const Color(0xFF6CF688).withValues(alpha: 0.4)),
                       const SizedBox(width: 8),
                       Container(
                           width: 8,
                           height: 2,
-                          color: const Color(0xFF6CF688).withOpacity(0.2)),
+                          color: const Color(0xFF6CF688).withValues(alpha: 0.2)),
                       const SizedBox(width: 8),
                       Container(
                           width: 16,
                           height: 2,
-                          color: const Color(0xFF6CF688).withOpacity(0.4)),
+                          color: const Color(0xFF6CF688).withValues(alpha: 0.4)),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -388,7 +461,7 @@ class _NotesListViewState extends State<NotesListView>
                   ),
                   const SizedBox(height: 10),
                   const Text(
-                    'Halaman ini masih kosong.\nMulai tulis strategi keuanganmu\ndi sini! ✨',
+                    'Halaman ini masih kosong.\nMulai tulis strategi keuanganmu\ndi sini! \u{2728}',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Color(0xFF8BCA6E),
@@ -403,17 +476,17 @@ class _NotesListViewState extends State<NotesListView>
                       Container(
                           width: 16,
                           height: 2,
-                          color: const Color(0xFF6CF688).withOpacity(0.2)),
+                          color: const Color(0xFF6CF688).withValues(alpha: 0.2)),
                       const SizedBox(width: 8),
                       Container(
                           width: 24,
                           height: 2,
-                          color: const Color(0xFF6CF688).withOpacity(0.4)),
+                          color: const Color(0xFF6CF688).withValues(alpha: 0.4)),
                       const SizedBox(width: 8),
                       Container(
                           width: 8,
                           height: 2,
-                          color: const Color(0xFF6CF688).withOpacity(0.2)),
+                          color: const Color(0xFF6CF688).withValues(alpha: 0.2)),
                     ],
                   ),
                 ],
@@ -421,19 +494,19 @@ class _NotesListViewState extends State<NotesListView>
             ),
             const SizedBox(height: 20),
             // Hint tap to add
-            Row(
+            const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
+                Icon(
                   Icons.touch_app_rounded,
                   color: Color(0xFF4A7A5A),
                   size: 16,
                 ),
-                const SizedBox(width: 6),
+                SizedBox(width: 6),
                 Text(
                   'Ketuk tombol + untuk memulai',
                   style: TextStyle(
-                    color: const Color(0xFF4A7A5A),
+                    color: Color(0xFF4A7A5A),
                     fontSize: 12,
                     fontStyle: FontStyle.italic,
                     letterSpacing: 0.3,
@@ -447,133 +520,34 @@ class _NotesListViewState extends State<NotesListView>
     );
   }
 
-  Widget _buildBottomNav() {
-    const navIcons = [
-      Icons.calculate_outlined, // 0 - HPP & BEP
-      Icons.account_balance_wallet_outlined, // 1 - Wallet
-      Icons.home, // 2 - Home
-      Icons.show_chart, // 3 - Chart (Insight)
-      Icons.history, // 4 - History
-    ];
-    const int navCount = 5;
-    const double navHeight = 68.0;
-    const double circleSize = 48.0;
-    const double circleTop = (navHeight - circleSize) / 2;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final navWidth = constraints.maxWidth;
-        final itemWidth = navWidth / navCount;
-        final circleLeft =
-            itemWidth * _selectedIndex + (itemWidth / 2) - circleSize / 2;
-
-        return SizedBox(
-          height: navHeight,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF132018).withOpacity(0.95),
-                    borderRadius: BorderRadius.circular(34),
-                    border:
-                        Border.all(color: const Color(0xFF2C4334), width: 1.5),
-                  ),
-                ),
-              ),
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 320),
-                curve: Curves.easeInOutCubic,
-                left: circleLeft,
-                top: circleTop,
-                child: Container(
-                  width: circleSize,
-                  height: circleSize,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF6CF688),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF6CF688).withOpacity(0.45),
-                        blurRadius: 16,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    navIcons[_selectedIndex],
-                    color: const Color(0xFF0C1B13),
-                    size: 24,
-                  ),
-                ),
-              ),
-              Row(
-                children: List.generate(navCount, (i) {
-                  final isActive = i == _selectedIndex;
-                  return Expanded(
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.translucent,
-                      onTap: () async {
-                        if (i == _selectedIndex) return;
-
-                        // We act as if going back to home or other root pages
-                        if (i == 2) {
-                          Navigator.popUntil(context, (route) => route.isFirst);
-                        } else {
-                          // other nav items not implemented here since it's a sub-page,
-                          // but can mimic InsightView's logic.
-                          Navigator.popUntil(context, (route) => route.isFirst);
-                          // For a complete flow, we'd use a main layout with a persistent bottom nav.
-                        }
-                      },
-                      child: SizedBox(
-                        height: navHeight,
-                        child: Center(
-                          child: AnimatedOpacity(
-                            duration: const Duration(milliseconds: 200),
-                            opacity: isActive ? 0.0 : 1.0,
-                            child: Icon(
-                              navIcons[i],
-                              color: const Color(0xFF6B7E72),
-                              size: 24,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   void _showDeleteConfirmation(BuildContext context, String noteId) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1B3324),
+        backgroundColor: const Color(0xFFD2E3C8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(
+            color: const Color(0xFF8BCA6E).withValues(alpha: 0.3),
+          ),
+        ),
         title:
-            const Text('Hapus Catatan?', style: TextStyle(color: Colors.white)),
+            const Text('Hapus Catatan?', style: TextStyle(color: Color(0xFF0F2E1A), fontWeight: FontWeight.bold)),
         content: const Text('Catatan ini akan dihapus secara permanen.',
-            style: TextStyle(color: Colors.white70)),
+            style: TextStyle(color: Color(0xFF2E4F39))),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child:
-                const Text('Batal', style: TextStyle(color: Color(0xFF8BCA6E))),
+                const Text('Batal', style: TextStyle(color: Color(0xFF4E6E56), fontWeight: FontWeight.bold)),
           ),
           TextButton(
             onPressed: () {
-              context.read<NoteViewModel>().deleteNote(noteId);
+              context.read<RiwayatViewModel>().updateCatatan(noteId, '');
               Navigator.pop(ctx);
             },
             child:
-                const Text('Hapus', style: TextStyle(color: Colors.redAccent)),
+                const Text('Hapus', style: TextStyle(color: Color(0xFFD32F2F), fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -587,14 +561,14 @@ class _NotesBackgroundPainter extends CustomPainter {
     final paint = Paint()
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30);
 
-    paint.color = const Color(0xFF146443).withOpacity(0.35);
+    paint.color = const Color(0xFF146443).withValues(alpha: 0.35);
     canvas.drawCircle(
         Offset(size.width * 0.18, size.height * 0.15), 110, paint);
 
-    paint.color = const Color(0xFF3CAE7A).withOpacity(0.25);
+    paint.color = const Color(0xFF3CAE7A).withValues(alpha: 0.25);
     canvas.drawCircle(Offset(size.width * 0.86, size.height * 0.23), 80, paint);
 
-    paint.color = const Color(0xFF1B4E36).withOpacity(0.2);
+    paint.color = const Color(0xFF1B4E36).withValues(alpha: 0.2);
     canvas.drawCircle(Offset(size.width * 0.7, size.height * 0.75), 180, paint);
   }
 

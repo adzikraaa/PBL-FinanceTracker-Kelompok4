@@ -170,27 +170,6 @@ class _SavingFormPageState extends State<SavingFormPage> with TickerProviderStat
                   : null,
             ),
             const SizedBox(height: 16),
-            _buildLabel('Nominal Sekarang'),
-            _buildTextField(
-              controller: _currentController,
-              hint: '0',
-              prefix: 'Rp ',
-              isNumber: true,
-              onChanged: (val) {
-                final cleanVal = val.replaceAll('.', '');
-                vm.currentAmount = double.tryParse(cleanVal) ?? 0;
-                setState(() {}); // Update to show warning
-              },
-            ),
-            if ((double.tryParse(_currentController.text.replaceAll('.', '')) ?? 0) >= 1000000000)
-              const Padding(
-                padding: EdgeInsets.only(top: 4, left: 4),
-                child: Text(
-                  'Batas maksimal input 1 Miliar',
-                  style: TextStyle(color: Colors.orange, fontSize: 10, fontWeight: FontWeight.w500),
-                ),
-              ),
-            const SizedBox(height: 16),
             _buildLabel('Nominal Target'),
             _buildTextField(
               controller: _targetController,
@@ -208,6 +187,27 @@ class _SavingFormPageState extends State<SavingFormPage> with TickerProviderStat
                   : null,
             ),
             if ((double.tryParse(_targetController.text.replaceAll('.', '')) ?? 0) >= 1000000000)
+              const Padding(
+                padding: EdgeInsets.only(top: 4, left: 4),
+                child: Text(
+                  'Batas maksimal input 1 Miliar',
+                  style: TextStyle(color: Colors.orange, fontSize: 10, fontWeight: FontWeight.w500),
+                ),
+              ),
+            const SizedBox(height: 16),
+            _buildLabel('Nominal Sekarang'),
+            _buildTextField(
+              controller: _currentController,
+              hint: '0',
+              prefix: 'Rp ',
+              isNumber: true,
+              onChanged: (val) {
+                final cleanVal = val.replaceAll('.', '');
+                vm.currentAmount = double.tryParse(cleanVal) ?? 0;
+                setState(() {}); // Update to show warning
+              },
+            ),
+            if ((double.tryParse(_currentController.text.replaceAll('.', '')) ?? 0) >= 1000000000)
               const Padding(
                 padding: EdgeInsets.only(top: 4, left: 4),
                 child: Text(

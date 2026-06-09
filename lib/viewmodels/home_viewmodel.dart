@@ -16,7 +16,7 @@ class HomeViewModel extends ChangeNotifier {
   String tabunganTarget = 'Rp 10.000.000';
   String tabunganSaatIni = 'Rp 7.500.000';
   String tabunganSisa = 'Rp 2.5jt lagi menuju target';
-  String tabunganEmoji = 'Hampir sampai! 🔥';
+  String tabunganEmoji = 'Hampir sampai! \u{1f525}';
 
   // ─── Data Catatan ─────────────────────────────────────────────────────────
   String catatanJudul = 'Rencana Jual\nFebruari';

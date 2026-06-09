@@ -25,6 +25,11 @@ class InsightView extends StatefulWidget {
 
 class _InsightViewState extends State<InsightView> {
   DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
+  final Map<String, int> _editingSales = {};
+
+  String _getProductKey(dynamic item, int index) {
+    return item.id ?? 'idx_$index';
+  }
 
   // Filter history berdasarkan bulan yang dipilih
   List<MapEntry<int, dynamic>> _filteredIndexed(List<dynamic> history) {
@@ -52,7 +57,7 @@ class _InsightViewState extends State<InsightView> {
         builder: (ctx, setModal) {
           return Container(
             decoration: const BoxDecoration(
-              color: kCardDark,
+              color: Color(0xFFD2E3C8),
               borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
@@ -63,8 +68,9 @@ class _InsightViewState extends State<InsightView> {
                 Center(
                   child: Container(
                     width: 40, height: 4,
+                    margin: const EdgeInsets.only(bottom: 20),
                     decoration: BoxDecoration(
-                      color: Colors.white24,
+                      color: const Color(0xFF1B3D2A).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -79,15 +85,15 @@ class _InsightViewState extends State<InsightView> {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.white10,
+                          color: const Color(0xFF1B3D2A).withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Icon(Icons.chevron_left, color: kWhite, size: 20),
+                        child: const Icon(Icons.chevron_left, color: Color(0xFF0F2E1A), size: 20),
                       ),
                     ),
                     Text(
                       '$tempYear',
-                      style: const TextStyle(color: kWhite, fontSize: 18, fontWeight: FontWeight.bold),
+                      style: const TextStyle(color: Color(0xFF0F2E1A), fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     GestureDetector(
                       onTap: () {
@@ -96,11 +102,11 @@ class _InsightViewState extends State<InsightView> {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: tempYear < now.year ? Colors.white10 : Colors.white.withOpacity(0.03),
+                          color: tempYear < now.year ? const Color(0xFF1B3D2A).withValues(alpha: 0.08) : const Color(0xFF1B3D2A).withValues(alpha: 0.02),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(Icons.chevron_right,
-                            color: tempYear < now.year ? kWhite : Colors.white24, size: 20),
+                            color: tempYear < now.year ? const Color(0xFF0F2E1A) : const Color(0xFF0F2E1A).withValues(alpha: 0.2), size: 20),
                       ),
                     ),
                   ],
@@ -132,13 +138,13 @@ class _InsightViewState extends State<InsightView> {
                         duration: const Duration(milliseconds: 150),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? kGreenAccent
+                              ? const Color(0xFF1B3D2A)
                               : isFuture
-                                  ? Colors.white.withOpacity(0.03)
-                                  : Colors.white.withOpacity(0.08),
+                                  ? const Color(0xFF1B3D2A).withValues(alpha: 0.02)
+                                  : const Color(0xFF1B3D2A).withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(10),
                           border: isSelected
-                              ? Border.all(color: kGreenAccent, width: 2)
+                              ? Border.all(color: const Color(0xFF1B3D2A), width: 2)
                               : null,
                         ),
                         alignment: Alignment.center,
@@ -146,10 +152,10 @@ class _InsightViewState extends State<InsightView> {
                           DateFormat('MMM', 'id_ID').format(DateTime(tempYear, m)),
                           style: TextStyle(
                             color: isSelected
-                                ? kTextDark
+                                ? Colors.white
                                 : isFuture
-                                    ? Colors.white24
-                                    : kWhite,
+                                    ? const Color(0xFF0F2E1A).withValues(alpha: 0.2)
+                                    : const Color(0xFF0F2E1A),
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                             fontSize: 12,
                           ),
@@ -176,17 +182,19 @@ class _InsightViewState extends State<InsightView> {
     final indexed = _filteredIndexed(finance.history);
     final filteredHistory = indexed.map((e) => e.value).toList();
 
+    final targetProfit = finance.getTargetProfitForMonth(_selectedMonth);
+
     // Hitung metrik dari history yang sudah difilter
     double filteredUntung = filteredHistory.fold(0.0, (sum, item) {
       double untungPerUnit = item.hargaJualUnit -
           (item.jumlahUnit > 0 ? item.totalHpp / item.jumlahUnit : 0);
       return sum + untungPerUnit * (item.jumlahUnitTerjual ?? 0);
     });
-    double filteredProgress = finance.targetProfitBulanan > 0
-        ? (filteredUntung / finance.targetProfitBulanan).clamp(0.0, 1.0)
+    double filteredProgress = targetProfit > 0
+        ? (filteredUntung / targetProfit).clamp(0.0, 1.0)
         : 0.0;
-    double filteredSisa = finance.targetProfitBulanan > 0
-        ? (finance.targetProfitBulanan - filteredUntung).clamp(0.0, double.infinity)
+    double filteredSisa = targetProfit > 0
+        ? (targetProfit - filteredUntung).clamp(0.0, double.infinity)
         : 0.0;
     int filteredTerjual =
         filteredHistory.fold<int>(0, (sum, item) => sum + ((item.jumlahUnitTerjual ?? 0) as int));
@@ -198,7 +206,7 @@ class _InsightViewState extends State<InsightView> {
           SafeArea(
             bottom: false,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 120, left: 16, right: 16, top: 16),
+              padding: const EdgeInsets.only(bottom: 160, left: 16, right: 16, top: 16),
               physics: const BouncingScrollPhysics(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -378,7 +386,7 @@ class _InsightViewState extends State<InsightView> {
                   children: const [
                     Icon(Icons.check_circle_outline, color: kTextDark, size: 16),
                     SizedBox(width: 6),
-                    Text('Set Target', style: TextStyle(color: kTextDark, fontWeight: FontWeight.bold, fontSize: 12)),
+                    Text('Atur Target', style: TextStyle(color: kTextDark, fontWeight: FontWeight.bold, fontSize: 12)),
                   ],
                 ),
               ),
@@ -471,12 +479,13 @@ class _InsightViewState extends State<InsightView> {
     double filteredSisa,
     int filteredTerjual,
   ) {
+    final targetProfit = finance.getTargetProfitForMonth(_selectedMonth);
     return Column(
       children: [
         IntrinsicHeight(
           child: Row(
             children: [
-              Expanded(child: _buildMetricCard('UNTUNG TERKUMPUL', CurrencyFormatter.formatRupiah(filteredUntung), kCardDark, kWhite)),
+              Expanded(child: _buildMetricCard('UNTUNG TERKUMPUL', CurrencyFormatter.formatRupiah(filteredUntung), const Color(0xFFD2E3C8), kTextDark)),
               const SizedBox(width: 12),
               Expanded(child: _buildMetricCard('SISA KE TARGET', CurrencyFormatter.formatRupiah(filteredSisa), kCardLight, kTextDark)),
             ],
@@ -486,9 +495,9 @@ class _InsightViewState extends State<InsightView> {
         IntrinsicHeight(
           child: Row(
             children: [
-              Expanded(child: _buildMetricCard('TARGET PROFIT', CurrencyFormatter.formatRupiah(finance.targetProfitBulanan), kCardLight, kTextDark)),
+              Expanded(child: _buildMetricCard('TARGET PROFIT', CurrencyFormatter.formatRupiah(targetProfit), kCardLight, kTextDark)),
               const SizedBox(width: 12),
-              Expanded(child: _buildMetricCard('TOTAL TERJUAL', '$filteredTerjual unit', kCardDark, kWhite)),
+              Expanded(child: _buildMetricCard('TOTAL TERJUAL', '$filteredTerjual unit', const Color(0xFFD2E3C8), kTextDark)),
             ],
           ),
         ),
@@ -561,6 +570,8 @@ class _InsightViewState extends State<InsightView> {
             ...indexed.map((entry) {
               final originalIndex = entry.key;
               final item = entry.value;
+              final prodKey = _getProductKey(item, originalIndex);
+              final currentSales = _editingSales[prodKey] ?? (item.jumlahUnitTerjual ?? 0);
               double untungPerUnit = item.hargaJualUnit - (item.jumlahUnit > 0 ? item.totalHpp / item.jumlahUnit : 0);
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
@@ -576,29 +587,13 @@ class _InsightViewState extends State<InsightView> {
                         ],
                       ),
                     ),
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () => finance.updatePenjualan(originalIndex, -1),
-                          child: Container(
-                            width: 32, height: 32,
-                            decoration: BoxDecoration(border: Border.all(color: Colors.white24), borderRadius: BorderRadius.circular(8)),
-                            child: const Icon(Icons.remove, color: Colors.white54, size: 16),
-                          ),
-                        ),
-                        SizedBox(
-                          width: 36,
-                          child: Text('${item.jumlahUnitTerjual ?? 0}', textAlign: TextAlign.center, style: const TextStyle(color: kWhite, fontWeight: FontWeight.bold)),
-                        ),
-                        GestureDetector(
-                          onTap: () => finance.updatePenjualan(originalIndex, 1),
-                          child: Container(
-                            width: 32, height: 32,
-                            decoration: BoxDecoration(border: Border.all(color: Colors.white24), borderRadius: BorderRadius.circular(8)),
-                            child: const Icon(Icons.add, color: Colors.white54, size: 16),
-                          ),
-                        ),
-                      ],
+                    _SalesCounterWidget(
+                      initialValue: currentSales,
+                      onChanged: (val) {
+                        setState(() {
+                          _editingSales[prodKey] = val;
+                        });
+                      },
                     ),
                   ],
                 ),
@@ -608,8 +603,14 @@ class _InsightViewState extends State<InsightView> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Penjualan disimpan!')));
+              onPressed: () async {
+                final targetProfit = finance.getTargetProfitForMonth(_selectedMonth);
+                final messenger = ScaffoldMessenger.of(context);
+                await finance.simpanPenjualanDanTarget(_selectedMonth, targetProfit, _editingSales);
+                setState(() {
+                  _editingSales.clear();
+                });
+                messenger.showSnackBar(const SnackBar(content: Text('Penjualan disimpan!')));
               },
               icon: const Icon(Icons.save_alt, color: kTextDark, size: 18),
               label: const Text('Simpan Penjualan', style: TextStyle(color: kTextDark, fontWeight: FontWeight.bold)),
@@ -626,21 +627,31 @@ class _InsightViewState extends State<InsightView> {
   }
 
   void _showEditDataDialog(BuildContext context, FinanceViewModel finance) {
-    final TextEditingController targetController = TextEditingController(text: CurrencyFormatter.formatRupiah(finance.targetProfitBulanan).replaceAll('Rp ', ''));
+    final initialTarget = finance.getTargetProfitForMonth(_selectedMonth);
+    final TextEditingController targetController = TextEditingController(text: CurrencyFormatter.formatRupiah(initialTarget).replaceAll('Rp ', ''));
     
     showDialog(
       context: context,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
+            final indexed = _filteredIndexed(finance.history);
             double currentTotal = 0;
-            for (var item in finance.history) {
-              currentTotal += (item.jumlahUnitTerjual ?? 0) * item.hargaJualUnit;
+            for (var entry in indexed) {
+              final item = entry.value;
+              final prodKey = _getProductKey(item, entry.key);
+              final currentSales = _editingSales[prodKey] ?? (item.jumlahUnitTerjual ?? 0);
+              currentTotal += currentSales * item.hargaJualUnit;
             }
 
             return Dialog(
-              backgroundColor: kCardDark,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              backgroundColor: const Color(0xFFD2E3C8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+                side: BorderSide(
+                  color: const Color(0xFF8BCA6E).withValues(alpha: 0.3),
+                ),
+              ),
               insetPadding: const EdgeInsets.all(16),
               child: SingleChildScrollView(
                 child: Padding(
@@ -652,36 +663,36 @@ class _InsightViewState extends State<InsightView> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Edit Data', style: TextStyle(color: kWhite, fontSize: 18, fontWeight: FontWeight.bold)),
+                          const Text('Edit Data', style: TextStyle(color: Color(0xFF0F2E1A), fontSize: 18, fontWeight: FontWeight.bold)),
                           GestureDetector(
                             onTap: () => Navigator.pop(context),
-                            child: const Icon(Icons.close, color: Colors.white54),
+                            child: const Icon(Icons.close, color: Color(0xFF0F2E1A)),
                           ),
                         ],
                       ),
                       const SizedBox(height: 24),
-                      const Text('TARGET PROFIT', style: TextStyle(color: Colors.white54, fontSize: 10, letterSpacing: 1.2, fontWeight: FontWeight.bold)),
+                      const Text('TARGET PROFIT', style: TextStyle(color: Color(0xFF4E6E56), fontSize: 10, letterSpacing: 1.2, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
+                          color: const Color(0xFF1B3D2A).withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.white12),
+                          border: Border.all(color: const Color(0xFF1B3D2A).withValues(alpha: 0.1)),
                         ),
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Monthly Goal', style: TextStyle(color: Colors.white38, fontSize: 10)),
+                            const Text('Target Bulanan', style: TextStyle(color: Color(0xFF4E6E56), fontSize: 10)),
                             Row(
                               children: [
-                                const Text('Rp ', style: TextStyle(color: kCardLight, fontSize: 20, fontWeight: FontWeight.bold)),
+                                const Text('Rp ', style: TextStyle(color: Color(0xFF1B3D2A), fontSize: 20, fontWeight: FontWeight.bold)),
                                 Expanded(
                                   child: TextField(
                                     controller: targetController,
                                     keyboardType: TextInputType.number,
                                     inputFormatters: [CurrencyInputFormatter()],
-                                    style: const TextStyle(color: kCardLight, fontSize: 24, fontWeight: FontWeight.bold),
+                                    style: const TextStyle(color: Color(0xFF1B3D2A), fontSize: 24, fontWeight: FontWeight.bold),
                                     decoration: const InputDecoration(
                                       border: InputBorder.none,
                                       isDense: true,
@@ -698,67 +709,51 @@ class _InsightViewState extends State<InsightView> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: const [
-                          Text('CATAT PENJUALAN', style: TextStyle(color: Colors.white54, fontSize: 10, letterSpacing: 1.2, fontWeight: FontWeight.bold)),
-                          Text('LIVE', style: TextStyle(color: kCardLight, fontSize: 10, fontWeight: FontWeight.bold)),
+                          Text('CATAT PENJUALAN', style: TextStyle(color: Color(0xFF4E6E56), fontSize: 10, letterSpacing: 1.2, fontWeight: FontWeight.bold)),
+                          Text('LIVE', style: TextStyle(color: Color(0xFF1B3D2A), fontSize: 10, fontWeight: FontWeight.bold)),
                         ],
                       ),
                       const SizedBox(height: 12),
-                      ...List.generate(finance.history.length, (index) {
-                        final item = finance.history[index];
+                      ...List.generate(indexed.length, (index) {
+                        final originalIndex = indexed[index].key;
+                        final item = indexed[index].value;
+                        final prodKey = _getProductKey(item, originalIndex);
+                        final currentSales = _editingSales[prodKey] ?? (item.jumlahUnitTerjual ?? 0);
                         return Container(
                           margin: const EdgeInsets.only(bottom: 8),
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.05),
+                            color: const Color(0xFF1B3D2A).withValues(alpha: 0.05),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.white12),
+                            border: Border.all(color: const Color(0xFF1B3D2A).withValues(alpha: 0.1)),
                           ),
                           child: Row(
                             children: [
                               Container(
                                 width: 40, height: 40,
-                                decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(8)),
-                                child: const Icon(Icons.coffee, color: Colors.white54, size: 20),
+                                decoration: BoxDecoration(color: const Color(0xFF1B3D2A).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                                child: const Icon(Icons.coffee, color: Color(0xFF1B3D2A), size: 20),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(item.namaProduk, style: const TextStyle(color: kWhite, fontWeight: FontWeight.bold, fontSize: 14)),
-                                    Text('Rp ${CurrencyFormatter.formatRupiah(item.hargaJualUnit).replaceAll('Rp ', '')}/unit', style: const TextStyle(color: Colors.white54, fontSize: 10)),
+                                    Text(item.namaProduk, style: const TextStyle(color: Color(0xFF0F2E1A), fontWeight: FontWeight.bold, fontSize: 14)),
+                                    Text('Rp ${CurrencyFormatter.formatRupiah(item.hargaJualUnit).replaceAll('Rp ', '')}/unit', style: const TextStyle(color: Color(0xFF4E6E56), fontSize: 10)),
                                   ],
                                 ),
                               ),
-                              Row(
-                                children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      finance.updatePenjualan(index, -1);
-                                      setStateDialog(() {});
-                                    },
-                                    child: Container(
-                                      width: 28, height: 28,
-                                      decoration: BoxDecoration(color: Colors.white12, borderRadius: BorderRadius.circular(6)),
-                                      child: const Icon(Icons.remove, color: Colors.white54, size: 14),
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    width: 32,
-                                    child: Text('${item.jumlahUnitTerjual ?? 0}', textAlign: TextAlign.center, style: const TextStyle(color: kWhite, fontWeight: FontWeight.bold)),
-                                  ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      finance.updatePenjualan(index, 1);
-                                      setStateDialog(() {});
-                                    },
-                                    child: Container(
-                                      width: 28, height: 28,
-                                      decoration: BoxDecoration(color: Colors.white12, borderRadius: BorderRadius.circular(6)),
-                                      child: const Icon(Icons.add, color: Colors.white54, size: 14),
-                                    ),
-                                  ),
-                                ],
+                              _SalesCounterWidget(
+                                initialValue: currentSales,
+                                isSmall: true,
+                                textColor: const Color(0xFF0F2E1A),
+                                onChanged: (val) {
+                                  setStateDialog(() {
+                                    _editingSales[prodKey] = val;
+                                  });
+                                  setState(() {});
+                                },
                               ),
                             ],
                           ),
@@ -768,26 +763,30 @@ class _InsightViewState extends State<InsightView> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Total Penjualan Hari Ini', style: TextStyle(color: Colors.white54, fontSize: 12)),
-                          Text(CurrencyFormatter.formatRupiah(currentTotal), style: const TextStyle(color: kCardLight, fontWeight: FontWeight.bold, fontSize: 14)),
+                          const Text('Total Penjualan Hari Ini', style: TextStyle(color: Color(0xFF4E6E56), fontSize: 12)),
+                          Text(CurrencyFormatter.formatRupiah(currentTotal), style: const TextStyle(color: Color(0xFF1B3D2A), fontWeight: FontWeight.bold, fontSize: 14)),
                         ],
                       ),
                       const SizedBox(height: 24),
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
-                          onPressed: () {
+                          onPressed: () async {
+                            final navigator = Navigator.of(context);
+                            final messenger = ScaffoldMessenger.of(context);
                             String targetStr = targetController.text.replaceAll('.', '');
-                            if (targetStr.isNotEmpty) {
-                              finance.setTargetProfit(double.tryParse(targetStr) ?? 0);
-                            }
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Perubahan disimpan!')));
+                            double target = double.tryParse(targetStr) ?? 0;
+                            await finance.simpanPenjualanDanTarget(_selectedMonth, target, _editingSales);
+                            setState(() {
+                              _editingSales.clear();
+                            });
+                            navigator.pop();
+                            messenger.showSnackBar(const SnackBar(content: Text('Perubahan disimpan!')));
                           },
-                          icon: const Icon(Icons.save, color: kTextDark, size: 18),
-                          label: const Text('Simpan Perubahan', style: TextStyle(color: kTextDark, fontWeight: FontWeight.bold)),
+                          icon: const Icon(Icons.save, color: Colors.white, size: 18),
+                          label: const Text('Simpan Perubahan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFFD54F),
+                            backgroundColor: const Color(0xFF1B3D2A),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
@@ -849,5 +848,117 @@ class _DonutChartPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _DonutChartPainter oldDelegate) {
     return oldDelegate.progress != progress;
+  }
+}
+
+class _SalesCounterWidget extends StatefulWidget {
+  final int initialValue;
+  final ValueChanged<int> onChanged;
+  final bool isSmall;
+  final Color? textColor;
+
+  const _SalesCounterWidget({
+    required this.initialValue,
+    required this.onChanged,
+    this.isSmall = false,
+    this.textColor,
+  });
+
+  @override
+  State<_SalesCounterWidget> createState() => _SalesCounterWidgetState();
+}
+
+class _SalesCounterWidgetState extends State<_SalesCounterWidget> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue.toString());
+  }
+
+  @override
+  void didUpdateWidget(covariant _SalesCounterWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialValue.toString() != _controller.text) {
+      final intval = int.tryParse(_controller.text) ?? 0;
+      if (intval != widget.initialValue) {
+        _controller.text = widget.initialValue.toString();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _updateValue(int newValue) {
+    _controller.text = newValue.toString();
+    widget.onChanged(newValue);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final double size = widget.isSmall ? 28.0 : 32.0;
+    final double iconSize = widget.isSmall ? 14.0 : 16.0;
+    final double width = widget.isSmall ? 32.0 : 40.0;
+    final Color actualTextColor = widget.textColor ?? kWhite;
+    final Color iconColor = widget.textColor?.withValues(alpha: 0.6) ?? Colors.white54;
+    final Color borderAccent = widget.textColor?.withValues(alpha: 0.25) ?? Colors.white24;
+
+    return Row(
+      children: [
+        GestureDetector(
+          onTap: () {
+            int current = int.tryParse(_controller.text) ?? 0;
+            _updateValue(max(0, current - 1));
+          },
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              border: Border.all(color: borderAccent),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Icon(Icons.remove, color: iconColor, size: iconSize),
+          ),
+        ),
+        SizedBox(
+          width: width,
+          child: TextField(
+            controller: _controller,
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: actualTextColor, fontWeight: FontWeight.bold),
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              isDense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+            onChanged: (val) {
+              int parsed = int.tryParse(val) ?? 0;
+              widget.onChanged(parsed);
+            },
+          ),
+        ),
+        GestureDetector(
+          onTap: () {
+            int current = int.tryParse(_controller.text) ?? 0;
+            _updateValue(current + 1);
+          },
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              border: Border.all(color: borderAccent),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Icon(Icons.add, color: iconColor, size: iconSize),
+          ),
+        ),
+      ],
+    );
   }
 }
