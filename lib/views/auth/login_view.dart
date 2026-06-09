@@ -207,9 +207,9 @@ class _LoginViewState extends State<LoginView>
                                               _passwordError =
                                                   'Password tidak boleh kosong';
                                               hasError = true;
-                                            } else if (_passwordController.text.length < 6) {
+                                            } else if (_passwordController.text.length < 8) {
                                               _passwordError =
-                                                  'Password minimal 6 karakter';
+                                                  'Password minimal 8 karakter';
                                               hasError = true;
                                             }
                                           });
@@ -584,7 +584,7 @@ class _LoginViewState extends State<LoginView>
               fontSize: 14,
             ),
             decoration: InputDecoration(
-              hintText: '••••••',
+              hintText: '••••••••',
               hintStyle: TextStyle(
                 color: AppColors.white.withValues(alpha: 0.4),
                 fontSize: 14,
