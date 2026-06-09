@@ -267,9 +267,9 @@ class _RegisterViewState extends State<RegisterView>
                                             hasError = true;
                                           } else if (_passwordController
                                                   .text.length <
-                                              6) {
+                                              8) {
                                             _passwordError =
-                                                'Password minimal 6 karakter';
+                                                'Password minimal 8 karakter';
                                             hasError = true;
                                           }
                                         });
@@ -654,7 +654,7 @@ class _RegisterViewState extends State<RegisterView>
               fontSize: 14,
             ),
             decoration: InputDecoration(
-              hintText: '••••••',
+              hintText: '••••••••',
               hintStyle: TextStyle(
                 color: AppColors.white.withValues(alpha: 0.4),
                 fontSize: 14,
