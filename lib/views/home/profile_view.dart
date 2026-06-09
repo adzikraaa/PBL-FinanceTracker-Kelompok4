@@ -172,16 +172,16 @@ class _ProfileViewState extends State<ProfileView> with TickerProviderStateMixin
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF163520),
+                            color: const Color(0xFFD3E3C8),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: const Color(0xFF4ADE80).withOpacity(0.2),
+                              color: const Color(0xFF8BCA6E).withOpacity(0.3),
                               width: 1,
                             ),
                           ),
                           child: const Icon(
                             Icons.edit,
-                            color: Color(0xFF4ADE80),
+                            color: Color(0xFF0C1B13),
                             size: 18,
                           ),
                         ),
@@ -425,7 +425,7 @@ class _ProfileViewState extends State<ProfileView> with TickerProviderStateMixin
                                 indent: 20,
                                 endIndent: 20,
                               ),
-                              _buildInfoTile(
+                                    _buildInfoTile(
                                 icon: Icons.login,
                                 label: 'Login dengan',
                                 value: _getProviderName(user),
@@ -444,21 +444,21 @@ class _ProfileViewState extends State<ProfileView> with TickerProviderStateMixin
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFE9F800),
+                              color: const Color(0xFFD3E3C8),
                               borderRadius: BorderRadius.circular(32),
                               boxShadow: [
-                                BoxShadow(color: const Color(0xFFE9F800).withOpacity(0.15), blurRadius: 20, spreadRadius: 2),
+                                BoxShadow(color: const Color(0xFFD3E3C8).withOpacity(0.15), blurRadius: 20, spreadRadius: 2),
                               ],
                             ),
                             child: const Row(
                               children: [
-                                Icon(Icons.help_outline, color: Colors.black, size: 24),
+                                Icon(Icons.help_outline, color: Color(0xFF0C1B13), size: 24),
                                 SizedBox(width: 20),
                                 Expanded(
                                   child: Text(
                                     'Support',
                                     style: TextStyle(
-                                      color: Colors.black,
+                                      color: Color(0xFF0C1B13),
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -478,21 +478,21 @@ class _ProfileViewState extends State<ProfileView> with TickerProviderStateMixin
                             final confirm = await showDialog<bool>(
                               context: context,
                               builder: (_) => AlertDialog(
-                                backgroundColor: const Color(0xFF163520),
+                                backgroundColor: const Color(0xFFD2E3C8),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(20),
                                   side: BorderSide(
-                                    color: const Color(0xFF4ADE80)
-                                        .withOpacity(0.2),
+                                    color: const Color(0xFF8BCA6E).withOpacity(0.3),
                                   ),
                                 ),
                                 title: const Text('Keluar',
-                                    style:
-                                        TextStyle(color: Colors.white)),
+                                    style: TextStyle(
+                                        color: Color(0xFF0F2E1A),
+                                        fontWeight: FontWeight.bold)),
                                 content: const Text(
                                   'Apakah kamu yakin ingin keluar dari akun?',
                                   style: TextStyle(
-                                      color: Color(0xB3FFFFFF)),
+                                      color: Color(0xFF2E4F39)),
                                 ),
                                 actions: [
                                   TextButton(
@@ -500,21 +500,22 @@ class _ProfileViewState extends State<ProfileView> with TickerProviderStateMixin
                                         Navigator.pop(context, false),
                                     child: const Text('Batal',
                                         style: TextStyle(
-                                            color: Color(0xFFFF5252),
+                                            color: Color(0xFF4E6E56),
                                             fontWeight: FontWeight.bold)),
                                   ),
                                   ElevatedButton(
                                     onPressed: () =>
                                         Navigator.pop(context, true),
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFFB5E48C),
+                                      backgroundColor: const Color(0xFF1B3D2A),
+                                      foregroundColor: Colors.white,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(12),
                                       ),
+                                      elevation: 0,
                                     ),
                                     child: const Text('Keluar',
                                         style: TextStyle(
-                                            color: Color(0xFF1A3A10),
                                             fontWeight: FontWeight.bold)),
                                   ),
                                 ],

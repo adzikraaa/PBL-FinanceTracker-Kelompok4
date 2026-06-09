@@ -1231,15 +1231,20 @@ class _RiwayatViewState extends State<RiwayatView>
       initialDateRange: _selectedDateRange,
       builder: (context, child) {
         return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF1B3D2A),
-              onPrimary: Colors.white,
-              surface: Color(0xFFD2E3C8),
-              onSurface: Color(0xFF0F2E1A),
+          data: ThemeData.dark().copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Color(0xFF6DFC9A), // Mint green for selected range & headers
+              onPrimary: Color(0xFF0C1B13), // Dark text on selected range
+              surface: Color(0xFF132A1D), // Dialog background
+              onSurface: Colors.white, // Active text color
+              onSecondary: Colors.white,
             ),
             dialogTheme: const DialogThemeData(
-              backgroundColor: Color(0xFFD2E3C8),
+              backgroundColor: Color(0xFF132A1D),
+            ),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Color(0xFF132A1D),
+              foregroundColor: Colors.white,
             ),
           ),
           child: child!,

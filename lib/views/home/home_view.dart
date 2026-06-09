@@ -387,8 +387,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     // Bubble Chat success notification
                     if (showUpgradeNotification)
                       Positioned(
-                        bottom: 62,
-                        right: 0,
+                        top: -10,
+                        right: 62,
                         child: PremiumBubbleChat(
                           onClose: () {
                             context.read<PremiumViewModel>().dismissUpgradeNotification();
@@ -1680,20 +1680,20 @@ class _PremiumBubbleChatState extends State<PremiumBubbleChat> with SingleTicker
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF1E1B10), Color(0xFF14120B)],
+                  colors: [Color(0xFF3D2E00), Color(0xFF2A1F00)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: const Color(0xFFFFD700).withOpacity(0.7),
+                  color: const Color(0xFFFFD700).withOpacity(0.9),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFFFD700).withOpacity(0.25),
-                    blurRadius: 12,
-                    spreadRadius: 1,
+                    color: const Color(0xFFFFD700).withOpacity(0.4),
+                    blurRadius: 16,
+                    spreadRadius: 2,
                   ),
                 ],
               ),
@@ -1706,10 +1706,10 @@ class _PremiumBubbleChatState extends State<PremiumBubbleChat> with SingleTicker
                     children: [
                       const Expanded(
                         child: Text(
-                          'Transaksi Berhasil! 🎉',
+                          'Transaksi Berhasil! \u{1f389}',
                           style: TextStyle(
                             color: Color(0xFFFFD700),
-                            fontSize: 12,
+                            fontSize: 13,
                             fontWeight: FontWeight.bold,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -1731,11 +1731,11 @@ class _PremiumBubbleChatState extends State<PremiumBubbleChat> with SingleTicker
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    'Halo Premium Member! Nikmati semua fitur tanpa batas \u{1f451}',
+                    'Halo Premium Member! Nikmati\nsemua fitur tanpa batas \u{1f451}',
                     style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      height: 1.3,
+                      color: Color(0xFFFFF0C0),
+                      fontSize: 11,
+                      height: 1.4,
                     ),
                   ),
                 ],
