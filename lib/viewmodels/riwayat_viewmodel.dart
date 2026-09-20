@@ -1,0 +1,103 @@
+import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import '../data/models/hpp_model.dart';
+import '../data/services/firestore_service.dart';
+
+class RiwayatViewModel extends ChangeNotifier {
+  final FirestoreService _firestoreService = FirestoreService();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  List<HppModel> _history = [];
+  bool isLoading = true;
+  String? error;
+
+  // State untuk menyimpan ID riwayat yang disorot/difilter dari catatan
+  String? _selectedHistoryId;
+
+  // Subscription ke stream Firestore
+  StreamSubscription<List<HppModel>>? _historySub;
+  // Subscription ke perubahan status auth
+  StreamSubscription<User?>? _authSub;
+
+  List<HppModel> get history => _history;
+  String? get selectedHistoryId => _selectedHistoryId;
+
+  void setSelectedHistoryId(String? id) {
+    _selectedHistoryId = id;
+    notifyListeners();
+  }
+
+  void clearSelectedHistoryId() {
+    _selectedHistoryId = null;
+    notifyListeners();
+  }
+
+  /// Item terbaru (untuk card di Home)
+  HppModel? get latest => _history.isNotEmpty ? _history.first : null;
+
+  /// Riwayat yang punya catatan non-kosong (untuk halaman Catatan)
+  List<HppModel> get historyWithCatatan =>
+      _history.where((item) => item.catatan.trim().isNotEmpty).toList();
+
+  /// Catatan terbaru (untuk card Catatan di Home)
+  HppModel? get latestWithCatatan =>
+      historyWithCatatan.isNotEmpty ? historyWithCatatan.first : null;
+
+  RiwayatViewModel() {
+    // Dengarkan perubahan auth — otomatis mulai/berhenti stream data
+    _authSub = _auth.authStateChanges().listen((user) {
+      if (user != null) {
+        _startListening(user.uid);
+      } else {
+        _stopListening();
+        _history = [];
+        isLoading = false;
+        notifyListeners();
+      }
+    });
+  }
+
+  /// Mulai subscribe ke koleksi 'history' di Firestore
+  void _startListening(String uid) {
+    // Batalkan subscription lama jika ada
+    _historySub?.cancel();
+    isLoading = true;
+    notifyListeners();
+
+    _historySub = _firestoreService.streamHistory(uid).listen(
+      (list) {
+        _history = list;
+        isLoading = false;
+        error = null;
+        notifyListeners();
+      },
+      onError: (e) {
+        error = e.toString();
+        isLoading = false;
+        notifyListeners();
+      },
+    );
+  }
+
+  /// Hentikan subscription ke Firestore
+  void _stopListening() {
+    _historySub?.cancel();
+    _historySub = null;
+  }
+
+  Future<void> deleteHistory(String id) async {
+    await _firestoreService.deleteHistory(id);
+  }
+
+  Future<void> updateCatatan(String id, String catatan) async {
+    await _firestoreService.updateHistoryCatatan(id, catatan);
+  }
+
+  @override
+  void dispose() {
+    _historySub?.cancel();
+    _authSub?.cancel();
+    super.dispose();
+  }
+}
